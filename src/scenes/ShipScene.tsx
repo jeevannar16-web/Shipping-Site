@@ -38,11 +38,11 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
 
   const hull = useMemo(() => {
     const s = new THREE.Shape()
-    s.moveTo(-4.2, -13)
-    s.lineTo(4.2, -13)
-    s.lineTo(4.2, 13)
+    s.moveTo(-4.7, -13)
+    s.lineTo(4.7, -13)
+    s.lineTo(4.7, 13)
     s.lineTo(0, 17)
-    s.lineTo(-4.2, 13)
+    s.lineTo(-4.7, 13)
     s.closePath()
     const g = new THREE.ExtrudeGeometry(s, { depth: 3.8, bevelEnabled: false })
     g.rotateX(-Math.PI / 2)
@@ -77,7 +77,7 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
       const side = Math.random() < 0.5 ? -1 : 1
       const s = 0.6 + Math.random() * 0.8
       f.makeScale(s, s, 1)
-      f.setPosition(side * (4.4 + Math.random() * 1.0), 0.05, -16 + Math.random() * 32)
+      f.setPosition(side * (4.9 + Math.random() * 1.0), 0.05, -16 + Math.random() * 32)
       foamRef.current!.setMatrixAt(k, f)
     }
     foamRef.current!.count = 220
@@ -87,7 +87,8 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
   useFrame(() => {
     if (groupRef.current) {
       const p = scrub?.current ?? 0
-      groupRef.current.position.z = THREE.MathUtils.lerp(8, 1, p)
+      groupRef.current.position.z = THREE.MathUtils.lerp(-16, -8, p)
+      groupRef.current.rotation.y = Math.PI
     }
   })
 
@@ -122,7 +123,7 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
             <meshStandardMaterial color="#14213D" {...std} />
           </mesh>
           <mesh position={[0, 0.1, 0]}>
-            <boxGeometry args={[8.6, 0.15, 26]} />
+            <boxGeometry args={[9.6, 0.15, 26]} />
             <meshStandardMaterial color="#F2F2F2" {...std} />
           </mesh>
           <mesh position={[0, 0.1, -15]}>
@@ -176,10 +177,10 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
         label="SHIP"
         target={() => coreRef.current}
         ship={{
-          travel: [8, 1],
+          travel: [-16, -8],
           points: [
-            { at: 0, local: [0, 2.6, -17], tag: 'BOW@0' },
-            { at: 1, local: [0, 5.1, -11.5], tag: 'BRIDGE@1' },
+            { at: 0, local: [0, 2.6, 17], tag: 'BOW@0' },
+            { at: 1, local: [0, 5.1, 11.5], tag: 'BRIDGE@1' },
           ],
         }}
       />

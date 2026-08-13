@@ -203,8 +203,8 @@ function CameraRig() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
   useLayoutEffect(() => {
     camera.fov = 35
-    camera.position.set(0, 15, 32)
-    camera.lookAt(0, 5, 0)
+    camera.position.set(0, 17, 40)
+    camera.lookAt(0, 6, 0)
     camera.updateProjectionMatrix()
   }, [camera])
   return null
@@ -213,7 +213,7 @@ function CameraRig() {
 export default function TerminalScene() {
   const fitRef = useRef<THREE.Group>(null)
   return (
-    <SceneCanvas fallbackLabel="Terminal" tone="orange" camera={{ position: [0, 15, 32], fov: 35 }}>
+    <SceneCanvas fallbackLabel="Terminal" tone="orange" camera={{ position: [0, 17, 40], fov: 35 }}>
       <color attach="background" args={['#B8C4CC']} />
       <fog attach="fog" args={['#B8C4CC', 50, 140]} />
       <ambientLight intensity={0.75} />
@@ -228,7 +228,7 @@ export default function TerminalScene() {
       <Lanes />
 
       <group ref={fitRef}>
-        <VisualTest label="YARD" target={() => fitRef.current} y={[160, 470]} x={[270, 1360]} />
+        <VisualTest label="YARD" target={() => fitRef.current} y={[250, 490]} x={[330, 1170]} />
         <ContainerYard />
         <GantryCrane />
       </group>

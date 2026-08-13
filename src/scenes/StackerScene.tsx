@@ -44,8 +44,8 @@ function Rig() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
   useLayoutEffect(() => {
     camera.fov = 35
-    camera.position.set(-10, 5.5, 21)
-    camera.lookAt(0.8, 2.4, 0)
+    camera.position.set(-8.5, 4.2, 16.5)
+    camera.lookAt(0.6, 2.2, 0)
     camera.updateProjectionMatrix()
   }, [])
   return null
@@ -65,8 +65,8 @@ export default function StackerScene() {
     const u = THREE.MathUtils.smoothstep(e, 0, 1)
     const ang = THREE.MathUtils.lerp(0.35, 0.9, u)
     boom.current!.rotation.z = ang
-    tele.current!.position.x = 5.4 + u * 0.8
-    level.current!.rotation.z = -boom.current!.rotation.z
+    tele.current!.position.x = 5.4 + 0.8 * e
+    level.current!.rotation.z = -ang
   })
 
   const std = { roughness: 0.9, metalness: 0 }
@@ -86,10 +86,10 @@ export default function StackerScene() {
         <planeGeometry args={[400, 400]} />
         <meshStandardMaterial color="#EDE7DC" {...std} />
       </mesh>
-      <ContactShadows opacity={0.35} blur={3} scale={45} />
+      <ContactShadows opacity={0.5} blur={2.5} far={8} scale={45} position={[0, 0.01, 0]} />
 
       <group ref={grp}>
-        <VisualTest label="STACKER" target={() => grp.current} y={[60, 570]} x={[200, 1080]} />
+        <VisualTest label="STACKER" target={() => grp.current} y={[95, 600]} x={[95, 1160]} />
         <group position={[-4.6, 0, 0]}>
           <mesh position={[0, 0.9, 0]}>
             <boxGeometry args={[4.4, 1.4, 2]} />
@@ -107,8 +107,8 @@ export default function StackerScene() {
             <boxGeometry args={[0.2, 0.4, 2]} />
             <meshStandardMaterial color="#111" {...std} />
           </mesh>
-          <mesh position={[-1.8, 1.9, 0]}>
-            <cylinderGeometry args={[0.07, 0.07, 1, 12]} />
+          <mesh position={[-2.0, 1.7, 0]}>
+            <boxGeometry args={[0.15, 0.3, 0.15]} />
             <meshStandardMaterial color="#111" {...std} />
           </mesh>
           {[
@@ -120,37 +120,37 @@ export default function StackerScene() {
             <group key={i} position={[p[0], 0.5, p[1]]} rotation={[Math.PI / 2, 0, 0]}>
               <mesh>
                 <cylinderGeometry args={[0.5, 0.5, 0.3, 24]} />
-                <meshStandardMaterial color="#141414" {...std} />
+                <meshStandardMaterial color="#101010" {...std} />
               </mesh>
               <mesh>
-                <cylinderGeometry args={[0.18, 0.18, 0.32, 16]} />
-                <meshStandardMaterial color="#9A9A9A" {...std} />
+                <cylinderGeometry args={[0.12, 0.12, 0.32, 16]} />
+                <meshStandardMaterial color="#8A8A8A" {...std} />
               </mesh>
             </group>
           ))}
         </group>
-        <group ref={boom} position={[-2.5, 1.5, 0]}>
-          <mesh position={[2.7, 0, 0]}>
-            <boxGeometry args={[5.4, 0.35, 0.45]} />
-            <meshStandardMaterial color="#8A8A8A" {...std} />
-          </mesh>
-          <group ref={tele} position={[5.4, 0, 0]}>
-            <mesh position={[1.5, 0, 0]}>
-              <boxGeometry args={[3, 0.28, 0.4]} />
-              <meshStandardMaterial color="#A8A8A8" {...std} />
+<group ref={boom} position={[-2.5, 1.5, 0]}>
+            <mesh position={[2.7, 0, 0]}>
+              <boxGeometry args={[5.4, 0.35, 0.45]} />
+              <meshStandardMaterial color="#8A8A8A" {...std} />
             </mesh>
-            <group ref={level} position={[0.6, -0.4, 0]}>
+            <group ref={tele} position={[5.4, 0, 0]}>
               <mesh>
-                <boxGeometry args={[1.9, 0.25, 2.3]} />
-                <meshStandardMaterial map={hazT} {...std} />
+                <boxGeometry args={[3, 0.28, 0.4]} />
+                <meshStandardMaterial color="#A8A8A8" {...std} />
               </mesh>
-              <mesh position={[0, -1.15, 0]}>
-                <boxGeometry args={[5.6, 2.3, 2.3]} />
-                <meshStandardMaterial color="#E8E8E8" map={ribT} {...std} />
-              </mesh>
+              <group ref={level} position={[1.5, -0.45, 0]}>
+                <mesh>
+                  <boxGeometry args={[1.9, 0.25, 2.3]} />
+                  <meshStandardMaterial map={hazT} {...std} />
+                </mesh>
+                <mesh position={[0, -1.35, 0]}>
+                  <boxGeometry args={[5.6, 2.3, 2.3]} />
+                  <meshStandardMaterial map={ribT} color="#EDEDED" roughness={0.85} metalness={0} transparent={false} opacity={1} depthWrite={true} />
+                </mesh>
+              </group>
             </group>
           </group>
-        </group>
         <mesh position={[7.2, 1.15, 0]}>
           <boxGeometry args={[5.6, 2.3, 2.3]} />
           <meshStandardMaterial color="#24457A" map={ribT} {...std} />

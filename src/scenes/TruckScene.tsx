@@ -20,8 +20,8 @@ function Rig() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
   useLayoutEffect(() => {
     camera.fov = 30
-    camera.position.set(0, 2.4, 26)
-    camera.lookAt(0, 1.8, 0)
+    camera.position.set(0, 2.3, 24)
+    camera.lookAt(0, 1.7, 0)
     camera.updateProjectionMatrix()
   }, [])
   return null
@@ -56,21 +56,21 @@ export default function TruckScene() {
       <ContactShadows opacity={0.3} blur={3} scale={45} />
 
       <group ref={grp}>
-        <VisualTest label="TRUCK" target={() => grp.current} y={[285, 505]} x={[270, 1030]} />
-        <mesh position={[0, 0.6, 0]}>
-          <boxGeometry args={[12.5, 0.4, 1.4]} />
-          <meshStandardMaterial color="#111" {...std} />
+        <VisualTest label="TRUCK" target={() => grp.current} y={[270, 505]} x={[250, 1025]} />
+        <mesh position={[-0.2, 0.6, 0]}>
+          <boxGeometry args={[11.6, 0.4, 1.4]} />
+          <meshStandardMaterial color="#101010" {...std} />
         </mesh>
         <group ref={wheels}>
           {[-4.6, -3.4, -2.2, 3.6, 4.8].map((x, i) => (
-            <group key={i} position={[x, 0.5, 0]} rotation={[0, 0, Math.PI / 2]}>
+            <group key={i} position={[x, 0.6, 0]} rotation={[0, 0, Math.PI / 2]}>
               <mesh>
-                <cylinderGeometry args={[0.5, 0.5, 0.35, 32]} />
-                <meshStandardMaterial color="#141414" {...std} />
+                <cylinderGeometry args={[0.6, 0.6, 0.35, 32]} />
+                <meshStandardMaterial color="#101010" {...std} />
               </mesh>
               <mesh>
-                <cylinderGeometry args={[0.18, 0.18, 0.37, 16]} />
-                <meshStandardMaterial color="#9A9A9A" {...std} />
+                <cylinderGeometry args={[0.15, 0.15, 0.37, 16]} />
+                <meshStandardMaterial color="#8A8A8A" {...std} />
               </mesh>
             </group>
           ))}
@@ -85,27 +85,31 @@ export default function TruckScene() {
         </mesh>
         <mesh position={[4.4, 1.55, 0]}>
           <boxGeometry args={[2.4, 1.5, 2.2]} />
-          <meshStandardMaterial color="#E8E8E8" {...std} />
-        </mesh>
-        <mesh position={[4.4, 2.45, 0]}>
-          <boxGeometry args={[2.2, 0.3, 2.1]} />
-          <meshStandardMaterial color="#E8E8E8" {...std} />
+          <meshStandardMaterial color="#DFDFDF" {...std} />
         </mesh>
         <mesh position={[5.55, 2.1, 0]} rotation={[0, 0, -0.28]}>
           <boxGeometry args={[0.12, 0.8, 2.0]} />
           <meshStandardMaterial color="#101418" {...std} />
         </mesh>
-        <mesh position={[4.4, 2.0, -0.55]}>
-          <planeGeometry args={[1.2, 0.5]} />
+        <mesh position={[4.4, 2.0, -1.11]}>
+          <planeGeometry args={[1.4, 0.55]} />
           <meshStandardMaterial color="#101418" {...std} />
         </mesh>
-        <mesh position={[4.4, 2.0, 0.55]} rotation={[0, 0, 0]}>
-          <planeGeometry args={[1.2, 0.5]} />
+        <mesh position={[4.4, 2.0, 1.11]}>
+          <planeGeometry args={[1.4, 0.55]} />
           <meshStandardMaterial color="#101418" {...std} />
         </mesh>
         <mesh position={[5.62, 1.3, 0]}>
           <boxGeometry args={[0.1, 0.6, 1.8]} />
-          <meshStandardMaterial color="#101418" {...std} />
+          <meshStandardMaterial color="#111" {...std} />
+        </mesh>
+        <mesh position={[5.55, 1.7, -0.75]}>
+          <boxGeometry args={[0.06, 0.15, 0.3]} />
+          <meshStandardMaterial color="#f2f2f2" {...std} />
+        </mesh>
+        <mesh position={[5.55, 1.7, 0.75]}>
+          <boxGeometry args={[0.06, 0.15, 0.3]} />
+          <meshStandardMaterial color="#f2f2f2" {...std} />
         </mesh>
         <mesh position={[3.2, 2.8, 0]}>
           <cylinderGeometry args={[0.08, 0.08, 0.9, 12]} />
