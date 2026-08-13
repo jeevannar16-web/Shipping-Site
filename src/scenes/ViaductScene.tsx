@@ -158,6 +158,12 @@ export default function ViaductScene() {
       <directionalLight position={[-30, 40, -20]} intensity={2.2} color="#ffc98a" />
       <directionalLight position={[10, 4, 10]} intensity={0.3} color="#2b4bff" />
 
+      {/* viaduct cove sphere — background dome */}
+      <mesh scale={200}>
+        <sphereGeometry args={[1, 32, 32]} />
+        <meshBasicMaterial color="#101410" side={THREE.BackSide} />
+      </mesh>
+
       {/* water */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
         <planeGeometry args={[90, 90]} />

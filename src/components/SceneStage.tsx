@@ -16,8 +16,8 @@ export function CameraRig({ pos, look }: { pos: [number, number, number]; look: 
 
 const GlobalLights = (
   <>
-    <ambientLight intensity={0.7} />
-    <directionalLight position={[-6, 12, 8]} intensity={1.2} color="#ffffff" />
+    <ambientLight intensity={0.75} />
+    <directionalLight position={[-6, 12, 8]} intensity={1.1} color="#ffffff" />
   </>
 )
 

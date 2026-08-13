@@ -289,8 +289,8 @@ export default function Home() {
 
       <StickyScene index="6" mode="OCEAN" bg="bg-[#1E56A0]" line="Ocean freight, end to end." scrub={oceanScrub} sub="FCL, LCL and specialised cargo — across every major trade lane.">
         <SuspenseBox label="Ocean">
-          <SceneStage label="Ocean" tone="blue" camera={{ position: [0, 30, 20], fov: 60 }}>
-            <ShipScene />
+          <SceneStage label="Ocean" tone="blue" camera={{ position: [0, 36, 16], fov: 35 }}>
+            <ShipScene scrub={oceanScrub} />
           </SceneStage>
         </SuspenseBox>
         <div className="absolute left-6 top-8 z-10 md:left-10">
@@ -418,7 +418,7 @@ function HubsStrip() {
               </p>
               <p className="mt-3 flex flex-wrap gap-2">
                 {h.capabilities.slice(0, 4).map((c) => (
-                  <span key={c} className="rounded-full border border-white/10 px-3 py-1 text-[9px] uppercase tracking-[0.14em] text-white/50">
+                  <span key={c} className="rounded-full border border-white/10 px-3 py-1 text-[9px] uppercase tracking-[0.14em] text-white/50 transition-colors hover:border-orange/60 hover:text-orange">
                     {c}
                   </span>
                 ))}

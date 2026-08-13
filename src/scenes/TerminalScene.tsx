@@ -1,5 +1,5 @@
-import { useMemo, useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useMemo, useRef, useLayoutEffect } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import SceneCanvas from '../components/SceneCanvas'
 import { VisualTest } from '../dev/VisualTest'
@@ -80,9 +80,9 @@ function ContainerYard() {
   )
 }
 
-/** V6 — 2 white lane stripes painted on the dark apron. */
+/** V6 — 2 white lane stripes painted on the dark apron (z ± 12). */
 function Lanes() {
-  const stripes = useMemo(() => [-3.85, 3.85], [])
+  const stripes = useMemo(() => [-12, 12], [])
   return (
     <group>
       {stripes.map((z) => (
@@ -154,22 +154,22 @@ function GantryCrane() {
         [-9, 9].map((z) => (
           <mesh key={`${x}-${z}`} position={[x, 6, z]}>
             <boxGeometry args={[1, 12, 1]} />
-            <meshStandardMaterial color="#f2f2f2" roughness={0.5} metalness={0.2} />
+            <meshStandardMaterial color="#E8E8E8" roughness={0.5} metalness={0.2} />
           </mesh>
         )),
       )}
       {/* YARD — main beam (24,1.4,1.8) y 11.5 */}
       <mesh position={[0, 11.5, 0]}>
         <boxGeometry args={[24, 1.4, 1.8]} />
-        <meshStandardMaterial color="#3a3f45" roughness={0.4} metalness={0.4} />
+        <meshStandardMaterial color="#E8E8E8" roughness={0.4} metalness={0.4} />
       </mesh>
-      {/* YARD — trolley (2.5,1,2.5) #222 y 10.7 */}
+      {/* YARD — trolley (2.5,1,2.5) #333 y 10.7 */}
       <group ref={trolleyRef} position={[-6, 10.7, 0]}>
         <mesh>
           <boxGeometry args={[2.5, 1, 2.5]} />
-          <meshStandardMaterial color="#222222" roughness={0.4} />
+          <meshStandardMaterial color="#333333" roughness={0.4} />
         </mesh>
-        {/* YARD — cables trolley → spreader, r .06 */}
+        {/* YARD — cables trolley → spreader, r .05 */}
         {[1, -1].map((off, i) => (
           <mesh
             key={i}
@@ -178,7 +178,7 @@ function GantryCrane() {
               cableRefs.current[i] = el
             }}
           >
-            <cylinderGeometry args={[0.06, 0.06, 1, 6]} />
+            <cylinderGeometry args={[0.05, 0.05, 1, 6]} />
             <meshStandardMaterial color="#2a2a2a" metalness={0.8} />
           </mesh>
         ))}
@@ -198,23 +198,26 @@ function GantryCrane() {
   )
 }
 
-/** YARD — camera (0,13,26), lookAt (0,5,0). */
-function CameraPush() {
-  useFrame((state) => {
-    state.camera.position.set(0, 13, 26)
-    state.camera.lookAt(0, 5, 0)
-  })
+/** YARD — camera (0,15,32), lookAt (0,5,0). */
+function CameraRig() {
+  const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
+  useLayoutEffect(() => {
+    camera.fov = 35
+    camera.position.set(0, 15, 32)
+    camera.lookAt(0, 5, 0)
+    camera.updateProjectionMatrix()
+  }, [camera])
   return null
 }
 
 export default function TerminalScene() {
   const fitRef = useRef<THREE.Group>(null)
   return (
-    <SceneCanvas fallbackLabel="Terminal" tone="orange" camera={{ position: [0, 13, 26], fov: 50 }}>
+    <SceneCanvas fallbackLabel="Terminal" tone="orange" camera={{ position: [0, 15, 32], fov: 35 }}>
       <color attach="background" args={['#B8C4CC']} />
-      <fog attach="fog" args={['#B8C4CC', 40, 110]} />
-      <ambientLight intensity={0.7} />
-      <directionalLight position={[-6, 12, 8]} intensity={1.2} color="#ffffff" />
+      <fog attach="fog" args={['#B8C4CC', 50, 140]} />
+      <ambientLight intensity={0.75} />
+      <directionalLight position={[-6, 12, 8]} intensity={1.1} color="#ffffff" />
 
       <SkyDome />
       {/* YARD — dark apron #2E2E2E 400×400 + white lanes (sibling of measured group) */}
@@ -225,11 +228,11 @@ export default function TerminalScene() {
       <Lanes />
 
       <group ref={fitRef}>
-        <VisualTest label="YARD" target={() => fitRef.current} y={[100, 680]} x={[0, 1280]} />
+        <VisualTest label="YARD" target={() => fitRef.current} y={[160, 470]} x={[270, 1360]} />
         <ContainerYard />
         <GantryCrane />
       </group>
-      <CameraPush />
+      <CameraRig />
     </SceneCanvas>
   )
 }
