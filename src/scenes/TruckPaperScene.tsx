@@ -4,6 +4,7 @@ import { ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
 import SceneCanvas from '../components/SceneCanvas'
 import { AutoFitCamera } from './fitCamera'
+import { clamp01, type ScrubRef } from '../lib/scrub'
 
 /** R2 — trailer rib texture (no thin rib meshes). */
 function useTrailerTexture() {
@@ -94,7 +95,7 @@ function Wheel({ x, z, refs, iBase }: { x: number; z: number; refs: React.Mutabl
 }
 
 /** G4 — side-view truck: trailer -6.5..+3.0, cab +3.2..+5.6, wheels r .55. */
-function TruckRig() {
+function TruckRig({ scrub }: { scrub?: ScrubRef }) {
   const groupRef = useRef<THREE.Group>(null)
   const wheelRefs = useRef<Array<THREE.Mesh | null>>([])
 
@@ -108,14 +109,21 @@ function TruckRig() {
 
   useFrame((_, dt) => {
     const t = performance.now() / 1000
-    // wheel spin + bob
-    wheelRefs.current.forEach((w, i) => {
-      if (!w) return
-      wheelSpins.current[i] += dt * 7
-      w.rotation.y = wheelSpins.current[i]
-    })
-    if (groupRef.current) {
-      groupRef.current.position.y = Math.sin(t * 2.2) * 0.02
+    if (scrub && scrub.current !== undefined) {
+      const p = clamp01(scrub.current)
+      wheelRefs.current.forEach((w, i) => {
+        if (w) w.rotation.y = p * 28 + i * 0.01
+      })
+      if (groupRef.current) groupRef.current.position.y = 0
+    } else {
+      wheelRefs.current.forEach((w, i) => {
+        if (!w) return
+        wheelSpins.current[i] += dt * 7
+        w.rotation.y = wheelSpins.current[i]
+      })
+      if (groupRef.current) {
+        groupRef.current.position.y = Math.sin(t * 2.2) * 0.02
+      }
     }
   })
 
@@ -171,7 +179,7 @@ function TruckRig() {
   )
 }
 
-export default function TruckPaperScene() {
+export default function TruckPaperScene({ scrub }: { scrub?: ScrubRef }) {
   const modelRef = useRef<THREE.Group>(null)
 
   return (
@@ -188,28 +196,36 @@ export default function TruckPaperScene() {
       </mesh>
 
       {/* scrolling ground dashes */}
-      <DashScroll />
+      <DashScroll scrub={scrub} />
 
       <ContactShadows position={[0, 0, 0]} opacity={0.4} scale={40} blur={2.5} far={7} resolution={512} color="#000000" />
 
       <group ref={modelRef}>
-        <TruckRig />
+        <TruckRig scrub={scrub} />
       </group>
-      <AutoFitCamera target={modelRef} coverage={0.7} axis={[0, 0.15, 1]} fov={30} />
+      <AutoFitCamera target={modelRef} coverage={0.75} axis={[0, 0.15, 1]} fov={30} />
     </SceneCanvas>
   )
 }
 
-/** Rendered inside the Canvas — scrolls the ground dash line left. */
-function DashScroll() {
+/** Rendered inside the Canvas — scrolls the ground dash line. Scrubbed: dashes slide x -40 → 0. */
+function DashScroll({ scrub }: { scrub?: ScrubRef }) {
   const dashRef = useRef<THREE.Group>(null)
   useFrame((state) => {
     const t = state.clock.elapsedTime
     if (dashRef.current) {
-      const off = (t * 4) % 1.5
-      dashRef.current.children.forEach((c, i) => {
-        c.position.x = -9 + ((i * 1.5 + off) % 18)
-      })
+      if (scrub && scrub.current !== undefined) {
+        const p = clamp01(scrub.current)
+        dashRef.current.position.x = -40 + 40 * p
+        dashRef.current.children.forEach((c, i) => {
+          c.position.x = -9 + ((p * 18 + i * 1.5) % 18)
+        })
+      } else {
+        const off = (t * 4) % 1.5
+        dashRef.current.children.forEach((c, i) => {
+          c.position.x = -9 + ((i * 1.5 + off) % 18)
+        })
+      }
     }
   })
   return (

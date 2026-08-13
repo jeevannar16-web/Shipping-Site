@@ -287,11 +287,11 @@ function StackerScene() {
         </mesh>
       ))}
 
-      {/* held container — OPAQUE (R1), ribs via texture (R2) */}
+      {/* held container — OPAQUE (R1), #E8E8E8, ribs via texture (R2) */}
       <group ref={containerRef} position={[-4.6, 1.4, 0]}>
         <mesh>
           <boxGeometry args={CONTAINER} />
-          <meshStandardMaterial map={ribs} color="#ffffff" roughness={0.7} metalness={0.15} flatShading />
+          <meshStandardMaterial map={ribs} color="#e8e8e8" roughness={0.7} metalness={0.15} flatShading />
         </mesh>
       </group>
 
@@ -315,16 +315,16 @@ export default function ReachStackerScene() {
 
       {/* R6 — studio cove floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.001, 0]}>
-        <planeGeometry args={[120, 120]} />
+        <planeGeometry args={[400, 400]} />
         <meshStandardMaterial color="#e6e1d8" roughness={1} />
       </mesh>
 
-      <ContactShadows position={[0, 0, 0]} opacity={0.4} scale={44} blur={2.5} far={6} resolution={512} color="#000000" />
+      <ContactShadows position={[0, 0, 0]} opacity={0.45} scale={160} blur={2.8} far={10} resolution={1024} color="#000000" />
 
       <group ref={modelRef}>
         <StackerScene />
       </group>
-      <AutoFitCamera target={modelRef} coverage={0.7} axis={[0, 0.35, 1]} fov={35} />
+      <AutoFitCamera target={modelRef} coverage={0.8} axis={[0, 0.35, 1]} fov={35} />
     </SceneCanvas>
   )
 }

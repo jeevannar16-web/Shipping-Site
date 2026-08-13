@@ -265,6 +265,85 @@ body {
   }
 }
 
+/* I1 — globe marker tag: scale-up + reveal second line on hover */
+.globe-tag {
+  pointer-events: auto;
+  transform: scale(1);
+  transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.globe-tag:hover {
+  transform: scale(1.1);
+}
+.globe-tag .globe-tag-sub {
+  display: block;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+.globe-tag:hover .globe-tag-sub {
+  max-height: 2em;
+  opacity: 1;
+}
+
+/* I1 — hover cards: orange border, lift -4px, orange index, inner media zoom */
+.hover-card {
+  transition: border-color 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease, background-color 0.35s ease;
+}
+.hover-card:hover {
+  border-color: #ff4a00;
+  transform: translateY(-4px);
+  box-shadow: 0 14px 32px rgba(255, 74, 0, 0.14);
+}
+.hover-card .hc-index {
+  transition: color 0.3s ease;
+}
+.hover-card:hover .hc-index {
+  color: #ff4a00;
+}
+.hover-card .hc-media {
+  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.hover-card:hover .hc-media {
+  transform: scale(1.05);
+}
+
+/* I1 — marquees double-speed on hover */
+.marquee-track:hover,
+.marquee-track-reverse:hover {
+  animation-duration: 15s;
+}
+
+/* I1 — stat count-underlined on finish */
+.stat-underline {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  display: block;
+  width: 2.25rem;
+  height: 2px;
+  background: #ff4a00;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.6s 0.15s ease-out;
+}
+.stat-underline.on {
+  transform: scaleX(1);
+}
+
+/* I1 — smooth FAQ accordion (grid-rows collapse) */
+.acc-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.acc-panel.open {
+  grid-template-rows: 1fr;
+}
+.acc-panel > div {
+  overflow: hidden;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .marquee-track,
   .marquee-track-reverse,

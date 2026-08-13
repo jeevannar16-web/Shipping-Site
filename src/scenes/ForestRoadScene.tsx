@@ -14,7 +14,7 @@ function TruckDrive() {
   })
   return (
     <group ref={ref} rotation={[0, 0, 0]}>
-      <Truck cabColor="#1a1a1a" containerColor="#f2f2f2" ribCount={10} />
+      <Truck cabColor="#8a8a8a" containerColor="#ffffff" ribCount={10} stripe shadow />
     </group>
   )
 }
@@ -33,28 +33,38 @@ export default function ForestRoadScene() {
   return (
     <SceneCanvas fallbackLabel="Industries" tone="violet" camera={{ position: [0, 55, 0], fov: 30 }}>
       <color attach="background" args={['#0b0b0c']} />
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[0, 60, 0]} intensity={1.2} color="#ffffff" />
+      <ambientLight intensity={0.7} />
+      <directionalLight position={[0, 60, 0]} intensity={1.4} color="#ffffff" />
 
       {/* ground */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
-        <planeGeometry args={[90, 90]} />
+        <planeGeometry args={[120, 120]} />
         <meshStandardMaterial color="#16260f" roughness={1} />
       </mesh>
 
-      {/* dense forest both sides */}
+      {/* dense forest both sides — spaced, 3 greens */}
       <InstancedTrees
-        count={900}
-        min={1.2}
-        max={2.2}
-        area={45}
+        count={1200}
+        min={1.5}
+        max={2.5}
+        area={55}
         center={[0, 0]}
         height={0}
+        colors={['#2e5b26', '#3e6b32', '#4e7b3a']}
+        spacing={2.5}
         avoid={(x) => Math.abs(x) < 6}
       />
 
-      {/* road: vertical, width 8 with dashes + edges */}
-      <CurvedRoad curve={curve} width={8} color="#2b2b2b" y={0.02} />
+      {/* road: vertical, width 8, #3A3A3A + bright edges + #E8E8E8 dashes */}
+      <CurvedRoad
+        curve={curve}
+        width={8}
+        color="#3a3a3a"
+        y={0.02}
+        dashColor="#e8e8e8"
+        edgeColor="#ffffff"
+        dashSize={[0.28, 3]}
+      />
 
       {/* truck driving downward */}
       <TruckDrive />

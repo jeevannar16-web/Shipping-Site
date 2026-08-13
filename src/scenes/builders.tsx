@@ -44,12 +44,16 @@ export function Truck({
   ribCount: _ribCount = 12,
   driving = true,
   bob = true,
+  shadow = false,
+  stripe = false,
 }: {
   cabColor?: string
   containerColor?: string
   ribCount?: number
   driving?: boolean
   bob?: boolean
+  shadow?: boolean
+  stripe?: boolean
 }) {
   const wheelRefs = useRef<(THREE.Mesh | null)[]>([])
   const groupRef = useRef<THREE.Group | null>(null)
@@ -100,6 +104,12 @@ export function Truck({
         <boxGeometry args={[2.4, 2.6, 7.5]} />
         <meshStandardMaterial map={ribTex} color="#ffffff" roughness={0.7} metalness={0.2} />
       </mesh>
+      {stripe && (
+        <mesh position={[0, 1.5, -1.9]}>
+          <boxGeometry args={[2.46, 0.24, 7.5]} />
+          <meshStandardMaterial color="#222" roughness={0.6} />
+        </mesh>
+      )}
       {/* exhaust stacks */}
       <mesh position={[0.75, 1.6, 2.75]}>
         <cylinderGeometry args={[0.09, 0.09, 0.7, 8]} />
@@ -130,6 +140,12 @@ export function Truck({
           ))}
         </group>
       ))}
+      {shadow && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -0.9]}>
+          <circleGeometry args={[1.7, 24]} />
+          <meshBasicMaterial color="#000000" transparent opacity={0.4} depthWrite={false} />
+        </mesh>
+      )}
     </group>
   )
 }
@@ -142,6 +158,9 @@ export function CurvedRoad({
   y = 0,
   dashed = true,
   edgeLines = true,
+  dashSize = [0.18, 1.1] as [number, number],
+  dashColor = '#f2f2f2',
+  edgeColor = '#f2f2f2',
 }: {
   curve: THREE.CatmullRomCurve3
   width?: number
@@ -149,6 +168,9 @@ export function CurvedRoad({
   y?: number
   dashed?: boolean
   edgeLines?: boolean
+  dashSize?: [number, number]
+  dashColor?: string
+  edgeColor?: string
 }) {
   const roadGeo = useMemo(() => {
     const pts = curve.getSpacedPoints(160)
@@ -212,15 +234,15 @@ export function CurvedRoad({
       {dashed &&
         dashes.map((d, i) => (
           <mesh key={`d${i}`} position={d.pos} rotation={[0, d.rot, 0]}>
-            <planeGeometry args={[0.18, 1.1]} />
-            <meshBasicMaterial color="#f2f2f2" />
+            <boxGeometry args={[dashSize[0], 0.02, dashSize[1]]} />
+            <meshBasicMaterial color={dashColor} />
           </mesh>
         ))}
       {edgeLines &&
         edges.map((e, i) => (
           <mesh key={`e${i}`} position={e.pos} rotation={[0, e.rot, 0]}>
-            <planeGeometry args={[0.09, 1]} />
-            <meshBasicMaterial color="#f2f2f2" />
+            <boxGeometry args={[0.09, 0.02, 1]} />
+            <meshBasicMaterial color={edgeColor} />
           </mesh>
         ))}
     </group>
@@ -236,6 +258,8 @@ export function InstancedTrees({
   center = [0, 0] as [number, number],
   avoid = (_x: number, _z: number) => false,
   height = 0,
+  colors = ['#2e5b26', '#3e6b32'],
+  spacing = 0,
 }: {
   count?: number
   min?: number
@@ -244,42 +268,53 @@ export function InstancedTrees({
   center?: [number, number]
   avoid?: (x: number, z: number) => boolean
   height?: number
+  colors?: string[]
+  spacing?: number
 }) {
-  const { dark, light } = useMemo(() => {
+  const meshes = useMemo(() => {
     const geo = new THREE.IcosahedronGeometry(1, 0)
-    const darkMat = new THREE.MeshStandardMaterial({ color: '#2e4b26', flatShading: true })
-    const lightMat = new THREE.MeshStandardMaterial({ color: '#3e5b32', flatShading: true })
-    const dark = new THREE.InstancedMesh(geo, darkMat, count)
-    const light = new THREE.InstancedMesh(geo, lightMat, count)
+    const mats = colors.map((c) => new THREE.MeshStandardMaterial({ color: c, flatShading: true }))
+    const inst = mats.map(() => new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial(), count))
     const m = new THREE.Matrix4()
     const q = new THREE.Quaternion()
     const e = new THREE.Euler()
+    const used = new Set<string>()
+    const cell = Math.max(1, Math.round(spacing))
     let placed = 0
     let guard = 0
-    while (placed < count && guard < count * 20) {
+    while (placed < count && guard < count * 40) {
       guard++
       const x = center[0] + (Math.random() - 0.5) * area * 2
       const z = center[1] + (Math.random() - 0.5) * area * 2
       if (avoid(x, z)) continue
+      if (spacing > 0) {
+        const k = `${Math.round(x / cell)}:${Math.round(z / cell)}`
+        if (used.has(k)) continue
+        used.add(k)
+      }
       const s = min + Math.random() * (max - min)
       e.set(Math.random() * 0.3, Math.random() * Math.PI, Math.random() * 0.3)
       q.setFromEuler(e)
       m.compose(new THREE.Vector3(x, height + s * 0.6, z), q, new THREE.Vector3(s, s, s))
-      const target = placed % 2 === 0 ? dark : light
-      target.setMatrixAt(Math.floor(placed / 2), m)
+      const meshIdx = placed % colors.length
+      inst[meshIdx].setMatrixAt(Math.floor(placed / colors.length), m)
       placed++
     }
-    dark.count = Math.ceil(placed / 2)
-    light.count = Math.floor(placed / 2)
-    dark.instanceMatrix.needsUpdate = true
-    light.instanceMatrix.needsUpdate = true
-    return { dark, light }
-  }, [count, min, max, area, center, avoid, height])
+    inst.forEach((mm, i) => {
+      let n = 0
+      for (let k = i; k < placed; k += colors.length) n++
+      mm.count = n
+      mm.material = mats[i]
+      mm.instanceMatrix.needsUpdate = true
+    })
+    return inst
+  }, [count, min, max, area, center, avoid, height, colors, spacing])
 
   return (
     <group>
-      <primitive object={dark} />
-      <primitive object={light} />
+      {meshes.map((mm, i) => (
+        <primitive key={i} object={mm} />
+      ))}
     </group>
   )
 }

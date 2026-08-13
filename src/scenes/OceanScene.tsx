@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import SceneCanvas from '../components/SceneCanvas'
 import { AutoFitCamera } from './fitCamera'
+import { clamp01, type ScrubRef } from '../lib/scrub'
 
 const CONTAINER_COLORS = ['#b4362b', '#24457a', '#2e5b40', '#c46a2b', '#d0d0d0', '#6b2b8a']
 const CONTAINER: [number, number, number] = [2.2, 1.2, 2.2]
@@ -52,16 +53,16 @@ function Hull() {
 
   return (
     <group>
-      {/* hull spans y -1..2.5 */}
-      <mesh geometry={geo} position={[0, -1, 0]}>
+      {/* hull spans y -1.2 .. 2.6 */}
+      <mesh geometry={geo} position={[0, -1.2, 0]}>
         <meshStandardMaterial color="#14213d" roughness={0.55} metalness={0.25} flatShading />
       </mesh>
-      {/* white waterline stripe */}
-      <mesh geometry={stripeGeo} position={[0, 0.1, 0]}>
+      {/* white waterline stripe at sea level */}
+      <mesh geometry={stripeGeo} position={[0, 1.2, 0]}>
         <meshStandardMaterial color="#f2f2f2" roughness={0.6} />
       </mesh>
-      {/* deck, y 2.5 */}
-      <mesh position={[0, 2.5, 0]}>
+      {/* deck, y 2.6 */}
+      <mesh position={[0, 2.6, 0]}>
         <boxGeometry args={[6.4, 0.4, 26]} />
         <meshStandardMaterial color="#cfd6de" roughness={0.8} />
       </mesh>
@@ -88,7 +89,7 @@ function Containers() {
         const h = 1 + ((col * 7 + row * 3) % 3)
         const colorIdx = (col * 7 + row * 3) % 6
         for (let k = 0; k < h; k++) {
-          m.makeTranslation(x, 2.5 + k * 1.22 + 0.6, z)
+          m.makeTranslation(x, 2.6 + k * 1.22 + 0.6, z)
           inst[colorIdx].setMatrixAt(idx++, m)
         }
       }
@@ -146,46 +147,68 @@ function FoamDots() {
   )
 }
 
-function Wake() {
+function Wake({ scrub }: { scrub?: ScrubRef }) {
+  const aRef = useRef<THREE.Mesh>(null)
+  const bRef = useRef<THREE.Mesh>(null)
+  const cRef = useRef<THREE.Mesh>(null)
+  useFrame(() => {
+    if (scrub && scrub.current !== undefined) {
+      const p = clamp01(scrub.current)
+      const op = 0.15 + 0.35 * Math.sin(p * Math.PI)
+      const set = (m: THREE.Mesh | null) => {
+        if (m) (m.material as THREE.MeshBasicMaterial).opacity = op
+      }
+      set(aRef.current)
+      set(bRef.current)
+      set(cRef.current)
+    }
+  })
   return (
     <group>
       {/* bow V-plane (bow faces -Z) */}
-      <mesh rotation={[0, 0, 0]} position={[0, 0.07, -15]}>
+      <mesh ref={aRef} rotation={[0, 0, 0]} position={[0, 0.07, -15]}>
         <planeGeometry args={[9, 5]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.35} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.5} />
       </mesh>
       {/* trailing streaks */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[4.3, 0.06, 3]}>
+      <mesh ref={bRef} rotation={[-Math.PI / 2, 0, 0]} position={[4.3, 0.06, 3]}>
         <planeGeometry args={[1.4, 32]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.35} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.5} />
       </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-4.3, 0.06, 3]}>
+      <mesh ref={cRef} rotation={[-Math.PI / 2, 0, 0]} position={[-4.3, 0.06, 3]}>
         <planeGeometry args={[1.4, 32]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.35} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.5} />
       </mesh>
     </group>
   )
 }
 
-function Ship() {
+function Ship({ scrub }: { scrub?: ScrubRef }) {
   const ref = useRef<THREE.Group>(null)
   useFrame((state) => {
     if (!ref.current) return
     const t = state.clock.elapsedTime
-    ref.current.position.x = Math.sin(t * 0.07) * 0.5
-    ref.current.rotation.z = Math.sin(t * 0.3) * 0.007 // ±0.4°
+    if (scrub && scrub.current !== undefined) {
+      const p = clamp01(scrub.current)
+      ref.current.position.z = -8 + 16 * p
+      ref.current.position.x = 0
+      ref.current.rotation.z = Math.sin(t * 0.3) * 0.003
+    } else {
+      ref.current.position.x = Math.sin(t * 0.07) * 0.5
+      ref.current.rotation.z = Math.sin(t * 0.3) * 0.007 // ±0.4°
+    }
   })
   return (
     <group ref={ref}>
       <Hull />
       <Containers />
-      {/* bridge at stern (+Z), taller than containers */}
-      <group position={[0, 2.5, 10.5]}>
+      {/* bridge at stern (+Z), h 5, on deck y 2.6 */}
+      <group position={[0, 2.6, 10.5]}>
         <mesh>
-          <boxGeometry args={[6, 4.5, 2.4]} />
+          <boxGeometry args={[6, 5, 2.4]} />
           <meshStandardMaterial color="#f2f2f2" roughness={0.6} />
         </mesh>
-        <mesh position={[0, 1.4, 1.22]}>
+        <mesh position={[0, 1.6, 1.22]}>
           <boxGeometry args={[5.4, 1.1, 0.06]} />
           <meshStandardMaterial color="#0a2a4a" roughness={0.3} metalness={0.5} />
         </mesh>
@@ -210,7 +233,7 @@ function Sea() {
     <group>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.2, 0]}>
         <planeGeometry args={[90, 90]} />
-        <meshStandardMaterial color="#1b4e8a" roughness={0.4} metalness={0.1} />
+        <meshStandardMaterial color="#1e56a0" roughness={0.4} metalness={0.1} />
       </mesh>
       {refs.map((r, i) => (
         <mesh key={i} ref={r} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.001 + i * 0.001, 0]}>
@@ -222,22 +245,22 @@ function Sea() {
   )
 }
 
-export default function OceanScene() {
+export default function OceanScene({ scrub }: { scrub?: ScrubRef }) {
   const modelRef = useRef<THREE.Group>(null)
 
   return (
     <SceneCanvas fallbackLabel="Ocean" tone="blue" camera={{ position: [0, 38, 14], fov: 35 }}>
-      <color attach="background" args={['#1b4e8a']} />
-      <fog attach="fog" args={['#1b4e8a', 60, 140]} />
+      <color attach="background" args={['#1e56a0']} />
+      <fog attach="fog" args={['#1e56a0', 60, 140]} />
       <ambientLight intensity={0.6} />
       <directionalLight position={[10, 30, 10]} intensity={1.6} color="#ffffff" />
 
       <Sea />
       <group ref={modelRef}>
-        <Ship />
+        <Ship scrub={scrub} />
       </group>
-      <Wake />
-      <AutoFitCamera target={modelRef} coverage={0.8} axis={[0, 0.85, 0.35]} fov={35} />
+      <Wake scrub={scrub} />
+      <AutoFitCamera target={modelRef} coverage={0.85} axis={[0, 0.9, 0.34]} fov={35} />
     </SceneCanvas>
   )
 }

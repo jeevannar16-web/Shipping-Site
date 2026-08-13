@@ -1,4 +1,4 @@
-import { createElement, useEffect, useRef, type ElementType, type ReactNode } from 'react'
+import { createElement, useEffect, useRef, useState, type ElementType, type ReactNode } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
@@ -96,9 +96,10 @@ export function FadeUp({ children, className = '', y = 40, delay = 0 }: {
   )
 }
 
-/** Count up to target when scrolled into view. */
-export function Counter({ value, suffix = '', className = '' }: { value: number; suffix?: string; className?: string }) {
+/** Count up to target when scrolled into view. Optional orange underline on finish. */
+export function Counter({ value, suffix = '', className = '', underline = false }: { value: number; suffix?: string; className?: string; underline?: boolean }) {
   const ref = useRef<HTMLSpanElement | null>(null)
+  const [done, setDone] = useState(false)
   useEffect(() => {
     registerGsap()
     const el = ref.current
@@ -106,6 +107,7 @@ export function Counter({ value, suffix = '', className = '' }: { value: number;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (reduced) {
       el.textContent = `${value.toLocaleString()}${suffix}`
+      setDone(true)
       return
     }
     const obj = { n: 0 }
@@ -124,6 +126,7 @@ export function Counter({ value, suffix = '', className = '' }: { value: number;
       paused: true,
       onUpdate: () => {
         el.textContent = `${Math.round(obj.n).toLocaleString()}${suffix}`
+        if (Math.round(obj.n) >= value) setDone(true)
       },
     })
     return () => {
@@ -132,9 +135,46 @@ export function Counter({ value, suffix = '', className = '' }: { value: number;
     }
   }, [value, suffix])
   return (
-    <span ref={ref} className={className}>
-      0{suffix}
+    <span className={`relative inline-block ${underline ? 'pb-3' : ''}`}>
+      <span ref={ref} className={className}>
+        0{suffix}
+      </span>
+      {underline && <span className={`stat-underline ${done ? 'on' : ''}`} />}
     </span>
+  )
+}
+
+/** I1 — magnetic wrapper: pulls toward the cursor (≤12px), springs back on leave. */
+export function Magnetic({ children, strength = 0.3, className = '' }: { children: ReactNode; strength?: number; className?: string }) {
+  const ref = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const xTo = gsap.quickTo(el, 'x', { duration: 0.35, ease: 'power3.out' })
+    const yTo = gsap.quickTo(el, 'y', { duration: 0.35, ease: 'power3.out' })
+    const max = 12
+    const onMove = (e: MouseEvent) => {
+      const r = el.getBoundingClientRect()
+      const relX = (e.clientX - (r.left + r.width / 2)) * strength
+      const relY = (e.clientY - (r.top + r.height / 2)) * strength
+      xTo(Math.max(-max, Math.min(max, relX)))
+      yTo(Math.max(-max, Math.min(max, relY)))
+    }
+    const onLeave = () => {
+      gsap.to(el, { x: 0, y: 0, duration: 0.7, ease: 'elastic.out(1, 0.4)' })
+    }
+    el.addEventListener('mousemove', onMove)
+    el.addEventListener('mouseleave', onLeave)
+    return () => {
+      el.removeEventListener('mousemove', onMove)
+      el.removeEventListener('mouseleave', onLeave)
+    }
+  }, [strength])
+  return (
+    <div ref={ref} className={`inline-block will-change-transform ${className}`}>
+      {children}
+    </div>
   )
 }
 

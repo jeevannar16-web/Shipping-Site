@@ -1,5 +1,5 @@
-import { useMemo, useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useEffect, useMemo, useRef } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import * as THREE from 'three'
 import SceneCanvas from '../components/SceneCanvas'
@@ -17,16 +17,16 @@ function latLng(lat: number, lng: number, r = RADIUS) {
   )
 }
 
-const MARKERS: { id: string; label: string; lat: number; lng: number }[] = [
-  { id: 'gb', label: 'UK', lat: 54, lng: -2 },
-  { id: 'de', label: 'GERMANY', lat: 51, lng: 10 },
-  { id: 'us', label: 'USA', lat: 39, lng: -98 },
-  { id: 'jp', label: 'JAPAN', lat: 36, lng: 138 },
-  { id: 'cn', label: 'CHINA', lat: 35, lng: 104 },
-  { id: 'in', label: 'INDIA', lat: 21, lng: 78 },
-  { id: 'hk', label: 'HONG KONG', lat: 22, lng: 114 },
-  { id: 'au', label: 'AUSTRALIA', lat: -25, lng: 134 },
-  { id: 'np', label: 'NEPAL', lat: 28, lng: 84 },
+const MARKERS: { id: string; label: string; sub: string; lat: number; lng: number }[] = [
+  { id: 'gb', label: 'UK', sub: 'EUROPE', lat: 54, lng: -2 },
+  { id: 'de', label: 'GERMANY', sub: 'EUROPE', lat: 51, lng: 10 },
+  { id: 'us', label: 'USA', sub: 'AMERICAS', lat: 39, lng: -98 },
+  { id: 'jp', label: 'JAPAN', sub: 'EAST ASIA', lat: 36, lng: 138 },
+  { id: 'cn', label: 'CHINA', sub: 'EAST ASIA', lat: 35, lng: 104 },
+  { id: 'in', label: 'INDIA', sub: 'SOUTH ASIA', lat: 21, lng: 78 },
+  { id: 'hk', label: 'HONG KONG', sub: 'EAST ASIA', lat: 22, lng: 114 },
+  { id: 'au', label: 'AUSTRALIA', sub: 'OCEANIA', lat: -25, lng: 134 },
+  { id: 'np', label: 'NEPAL', sub: 'SOUTH ASIA', lat: 28, lng: 84 },
 ]
 
 /** Canvas-generated round alpha map so every point renders as a clean circle. */
@@ -108,11 +108,11 @@ function Glow() {
   const blue = useGlowTexture('#2b4bff')
   return (
     <group>
-      <sprite position={[0, RADIUS, 0]} scale={[10, 10, 1]}>
-        <spriteMaterial map={orange} transparent opacity={0.8} blending={THREE.AdditiveBlending} depthWrite={false} />
+      <sprite position={[0, 3.1, -0.8]} scale={[6.5, 6.5, 1]} renderOrder={-1}>
+        <spriteMaterial map={orange} transparent opacity={0.55} blending={THREE.AdditiveBlending} depthWrite={false} />
       </sprite>
-      <sprite position={[0, -RADIUS, 0]} scale={[11, 11, 1]}>
-        <spriteMaterial map={blue} transparent opacity={0.8} blending={THREE.AdditiveBlending} depthWrite={false} />
+      <sprite position={[0, -3.3, -0.8]} scale={[7, 7, 1]} renderOrder={-1}>
+        <spriteMaterial map={blue} transparent opacity={0.55} blending={THREE.AdditiveBlending} depthWrite={false} />
       </sprite>
     </group>
   )
@@ -198,7 +198,7 @@ function Arcs() {
   )
 }
 
-/** G1 — orange marker dots + tags; hide a tag when its point faces away. */
+/** G1 — orange marker dots + tags; hide a tag when it faces away or sits left of 52vw. */
 function Markers() {
   const groupRef = useRef<THREE.Group>(null)
   const labelRefs = useRef<Array<HTMLDivElement | null>>([])
@@ -207,18 +207,24 @@ function Markers() {
   const worldPos = useMemo(() => new THREE.Vector3(), [])
   const normal = useMemo(() => new THREE.Vector3(), [])
   const camDir = useMemo(() => new THREE.Vector3(), [])
+  const screen = useMemo(() => new THREE.Vector3(), [])
 
   useFrame((state) => {
     const g = groupRef.current
     if (!g) return
     g.updateMatrixWorld()
     g.getWorldPosition(center)
+    const vw = state.size.width
     for (let i = 0; i < base.length; i++) {
       worldPos.copy(base[i]).applyMatrix4(g.matrixWorld)
       normal.copy(worldPos).sub(center).normalize()
       camDir.copy(state.camera.position).sub(worldPos).normalize()
       const el = labelRefs.current[i]
-      if (el) el.style.opacity = camDir.dot(normal) < 0.1 ? '0' : '1'
+      if (!el) continue
+      screen.copy(worldPos).project(state.camera)
+      const screenX = (screen.x * 0.5 + 0.5) * vw
+      const hidden = camDir.dot(normal) < 0.1 || screenX < vw * 0.52
+      el.style.opacity = hidden ? '0' : '1'
     }
   })
 
@@ -237,17 +243,21 @@ function Markers() {
               center
               distanceFactor={30}
               zIndexRange={[30, 0]}
-              style={{ pointerEvents: 'none' }}
+              style={{ pointerEvents: 'auto' }}
             >
               <div
                 ref={(el) => {
                   labelRefs.current[i] = el
                 }}
-                className="flex items-center gap-1.5 whitespace-nowrap px-2 py-0.5 font-mono text-[10px] leading-none tracking-[0.14em] text-white transition-opacity duration-300"
+                data-hover
+                className="globe-tag flex items-center gap-1.5 whitespace-nowrap px-2 py-0.5 font-mono text-[10px] leading-none tracking-[0.14em] text-white transition-opacity duration-300"
                 style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 30 }}
               >
                 <span className="inline-block h-[3px] w-[3px] rounded-full bg-[#ff4a00]" />
-                {m.label}
+                <span className="flex flex-col">
+                  <span>{m.label}</span>
+                  <span className="globe-tag-sub font-mono text-[8px] tracking-[0.18em] text-white/55">{m.sub}</span>
+                </span>
               </div>
             </Html>
           </group>
@@ -257,14 +267,43 @@ function Markers() {
   )
 }
 
-/** G1 — group at (3.1,-0.2,0), rotation 0.0008/frame, parallax .05. */
+/** G1 — group at (3.1,-0.2,0): pointer drag with velocity + damping, parallax tilt. */
 function Rig() {
   const ref = useRef<THREE.Group>(null)
+  const drag = useRef({ down: false, lastX: 0, v: 0 })
+  const domEl = useThree((s) => s.gl.domElement)
+
+  useEffect(() => {
+    const d = drag.current
+    const onDown = (e: PointerEvent) => {
+      d.down = true
+      d.lastX = e.clientX
+    }
+    const onMove = (e: PointerEvent) => {
+      if (!d.down) return
+      const dx = e.clientX - d.lastX
+      d.lastX = e.clientX
+      d.v += dx * 0.004
+    }
+    const onUp = () => {
+      d.down = false
+    }
+    domEl.addEventListener('pointerdown', onDown)
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+    return () => {
+      domEl.removeEventListener('pointerdown', onDown)
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+    }
+  }, [domEl])
 
   useFrame((state) => {
     const g = ref.current
     if (!g) return
-    g.rotation.y += 0.0008
+    g.rotation.y += drag.current.v
+    drag.current.v *= 0.94
+    if (Math.abs(drag.current.v) < 0.0005) g.rotation.y += 0.0008
     g.rotation.x = THREE.MathUtils.lerp(g.rotation.x, -state.pointer.y * 0.05, 0.05)
   })
 
@@ -281,6 +320,7 @@ function Rig() {
 export default function GlobeScene() {
   return (
     <SceneCanvas fallbackLabel="Global" tone="violet" camera={{ position: [0, 0, 10], fov: 45 }}>
+      <color attach="background" args={['#050505']} />
       <ambientLight intensity={0.5} />
       <Stars count={400} />
       <Rig />

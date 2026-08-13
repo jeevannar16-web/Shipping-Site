@@ -91,7 +91,7 @@ function Traffic({ curve, laneSign = 1, count = 12 }: { curve: THREE.CatmullRomC
       const p = curve.getPointAt(progress)
       const t = curve.getTangentAt(progress)
       const right = new THREE.Vector3(-t.z, 0, t.x).normalize()
-      const pos = new THREE.Vector3(p.x + right.x * 1.2 * laneSign, 10.6, p.z + right.z * 1.2 * laneSign)
+      const pos = new THREE.Vector3(p.x + right.x * 1.6 * laneSign, 10.6, p.z + right.z * 1.6 * laneSign)
       const fwd = new THREE.Vector3(t.x, 0, t.z).normalize()
       e.set(0, Math.atan2(fwd.x, fwd.z), 0)
       q.setFromEuler(e)
@@ -153,29 +153,29 @@ export default function ViaductScene() {
   return (
     <SceneCanvas fallbackLabel="About" tone="blue" camera={{ position: [0, 26, 28], fov: 35 }}>
       <color attach="background" args={['#0b0b0c']} />
-      <fog attach="fog" args={['#3a2417', 20, 70]} />
-      <ambientLight intensity={0.4} />
-      <directionalLight position={[-30, 40, -20]} intensity={2} color="#ffd9a0" />
+      <fog attach="fog" args={['#1a1410', 60, 140]} />
+      <ambientLight intensity={0.6} />
+      <directionalLight position={[-30, 40, -20]} intensity={2.2} color="#ffc98a" />
       <directionalLight position={[10, 4, 10]} intensity={0.3} color="#2b4bff" />
 
       {/* water */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
         <planeGeometry args={[90, 90]} />
-        <meshStandardMaterial color="#4a5a5a" roughness={0.4} metalness={0.3} />
+        <meshStandardMaterial color="#3e5e6e" roughness={0.4} metalness={0.3} />
       </mesh>
 
       {/* green banks */}
-      <InstancedTrees count={200} min={1} max={2.2} area={42} center={[0, 0]} height={0} />
+      <InstancedTrees count={300} min={1} max={2.2} area={42} center={[0, 0]} height={0} />
 
       {/* viaduct 1 */}
-      <CurvedRoad curve={curveMain} width={6} color="#6f6f6f" y={10.05} />
+      <CurvedRoad curve={curveMain} width={6} color="#6f6f6f" y={10.05} dashSize={[0.3, 3]} />
       <Pillars curve={curveMain} />
       <Traffic curve={curveMain} laneSign={1} count={12} />
       <SemiTraffic curve={curveMain} laneSign={-1} cab="#f2f2f2" container="#ff4a00" offset={0.2} />
       <SemiTraffic curve={curveMain} laneSign={-1} cab="#f2f2f2" container="#f0f0f0" offset={0.7} />
 
       {/* viaduct 2 (mirror) */}
-      <CurvedRoad curve={curveMirror} width={6} color="#6f6f6f" y={10.05} />
+      <CurvedRoad curve={curveMirror} width={6} color="#6f6f6f" y={10.05} dashSize={[0.3, 3]} />
       <Pillars curve={curveMirror} />
       <Traffic curve={curveMirror} laneSign={-1} count={12} />
       <SemiTraffic curve={curveMirror} laneSign={1} cab="#ff4a00" container="#f0f0f0" offset={0.5} />
