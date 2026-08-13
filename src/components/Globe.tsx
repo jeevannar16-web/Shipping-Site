@@ -276,7 +276,7 @@ function Globe({ activeCountryId, onHover }: { activeCountryId: string | null; o
     canvas.width = 512
     canvas.height = 256
     const ctx = canvas.getContext('2d')!
-    ctx.fillStyle = '#0b0e14'
+    ctx.fillStyle = '#0e0e12'
     ctx.fillRect(0, 0, 512, 256)
     for (let i = 0; i < 2200; i++) {
       const lat = Math.random() * 180 - 90
@@ -303,7 +303,7 @@ function Globe({ activeCountryId, onHover }: { activeCountryId: string | null; o
         <>
           <mesh>
             <sphereGeometry args={[radius, 64, 64]} />
-            <meshBasicMaterial color="#0c1017" />
+            <meshBasicMaterial color="#101016" />
           </mesh>
           <mesh>
             <sphereGeometry args={[radius * 1.0005, 64, 64]} />

@@ -52,7 +52,7 @@ export default function IrisWipe() {
       style={{
         clipPath: 'circle(0% at 50% 50%)',
         background:
-          'radial-gradient(circle at 50% 50%, #141d31 0%, #0c1322 45%, #060a13 100%)',
+          'radial-gradient(circle at 50% 50%, #1c1c22 0%, #0e0e12 45%, #050506 100%)',
       }}
     />
   )

@@ -25,11 +25,11 @@ function Highway() {
     <group>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
         <planeGeometry args={[ROAD_LEN, 9]} />
-        <meshBasicMaterial color="#0e0f14" />
+        <meshBasicMaterial color="#0b0b0d" />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.001, 0]}>
         <planeGeometry args={[ROAD_LEN, 3.2]} />
-        <meshBasicMaterial color="#111319" />
+        <meshBasicMaterial color="#0d0d10" />
       </mesh>
       <group ref={edgeRef}>
         {[-1.6, 1.6].map((z) => (
@@ -145,7 +145,7 @@ export function TruckContent() {
         <Truck />
       </group>
       <Sparkles count={70} scale={[14, 4, 10]} size={2} speed={0.3} opacity={0.5} color="#f5a524" />
-      <fog attach="fog" args={['#060a13', 10, 24]} />
+      <fog attach="fog" args={['#09090b', 10, 24]} />
     </>
   )
 }

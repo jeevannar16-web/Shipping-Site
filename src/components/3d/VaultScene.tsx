@@ -91,12 +91,12 @@ function Vault() {
       {/* Floor plate */}
       <mesh position={[0, -1.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[3.4, 48]} />
-        <meshBasicMaterial color="#0b0f18" transparent opacity={0.85} />
+        <meshBasicMaterial color="#0d0d10" transparent opacity={0.85} />
       </mesh>
       {/* Frame */}
       <mesh>
         <boxGeometry args={[2.4, 2.4, 2.4]} />
-        <meshStandardMaterial color="#0d1320" metalness={0.6} roughness={0.4} />
+        <meshStandardMaterial color="#0e0e12" metalness={0.6} roughness={0.4} />
       </mesh>
       <mesh>
         <boxGeometry args={[2.5, 2.5, 2.5]} />
@@ -181,7 +181,7 @@ export function VaultContent() {
       <directionalLight position={[4, 6, 6]} intensity={1.1} color="#dff" />
       <pointLight position={[0, 3, 0]} intensity={20} distance={10} decay={2} color="#2dd4bf" />
       <Vault />
-      <fog attach="fog" args={['#060a13', 8, 20]} />
+      <fog attach="fog" args={['#09090b', 8, 20]} />
     </>
   )
 }

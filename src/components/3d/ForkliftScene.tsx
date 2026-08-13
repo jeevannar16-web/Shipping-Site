@@ -145,7 +145,7 @@ export function ForkliftContent() {
       <RackRow side={1} />
       <Forklift />
       <Sparkles count={60} scale={[16, 6, 14]} size={2} speed={0.25} opacity={0.4} color="#f5a524" />
-      <fog attach="fog" args={['#060a13', 10, 22]} />
+      <fog attach="fog" args={['#09090b', 10, 22]} />
     </>
   )
 }

@@ -75,7 +75,7 @@ export function ContainerShip({ position = [0, 0, 0] as [number, number, number]
         {/* Hull */}
         <mesh position={[0, 0, 0]}>
           <boxGeometry args={[2.6, 0.7, 0.7]} />
-          <meshStandardMaterial color="#1a232e" metalness={0.4} roughness={0.5} />
+          <meshStandardMaterial color="#15151a" metalness={0.4} roughness={0.5} />
         </mesh>
         {/* Hull waterline */}
         <mesh position={[0, -0.3, 0]}>
@@ -85,7 +85,7 @@ export function ContainerShip({ position = [0, 0, 0] as [number, number, number]
         {/* Bow */}
         <mesh position={[1.35, 0.1, 0]} rotation={[0, 0, 0]}>
           <coneGeometry args={[0.42, 0.8, 4]} />
-          <meshStandardMaterial color="#1a232e" metalness={0.4} roughness={0.5} />
+          <meshStandardMaterial color="#15151a" metalness={0.4} roughness={0.5} />
         </mesh>
         {/* Bridge */}
         <mesh position={[-0.8, 0.75, 0]}>

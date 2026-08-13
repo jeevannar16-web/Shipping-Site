@@ -31,7 +31,7 @@ function Ocean() {
       <planeGeometry args={[60, 60, 90, 90]} />
       <meshStandardMaterial
         ref={matRef}
-        color="#0a1a26"
+        color="#0b1014"
         metalness={0.8}
         roughness={0.25}
         transparent
@@ -121,7 +121,7 @@ export function ShipContent() {
       <Ocean />
       <Containership />
       <Sparkles count={130} scale={[28, 2, 28]} size={2.4} speed={0.5} opacity={0.4} color="#2dd4bf" />
-      <fog attach="fog" args={['#060a13', 12, 30]} />
+      <fog attach="fog" args={['#09090b', 12, 30]} />
     </>
   )
 }

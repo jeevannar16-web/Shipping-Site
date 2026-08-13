@@ -123,8 +123,8 @@ export function PlaneContent() {
         <CargoJet />
       </Trail>
       <Sparkles count={120} scale={[30, 8, 30]} size={2} speed={0.4} opacity={0.35} color="#2dd4bf" />
-      <gridHelper args={[40, 30, '#1a2130', '#10141f']} position={[0, -0.5, 0]} />
-      <fog attach="fog" args={['#060a13', 14, 30]} />
+      <gridHelper args={[40, 30, '#19191e', '#101013']} position={[0, -0.5, 0]} />
+      <fog attach="fog" args={['#09090b', 14, 30]} />
     </>
   )
 }
