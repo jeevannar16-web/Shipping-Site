@@ -17,6 +17,82 @@ export const COUNTRIES: Country[] = [
   { id: 'gb', name: 'United Kingdom', lat: 51.5074, lng: -0.1278 },
 ]
 
+export type Hub = {
+  id: string
+  country: string
+  region: string
+  timezone: string
+  capabilities: string[]
+}
+
+export const HUBS: Hub[] = [
+  {
+    id: 'au',
+    country: 'Australia',
+    region: 'Oceania',
+    timezone: 'Australia/Melbourne',
+    capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage', 'Warehousing & 3PL', 'Domestic & Linehaul'],
+  },
+  {
+    id: 'nz',
+    country: 'New Zealand',
+    region: 'Oceania',
+    timezone: 'Pacific/Auckland',
+    capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage', 'Domestic & Linehaul'],
+  },
+  {
+    id: 'hk',
+    country: 'Hong Kong',
+    region: 'Asia',
+    timezone: 'Asia/Hong_Kong',
+    capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage', 'Warehousing & 3PL', 'Project Cargo'],
+  },
+  {
+    id: 'cn',
+    country: 'China',
+    region: 'Asia',
+    timezone: 'Asia/Shanghai',
+    capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage', 'Warehousing & 3PL'],
+  },
+  {
+    id: 'vn',
+    country: 'Vietnam',
+    region: 'Asia',
+    timezone: 'Asia/Ho_Chi_Minh',
+    capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage', 'Warehousing & 3PL'],
+  },
+  {
+    id: 'us',
+    country: 'United States',
+    region: 'Americas',
+    timezone: 'America/Los_Angeles',
+    capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage', 'Warehousing & 3PL', 'Project Cargo'],
+  },
+  {
+    id: 'th',
+    country: 'Thailand',
+    region: 'Asia',
+    timezone: 'Asia/Bangkok',
+    capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage'],
+  },
+  {
+    id: 'de',
+    country: 'Germany',
+    region: 'Europe',
+    timezone: 'Europe/Berlin',
+    capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage', 'Warehousing & 3PL', 'Project Cargo'],
+  },
+  {
+    id: 'gb',
+    country: 'United Kingdom',
+    region: 'Europe',
+    timezone: 'Europe/London',
+    capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage', 'Warehousing & 3PL'],
+  },
+]
+
+export const NETWORK_REGIONS = ['Oceania', 'Asia', 'Americas', 'Europe']
+
 export const STATS = [
   { value: 2500, suffix: '+', label: 'Shipments per month' },
   { value: 98.2, suffix: '%', label: 'On-time delivery rate', decimals: 1 },

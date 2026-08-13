@@ -1,13 +1,34 @@
-import { useState } from 'react'
+import { useState, useLayoutEffect, useRef } from 'react'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { ArrowUpRight, CalendarDays } from 'lucide-react'
 import { INSIGHTS } from '../data'
+
+gsap.registerPlugin(ScrollTrigger)
 
 const FILTERS = ['All', 'Case Studies', 'Global', 'Customs Advice']
 
 export default function Insights() {
   const [filter, setFilter] = useState('All')
+  const gridRef = useRef<HTMLDivElement>(null)
 
   const filtered = filter === 'All' ? INSIGHTS : INSIGHTS.filter((i) => i.category === filter)
+
+  useLayoutEffect(() => {
+    const grid = gridRef.current
+    if (!grid) return
+
+    const cards = Array.from(grid.children) as HTMLElement[]
+    const tl = gsap.timeline()
+    tl.fromTo(
+      cards,
+      { opacity: 0, y: 24, scale: 0.96 },
+      { opacity: 1, y: 0, scale: 1, duration: 0.45, stagger: 0.06, ease: 'power3.out' },
+    )
+    return () => {
+      tl.kill()
+    }
+  }, [filter])
 
   return (
     <section id="insights" className="relative border-t border-white/5 bg-carbon/40 py-28 md:py-36">
@@ -23,10 +44,12 @@ export default function Insights() {
               <span className="text-white/40"> in your industry.</span>
             </h2>
           </div>
-          <div className="flex max-w-3xl flex-wrap gap-2">
+          <div className="flex max-w-3xl flex-wrap gap-2" role="tablist" aria-label="Insight categories">
             {FILTERS.map((f) => (
               <button
                 key={f}
+                role="tab"
+                aria-selected={filter === f}
                 onClick={() => setFilter(f)}
                 className={`rounded-full border px-4 py-2 text-xs font-medium uppercase tracking-wider transition-all ${
                   filter === f
@@ -40,18 +63,19 @@ export default function Insights() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" data-reveal-stagger>
-          {filtered.map((post) => (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" ref={gridRef} key={filter}>
+          {filtered.map((post, i) => (
             <article
-              key={post.title}
+              key={`${filter}-${post.title}`}
               className="group cursor-pointer rounded-2xl border border-white/10 bg-carbon p-8 transition-all duration-500 hover:-translate-y-1 hover:border-white/25"
+              style={{ transitionDelay: `${i * 40}ms` }}
             >
               <div className="flex items-center justify-between">
                 <span
-                  className={`rounded-full px-3 py-1 text-[10px] uppercase tracking-wider ${
+                  className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-wider ${
                     post.accent === 'orange'
-                      ? 'bg-neon-orange/15 text-neon-orange'
-                      : 'bg-cyber-blue/15 text-cyber-blue'
+                      ? 'border-neon-orange/30 bg-neon-orange/15 text-neon-orange'
+                      : 'border-cyber-blue/30 bg-cyber-blue/15 text-cyber-blue'
                   }`}
                 >
                   {post.category}

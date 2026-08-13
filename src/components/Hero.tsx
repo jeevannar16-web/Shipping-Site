@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ArrowRight, Globe2 } from 'lucide-react'
 import GlobeScene from './Globe'
+import MagneticButton from './MagneticButton'
 import type { Country } from '../data'
 
 export default function Hero({ hubRef }: { hubRef: (el: HTMLElement | null) => void }) {
@@ -46,19 +47,19 @@ export default function Hero({ hubRef }: { hubRef: (el: HTMLElement | null) => v
         </p>
 
         <div className="mt-10 flex flex-wrap items-center gap-4" data-anim="fade-up">
-          <a
+          <MagneticButton
             href="#contact"
-            className="group flex items-center gap-3 rounded-full bg-neon-orange px-7 py-4 text-sm font-semibold text-void transition-all hover:shadow-[0_0_40px_rgba(255,85,0,0.4)]"
+            className="group flex items-center gap-3 rounded-full bg-neon-orange px-7 py-4 text-sm font-semibold text-void transition-all hover:shadow-[0_0_40px_rgba(255,85,0,0.4)] active:scale-[0.97]"
           >
             Talk With Us
             <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
-          </a>
-          <a
+          </MagneticButton>
+          <MagneticButton
             href="#services"
-            className="flex items-center gap-3 rounded-full border border-white/15 px-7 py-4 text-sm font-semibold text-white transition-all hover:border-cyber-blue hover:text-cyber-blue"
+            className="flex items-center gap-3 rounded-full border border-white/15 px-7 py-4 text-sm font-semibold text-white transition-all hover:border-cyber-blue hover:text-cyber-blue active:scale-[0.97]"
           >
             Our Services
-          </a>
+          </MagneticButton>
         </div>
 
         <div className="mt-16 flex max-w-2xl flex-wrap items-center justify-between gap-6 border-t border-white/10 pt-8" data-anim="fade-up">

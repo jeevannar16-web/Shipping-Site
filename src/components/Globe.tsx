@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, Suspense, useCallback, useEffect } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls, Stars } from '@react-three/drei'
 import * as THREE from 'three'
 import type { Country } from '../data'
@@ -30,7 +30,7 @@ function createArcPoints(start: THREE.Vector3, end: THREE.Vector3, radius: numbe
   return points
 }
 
-/** Shader for a soft neon atmosphere glow. */
+/** Soft neon atmosphere rim glow (Fresnel). */
 function Atmosphere({ radius }: { radius: number }) {
   const meshRef = useRef<THREE.Mesh>(null!)
   useFrame(({ clock }) => {
@@ -61,6 +61,43 @@ function Atmosphere({ radius }: { radius: number }) {
         `}
       />
     </mesh>
+  )
+}
+
+/** Glowing lat/long wireframe grid overlay on the globe surface. */
+function WireGrid({ radius }: { radius: number }) {
+  const ref = useRef<THREE.LineSegments>(null!)
+  const geometry = useMemo(() => {
+    const pts: number[] = []
+    const steps = 48
+    for (let i = 0; i <= steps; i++) {
+      const phi = (i / steps) * Math.PI * 2
+      for (let j = 0; j <= steps; j++) {
+        const theta = (j / steps) * Math.PI
+        const x = radius * Math.sin(theta) * Math.cos(phi)
+        const y = radius * Math.cos(theta)
+        const z = radius * Math.sin(theta) * Math.sin(phi)
+        pts.push(x, y, z)
+      }
+    }
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pts), 3))
+    return geo
+  }, [radius])
+
+  useFrame(({ clock }) => {
+    if (ref.current) {
+      ref.current.rotation.y = clock.getElapsedTime() * 0.012
+      const mat = ref.current.material as THREE.LineBasicMaterial
+      mat.opacity = 0.14 + Math.sin(clock.getElapsedTime() * 0.4) * 0.04
+    }
+  })
+
+  return (
+    <lineSegments ref={ref}>
+      <primitive object={geometry} attach="geometry" />
+      <lineBasicMaterial color="#00f0ff" transparent opacity={0.15} />
+    </lineSegments>
   )
 }
 
@@ -116,7 +153,7 @@ function CountryMarker({
   )
 }
 
-function RouteArc({ points, active }: { points: THREE.Vector3[]; active: boolean }) {
+function RouteArc({ points }: { points: THREE.Vector3[] }) {
   const lineRef = useRef<THREE.Line>(null!)
   const line = useMemo(() => {
     const geometry = new THREE.BufferGeometry().setAttribute(
@@ -124,12 +161,12 @@ function RouteArc({ points, active }: { points: THREE.Vector3[]; active: boolean
       new THREE.BufferAttribute(new Float32Array(points.flatMap((p) => [p.x, p.y, p.z])), 3),
     )
     const material = new THREE.LineBasicMaterial({
-      color: active ? '#ff5500' : '#00f0ff',
+      color: '#00f0ff',
       transparent: true,
       opacity: 0.35,
     })
     return new THREE.Line(geometry, material)
-  }, [points, active])
+  }, [points])
   useFrame(({ clock }) => {
     const mat = lineRef.current?.material as THREE.LineBasicMaterial | undefined
     if (mat) {
@@ -148,9 +185,7 @@ function FlyingDot({ points, offset }: { points: THREE.Vector3[]; offset: number
     const f = idx - i
     const a = points[i] ?? points[0]
     const b = points[Math.min(i + 1, points.length - 1)] ?? a
-    if (dotRef.current) {
-      dotRef.current.position.lerpVectors(a, b, f)
-    }
+    if (dotRef.current) dotRef.current.position.lerpVectors(a, b, f)
   })
   return (
     <mesh ref={dotRef}>
@@ -164,6 +199,18 @@ function FlyingDot({ points, offset }: { points: THREE.Vector3[]; offset: number
       />
     </mesh>
   )
+}
+
+function CameraRig({ children }: { children: React.ReactNode }) {
+  const { camera, mouse } = useThree()
+  useFrame(() => {
+    const targetX = mouse.x * 0.5
+    const targetY = mouse.y * 0.3
+    camera.position.x += (targetX - camera.position.x) * 0.04
+    camera.position.y += (targetY - camera.position.y) * 0.04
+    camera.lookAt(0, 0, 0)
+  })
+  return <>{children}</>
 }
 
 function Globe({ activeCountryId, onHover }: { activeCountryId: string | null; onHover: (country: Country | null) => void }) {
@@ -235,8 +282,8 @@ function Globe({ activeCountryId, onHover }: { activeCountryId: string | null; o
       const lat = Math.random() * 180 - 90
       const lng = Math.random() * 360 - 180
       const v = latLngToVector3(clampLat(lat), lng, 1)
-      const px = ((v.x / 2) + 0.5) * 512
-      const py = ((-v.z / 2) + 0.5) * 256
+      const px = (v.x / 2 + 0.5) * 512
+      const py = (-v.z / 2 + 0.5) * 256
       ctx.fillStyle = `rgba(140,220,255,${0.1 + Math.random() * 0.25})`
       ctx.fillRect(px, py, 1.4, 1.4)
     }
@@ -264,9 +311,10 @@ function Globe({ activeCountryId, onHover }: { activeCountryId: string | null; o
           </mesh>
         </>
       )}
+      <WireGrid radius={radius * 1.004} />
       <Atmosphere radius={radius} />
       {arcs.map(({ points }, i) => (
-        <RouteArc key={i} points={points} active={false} />
+        <RouteArc key={i} points={points} />
       ))}
       {arcs.map(({ points, offset }, i) => (
         <FlyingDot key={`dot-${i}`} points={points} offset={offset} />
@@ -303,23 +351,38 @@ export default function GlobeScene({
   onHover: (country: Country | null) => void
 }) {
   const [ready, setReady] = useState(false)
+  const [failed, setFailed] = useState(false)
   const onCreated = useCallback(() => setReady(true), [])
 
   return (
     <div className="relative h-full w-full">
-      <Canvas
-        dpr={[1, 2]}
-        camera={{ position: [0, 0.4, 5.8], fov: 45 }}
-        onCreated={onCreated}
-        gl={{ antialias: true, alpha: true }}
-      >
-        <Suspense fallback={null}>
-          <Stars radius={60} depth={50} count={4500} factor={3} saturation={0} fade speed={0.6} />
-          <Globe activeCountryId={activeCountryId} onHover={onHover} />
-          <OrbitControls enablePan={false} enableZoom={false} rotateSpeed={0.5} autoRotate={false} />
-        </Suspense>
-      </Canvas>
-      {!ready && <SceneFallback />}
+      {failed ? (
+        <div className="flex h-full w-full items-center justify-center">
+          <div className="max-w-xs rounded-2xl border border-white/10 bg-carbon/80 p-8 text-center">
+            <div className="mx-auto h-20 w-20 rounded-full bg-gradient-to-br from-neon-orange/20 to-cyber-blue/20" />
+            <p className="mt-4 font-display text-lg font-semibold text-white">Globe unavailable</p>
+            <p className="mt-2 text-sm text-white/50">3D couldn't load on this device.</p>
+          </div>
+        </div>
+      ) : (
+        <Canvas
+          dpr={[1, 2]}
+          camera={{ position: [0, 0.4, 5.8], fov: 45 }}
+          onCreated={onCreated}
+          onError={() => setFailed(true)}
+          gl={{ antialias: true, alpha: true, failIfMajorPerformanceCaveat: false }}
+          fallback={<div className="flex h-full w-full items-center justify-center"><SceneFallback /></div>}
+        >
+          <Suspense fallback={null}>
+            <CameraRig>
+              <Stars radius={60} depth={50} count={4500} factor={3} saturation={0} fade speed={0.6} />
+              <Globe activeCountryId={activeCountryId} onHover={onHover} />
+              <OrbitControls enablePan={false} enableZoom={false} rotateSpeed={0.5} autoRotate={false} />
+            </CameraRig>
+          </Suspense>
+        </Canvas>
+      )}
+      {!ready && !failed && <SceneFallback />}
       <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 text-[10px] uppercase tracking-[0.3em] text-white/30">
         Drag to explore the network
       </div>

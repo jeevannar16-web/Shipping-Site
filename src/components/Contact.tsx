@@ -257,7 +257,24 @@ export function Footer() {
           <div className="flex flex-wrap gap-6">
             <a href="#" className="transition-colors hover:text-white/60">Privacy Policy</a>
             <a href="#" className="transition-colors hover:text-white/60">Terms & Conditions</a>
-            <a href="#" className="transition-colors hover:text-white/60">QHSE</a>
+            <a href="#" className="transition-colors hover:text-white/60">Payment Policy</a>
+            <a href="#" className="transition-colors hover:text-white/60">Refund & Returns</a>
+          </div>
+        </div>
+        <div className="mt-6 flex flex-col items-start justify-between gap-4 rounded-xl border border-white/10 bg-carbon/60 px-6 py-5 md:flex-row md:items-center">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Quality · Health · Safety · Environment</p>
+            <p className="mt-1 text-xs text-white/35">ISO-aligned QHSE standards across all operations.</p>
+          </div>
+          <div className="flex gap-3">
+            {['QHSE', 'ISO 9001', 'ISO 14001', 'ISO 45001'].map((badge) => (
+              <span
+                key={badge}
+                className="rounded-lg border border-white/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-white/60 transition-colors hover:border-cyber-blue/50 hover:text-cyber-blue"
+              >
+                {badge}
+              </span>
+            ))}
           </div>
         </div>
       </div>
