@@ -19,7 +19,7 @@ function Streak({ color = '#ffffff', opacity = 0.15, dir = 1 }: { color?: string
 }
 
 /** Top-down container ship at sea — camera slightly tilted, gentle roll loop. */
-export default function OceanScene() {
+function Ship() {
   const shipRef = useRef<THREE.Group>(null)
 
   const hullShape = useMemo(() => {
@@ -66,28 +66,12 @@ export default function OceanScene() {
   })
 
   return (
-    <SceneCanvas fallbackLabel="Ocean" tone="blue" camera={{ position: [0, 34, 10], fov: 42 }}>
-      <color attach="background" args={['#1c4e9c']} />
-      <ambientLight intensity={0.8} />
-      <directionalLight position={[0, 40, 10]} intensity={1.6} color="#ffffff" />
-
-      {/* sea */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]}>
-        <planeGeometry args={[60, 70]} />
-        <meshStandardMaterial color="#1c4e9c" roughness={0.35} metalness={0.1} />
+    <group ref={shipRef}>
+      {/* hull */}
+      <mesh>
+        <shapeGeometry args={[hullShape]} />
+        <meshStandardMaterial color="#101820" roughness={0.7} flatShading />
       </mesh>
-
-      {/* scrolling wave streaks */}
-      <Streak opacity={0.15} dir={1} />
-      <Streak opacity={0.1} dir={-1} />
-
-      {/* ship — bow up = -z */}
-      <group ref={shipRef}>
-        {/* hull */}
-        <mesh>
-          <shapeGeometry args={[hullShape]} />
-          <meshStandardMaterial color="#101820" roughness={0.7} flatShading />
-        </mesh>
         {/* bow tip */}
         <mesh position={[0, 0.4, 13]}>
           <boxGeometry args={[0.4, 0.4, 1]} />
@@ -129,6 +113,28 @@ export default function OceanScene() {
           <meshBasicMaterial color="#ffffff" transparent opacity={0.35} />
         </mesh>
       </group>
+  )
+}
+
+export default function OceanScene() {
+  return (
+    <SceneCanvas fallbackLabel="Ocean" tone="blue" camera={{ position: [0, 34, 10], fov: 42 }}>
+      <color attach="background" args={['#1c4e9c']} />
+      <ambientLight intensity={0.8} />
+      <directionalLight position={[0, 40, 10]} intensity={1.6} color="#ffffff" />
+
+      {/* sea */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]}>
+        <planeGeometry args={[60, 70]} />
+        <meshStandardMaterial color="#1c4e9c" roughness={0.35} metalness={0.1} />
+      </mesh>
+
+      {/* scrolling wave streaks */}
+      <Streak opacity={0.15} dir={1} />
+      <Streak opacity={0.1} dir={-1} />
+
+      {/* ship — bow up = -z */}
+      <Ship />
     </SceneCanvas>
   )
 }

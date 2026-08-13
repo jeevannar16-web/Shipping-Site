@@ -5,7 +5,7 @@ import SceneCanvas from '../components/SceneCanvas'
 import { Truck } from './builders'
 
 /** Side-view driving truck on paper-white with scrolling ground dashes. */
-export default function TruckPaperScene() {
+function TruckRig() {
   const dashRef = useRef<THREE.Group>(null)
 
   const dashes = useMemo(() => {
@@ -24,18 +24,7 @@ export default function TruckPaperScene() {
   })
 
   return (
-    <SceneCanvas fallbackLabel="Linehaul" tone="blue" camera={{ position: [-10.5, 2.6, 0], fov: 40 }}>
-      <color attach="background" args={['#efeae3']} />
-      <ambientLight intensity={0.8} />
-      <directionalLight position={[8, 12, 6]} intensity={1.5} color="#fff6e8" />
-      <directionalLight position={[-6, 3, -4]} intensity={0.35} color="#ffffff" />
-
-      {/* ground */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
-        <planeGeometry args={[30, 60]} />
-        <meshStandardMaterial color="#efeae3" roughness={1} />
-      </mesh>
-
+    <>
       {/* scrolling ground dashes */}
       <group ref={dashRef}>
         {dashes.map((z, i) => (
@@ -50,6 +39,25 @@ export default function TruckPaperScene() {
       <group position={[0, 0, 0]} rotation={[0, 0, 0]}>
         <Truck cabColor="#d0d0d0" containerColor="#f0f0f0" ribCount={12} driving bob shadow />
       </group>
+    </>
+  )
+}
+
+export default function TruckPaperScene() {
+  return (
+    <SceneCanvas fallbackLabel="Linehaul" tone="blue" camera={{ position: [-10.5, 2.6, 0], fov: 40 }}>
+      <color attach="background" args={['#efeae3']} />
+      <ambientLight intensity={0.8} />
+      <directionalLight position={[8, 12, 6]} intensity={1.5} color="#fff6e8" />
+      <directionalLight position={[-6, 3, -4]} intensity={0.35} color="#ffffff" />
+
+      {/* ground */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
+        <planeGeometry args={[30, 60]} />
+        <meshStandardMaterial color="#efeae3" roughness={1} />
+      </mesh>
+
+      <TruckRig />
     </SceneCanvas>
   )
 }

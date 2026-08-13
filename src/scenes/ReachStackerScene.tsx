@@ -36,7 +36,7 @@ const STACK_X = 3.4
  * 10s loop: 0-3 lift boom, 3-5 telescope forward, 5-6 lower onto stack,
  * 6-7 release + retract, 7-10 hold.
  */
-export default function ReachStackerScene() {
+function StackerScene() {
   const hazard = useHazardTexture()
 
   const boomRef = useRef<THREE.Group>(null)      // pivots at front of stacker
@@ -86,28 +86,7 @@ export default function ReachStackerScene() {
   })
 
   return (
-    <SceneCanvas fallbackLabel="Freight" tone="orange" camera={{ position: [0, 5.5, 12], fov: 42 }}>
-      <color attach="background" args={['#efeae3']} />
-      <ambientLight intensity={0.75} />
-      <directionalLight position={[6, 12, 6]} intensity={1.4} color="#fff6e8" />
-      <directionalLight position={[-6, 4, -4]} intensity={0.4} color="#ffffff" />
-
-      {/* floor */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
-        <planeGeometry args={[40, 30]} />
-        <meshStandardMaterial color="#efeae3" roughness={1} />
-      </mesh>
-
-      {/* soft shadow blobs */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-3.5, 0.01, 0]}>
-        <planeGeometry args={[5, 8]} />
-        <meshBasicMaterial color="#000" transparent opacity={0.1} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[STACK_X, 0.01, 0]}>
-        <planeGeometry args={[4, 7]} />
-        <meshBasicMaterial color="#000" transparent opacity={0.1} />
-      </mesh>
-
+    <>
       {/* container stack (right) */}
       <group position={[STACK_X, 0, 0]}>
         {STACK_COLORS.map((color, i) => (
@@ -179,6 +158,35 @@ export default function ReachStackerScene() {
           <meshStandardMaterial color="#f5f5f5" roughness={0.6} metalness={0.2} />
         </mesh>
       </group>
+    </>
+  )
+}
+
+export default function ReachStackerScene() {
+  return (
+    <SceneCanvas fallbackLabel="Freight" tone="orange" camera={{ position: [0, 5.5, 12], fov: 42 }}>
+      <color attach="background" args={['#efeae3']} />
+      <ambientLight intensity={0.75} />
+      <directionalLight position={[6, 12, 6]} intensity={1.4} color="#fff6e8" />
+      <directionalLight position={[-6, 4, -4]} intensity={0.4} color="#ffffff" />
+
+      {/* floor */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
+        <planeGeometry args={[40, 30]} />
+        <meshStandardMaterial color="#efeae3" roughness={1} />
+      </mesh>
+
+      {/* soft shadow blobs */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-3.5, 0.01, 0]}>
+        <planeGeometry args={[5, 8]} />
+        <meshBasicMaterial color="#000" transparent opacity={0.1} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[STACK_X, 0.01, 0]}>
+        <planeGeometry args={[4, 7]} />
+        <meshBasicMaterial color="#000" transparent opacity={0.1} />
+      </mesh>
+
+      <StackerScene />
     </SceneCanvas>
   )
 }
