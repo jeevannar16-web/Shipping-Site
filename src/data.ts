@@ -1,3 +1,15 @@
+export const BRAND = {
+  name: 'Jeevan Global Logistics',
+  short: 'Jeevan',
+  tagline: 'Every leg of the journey.',
+  email: 'jeevannar16@gmail.com',
+  phone: 'Your phone number',
+  phoneHref: 'tel:',
+  address: 'Kathmandu, Nepal',
+  hours: 'Monday - Friday / 9AM - 6PM',
+  countries: ['Nepal', 'India', 'China'],
+}
+
 export type Country = {
   id: string
   name: string
@@ -6,15 +18,15 @@ export type Country = {
 }
 
 export const COUNTRIES: Country[] = [
-  { id: 'au', name: 'Australia', lat: -33.8688, lng: 151.2093 },
-  { id: 'nz', name: 'New Zealand', lat: -36.8485, lng: 174.7633 },
-  { id: 'hk', name: 'Hong Kong', lat: 22.3193, lng: 114.1694 },
+  { id: 'np', name: 'Nepal', lat: 27.7172, lng: 85.324 },
+  { id: 'in', name: 'India', lat: 28.6139, lng: 77.209 },
   { id: 'cn', name: 'China', lat: 31.2304, lng: 121.4737 },
-  { id: 'vn', name: 'Vietnam', lat: 10.8231, lng: 106.6297 },
+  { id: 'ae', name: 'UAE', lat: 25.2048, lng: 55.2708 },
   { id: 'us', name: 'United States', lat: 34.0522, lng: -118.2437 },
-  { id: 'th', name: 'Thailand', lat: 13.7563, lng: 100.5018 },
-  { id: 'de', name: 'Germany', lat: 53.5511, lng: 9.9937 },
   { id: 'gb', name: 'United Kingdom', lat: 51.5074, lng: -0.1278 },
+  { id: 'de', name: 'Germany', lat: 53.5511, lng: 9.9937 },
+  { id: 'au', name: 'Australia', lat: -33.8688, lng: 151.2093 },
+  { id: 'jp', name: 'Japan', lat: 35.6762, lng: 139.6503 },
 ]
 
 export type Hub = {
@@ -27,52 +39,45 @@ export type Hub = {
 
 export const HUBS: Hub[] = [
   {
-    id: 'au',
-    country: 'Australia',
-    region: 'Oceania',
-    timezone: 'Australia/Melbourne',
-    capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage', 'Warehousing & 3PL', 'Domestic & Linehaul'],
+    id: 'np',
+    country: 'Nepal',
+    region: 'South Asia',
+    timezone: 'Asia/Kathmandu',
+    capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage', 'Warehousing & 3PL', 'Road Freight'],
   },
   {
-    id: 'nz',
-    country: 'New Zealand',
-    region: 'Oceania',
-    timezone: 'Pacific/Auckland',
-    capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage', 'Domestic & Linehaul'],
-  },
-  {
-    id: 'hk',
-    country: 'Hong Kong',
-    region: 'Asia',
-    timezone: 'Asia/Hong_Kong',
-    capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage', 'Warehousing & 3PL', 'Project Cargo'],
+    id: 'in',
+    country: 'India',
+    region: 'South Asia',
+    timezone: 'Asia/Kolkata',
+    capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage', 'Road Freight'],
   },
   {
     id: 'cn',
     country: 'China',
-    region: 'Asia',
+    region: 'East Asia',
     timezone: 'Asia/Shanghai',
     capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage', 'Warehousing & 3PL'],
   },
   {
-    id: 'vn',
-    country: 'Vietnam',
-    region: 'Asia',
-    timezone: 'Asia/Ho_Chi_Minh',
-    capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage', 'Warehousing & 3PL'],
+    id: 'ae',
+    country: 'UAE',
+    region: 'Middle East',
+    timezone: 'Asia/Dubai',
+    capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage'],
   },
   {
     id: 'us',
     country: 'United States',
     region: 'Americas',
     timezone: 'America/Los_Angeles',
-    capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage', 'Warehousing & 3PL', 'Project Cargo'],
+    capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage', 'Warehousing & 3PL'],
   },
   {
-    id: 'th',
-    country: 'Thailand',
-    region: 'Asia',
-    timezone: 'Asia/Bangkok',
+    id: 'gb',
+    country: 'United Kingdom',
+    region: 'Europe',
+    timezone: 'Europe/London',
     capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage'],
   },
   {
@@ -80,23 +85,30 @@ export const HUBS: Hub[] = [
     country: 'Germany',
     region: 'Europe',
     timezone: 'Europe/Berlin',
-    capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage', 'Warehousing & 3PL', 'Project Cargo'],
+    capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage', 'Project Cargo'],
   },
   {
-    id: 'gb',
-    country: 'United Kingdom',
-    region: 'Europe',
-    timezone: 'Europe/London',
+    id: 'au',
+    country: 'Australia',
+    region: 'Oceania',
+    timezone: 'Australia/Sydney',
     capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage', 'Warehousing & 3PL'],
+  },
+  {
+    id: 'jp',
+    country: 'Japan',
+    region: 'East Asia',
+    timezone: 'Asia/Tokyo',
+    capabilities: ['Air Freight', 'Ocean Freight', 'Customs Brokerage'],
   },
 ]
 
-export const NETWORK_REGIONS = ['Oceania', 'Asia', 'Americas', 'Europe']
+export const NETWORK_REGIONS = ['South Asia', 'East Asia', 'Middle East', 'Americas', 'Europe', 'Oceania']
 
 export const STATS = [
-  { value: 2500, suffix: '+', label: 'Shipments per month' },
-  { value: 98.2, suffix: '%', label: 'On-time delivery rate', decimals: 1 },
-  { value: 8, suffix: '+', label: 'Years in operation' },
+  { value: 100, suffix: '+', label: 'Shipments per month' },
+  { value: 98, suffix: '%', label: 'On-time delivery rate' },
+  { value: 2, suffix: '+', label: 'Years in operation' },
 ]
 
 export const SERVICES = [
@@ -139,7 +151,7 @@ export const FEATURES = [
   },
   {
     title: 'Global Network Coverage',
-    desc: 'From APAC lanes to international corridors, our partner network spans every major trade route your business relies on.',
+    desc: 'From regional lanes to international corridors, our partner network spans every major trade route your business relies on.',
   },
   {
     title: '24/7 Customer Support',
@@ -158,7 +170,7 @@ export const WHY_US = [
   },
   {
     title: 'Compliance You Can Trust',
-    desc: 'Our licensed customs brokers keep your shipments moving within every regulatory requirement across APAC.',
+    desc: 'Our licensed customs brokers keep your shipments moving within every regulatory requirement.',
   },
   {
     title: 'Competitive, Transparent Pricing',
@@ -172,127 +184,110 @@ export const WHY_US = [
 
 export const TESTIMONIALS = [
   {
-    quote:
-      'My business would not function without this team. Extremely talented with immense experience tailoring each consignment based on its merits. We have our dedicated account managers that know our business, are responsive and provide personalised service which we never had with bigger companies. UC for the win.',
-    name: 'Thomas Munro',
-    role: 'Director',
-    org: 'Picha Group',
+    quote: 'Your client testimonial here. Replace this with a real review from a customer or partner who has shipped with you.',
+    name: 'Your Client Name',
+    role: 'Your role / title',
+    org: 'Company Name',
   },
   {
-    quote:
-      'As a first-time supplier shipping equipment to support one of the major Australian infrastructure projects I came up against uncharted territories. It was a three-month discovery and mobilisation period until the first shipment left its origin airborne for Melbourne. Our first-time-right delivery to my customer\u2019s 3PL was no coincidence.',
-    name: 'Francis Fung',
-    role: 'APAC Supply Chain Operations Director, US Fortune 500 Telecom and Communications Supplier',
-    org: 'CommScope',
+    quote: 'Your client testimonial here. Replace this with a real review from a customer or partner who has shipped with you.',
+    name: 'Your Client Name',
+    role: 'Your role / title',
+    org: 'Company Name',
   },
   {
-    quote:
-      'I worked closely with Chris over several years to build a seamless, cost-effective supply chain for one of Australia\u2019s largest fashion retail companies. Chris was not only able to help us streamline our operations throughout Asia and shorten our time to market, but through his willingness to negotiate great rates, also provide significant cost savings.',
-    name: 'Alex Hughes',
-    role: 'Senior Management',
-    org: 'Factory X',
+    quote: 'Your client testimonial here. Replace this with a real review from a customer or partner who has shipped with you.',
+    name: 'Your Client Name',
+    role: 'Your role / title',
+    org: 'Company Name',
   },
 ]
 
 export const AIRLINES = [
-  'Air China',
-  'Vietnam Airlines',
-  'British Airways',
-  'Fiji Airways',
-  'Malaysia Airlines',
-  'China Southern',
-  'Qatar Airways',
-  'China Eastern',
-  'Qantas',
-  'Air New Zealand',
-  'Etihad',
-  'Cathay Pacific',
-  'Singapore Airlines',
-  'Emirates',
-  'Air India',
-  'Thai Airways',
+  'Airline Partner 1',
+  'Airline Partner 2',
+  'Airline Partner 3',
+  'Airline Partner 4',
+  'Airline Partner 5',
+  'Airline Partner 6',
+  'Airline Partner 7',
+  'Airline Partner 8',
 ]
 
 export const SHIPPING_LINES = [
-  'CMA CGM',
-  'Wallenius Wilhelmsen',
-  'Sinotrans',
-  'NYK Line',
-  'K-Line',
-  'COSCO',
-  'Evergreen Line',
-  'Yang Ming',
-  'PIL',
-  'MSC',
-  'HMM',
-  'Maersk',
-  'APL',
-  'Hapag-Lloyd',
+  'Shipping Line 1',
+  'Shipping Line 2',
+  'Shipping Line 3',
+  'Shipping Line 4',
+  'Shipping Line 5',
+  'Shipping Line 6',
+  'Shipping Line 7',
+  'Shipping Line 8',
 ]
 
 export const INSIGHTS = [
   {
-    title: 'Reduced Import Delays & Storage Costs Across 700+ Containers',
+    title: 'Your first insight title goes here',
     category: 'Case Studies',
-    date: 'Jul 8, 2026',
+    date: 'Jan 2026',
     accent: 'orange',
   },
   {
-    title: 'Cost-Optimised and Speed to Market Import Program for New Truck Launch in Australia',
-    category: 'Case Studies',
-    date: 'Jul 10, 2026',
-    accent: 'blue',
-  },
-  {
-    title: 'Grid-Scale Battery Project Logistics Delivery for Renewable Energy Infrastructure',
-    category: 'Case Studies',
-    date: 'Jul 10, 2026',
-    accent: 'orange',
-  },
-  {
-    title: 'Time-Critical Oversized Sewer Tank Delivery to Residential Estate Development',
-    category: 'Case Studies',
-    date: 'Jul 10, 2026',
-    accent: 'blue',
-  },
-  {
-    title: 'Global shipping rates soar as retailers race to beat looming tariffs',
+    title: 'Your second insight title goes here',
     category: 'Global',
-    date: 'Jul 13, 2026',
+    date: 'Feb 2026',
+    accent: 'blue',
+  },
+  {
+    title: 'Your third insight title goes here',
+    category: 'Case Studies',
+    date: 'Mar 2026',
     accent: 'orange',
   },
   {
-    title: 'US Tariffs: Refunds, Section 301 Duties and Importer Advice',
+    title: 'Your fourth insight title goes here',
     category: 'Customs Advice',
-    date: 'Aug 2026',
+    date: 'Apr 2026',
+    accent: 'blue',
+  },
+  {
+    title: 'Your fifth insight title goes here',
+    category: 'Global',
+    date: 'May 2026',
+    accent: 'orange',
+  },
+  {
+    title: 'Your sixth insight title goes here',
+    category: 'Case Studies',
+    date: 'Jun 2026',
     accent: 'blue',
   },
 ]
 
 export const FAQS = [
   {
-    q: 'What does United Carriers do?',
-    a: 'United Carriers is a global freight forwarding and logistics provider delivering end-to-end supply chain solutions, including airfreight, seafreight, customs brokerage, warehousing, and transport.',
+    q: 'What services do you offer?',
+    a: 'Replace this with a clear answer about your services — air freight, ocean freight, customs, warehousing, and more.',
   },
   {
-    q: 'What industries do you specialise in?',
-    a: 'We support a broad range of industries including retail, fashion, food & beverage, industrial, project cargo, and technology.',
+    q: 'Which countries do you ship to?',
+    a: 'Replace this with a clear answer about the destinations you cover.',
   },
   {
-    q: 'What shipping methods do you offer?',
-    a: 'We offer airfreight, seafreight (FCL & LCL), breakbulk, RO/RO, and multimodal transport solutions.',
+    q: 'How is freight pricing calculated?',
+    a: 'Replace this with a clear answer about how you price shipments.',
   },
   {
-    q: 'Do you provide customs clearance services?',
-    a: 'Yes, we offer in-house customs brokerage to manage import and export clearances efficiently.',
+    q: 'Do you provide customs clearance?',
+    a: 'Replace this with a clear answer about your customs services.',
   },
   {
     q: 'Can you handle oversized or heavy cargo?',
-    a: 'Yes, we specialise in project cargo including out-of-gauge (OOG) and heavy lift shipments.',
+    a: 'Replace this with a clear answer about project cargo and heavy lift.',
   },
   {
     q: 'How do I request a quote?',
-    a: 'You can contact us via our website, email, or phone with your shipment details.',
+    a: 'Replace this with a clear answer about how customers can request a quote.',
   },
 ]
 
@@ -300,16 +295,16 @@ export const NAV_LINKS = [
   { label: 'About', href: '#about', num: '01' },
   { label: 'Services', href: '#services', num: '02' },
   { label: 'Why Us', href: '#why-us', num: '03' },
-  { label: 'Insights', href: '#insights', num: '04' },
-  { label: 'FAQ', href: '#faq', num: '05' },
+  { label: 'Network', href: '#network', num: '04' },
+  { label: 'Insights', href: '#insights', num: '05' },
   { label: 'Contact', href: '#contact', num: '06' },
 ]
 
 export const CONTACT = {
-  email: 'contact@unitedcarriers.com',
-  phone: '1300 000 082',
-  phoneHref: 'tel:1300000082',
-  address: '2A International Square, Tullamarine VIC 3043, Australia',
-  hours: 'Monday - Friday / 8:30AM - 5PM',
-  countries: ['Australia', 'New Zealand', 'Hong Kong', 'China'],
+  email: 'jeevannar16@gmail.com',
+  phone: 'Your phone number',
+  phoneHref: 'tel:',
+  address: 'Kathmandu, Nepal',
+  hours: 'Monday - Friday / 9AM - 6PM',
+  countries: ['Nepal', 'India', 'China'],
 }

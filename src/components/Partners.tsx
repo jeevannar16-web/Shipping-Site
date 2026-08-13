@@ -37,11 +37,11 @@ export default function Partners() {
       </div>
       <div data-reveal>
         <div className="mb-6 space-y-2">
-          <p className="px-6 text-[10px] uppercase tracking-[0.25em] text-cyber-blue/60">Airlines</p>
+          <p className="px-6 text-[10px] uppercase tracking-[0.25em] text-teal/60">Airlines</p>
           <MarqueeRow items={AIRLINES} />
         </div>
         <div className="space-y-2">
-          <p className="px-6 text-[10px] uppercase tracking-[0.25em] text-neon-orange/60">Shipping lines</p>
+          <p className="px-6 text-[10px] uppercase tracking-[0.25em] text-gold/60">Shipping lines</p>
           <MarqueeRow items={SHIPPING_LINES} reverse />
         </div>
       </div>

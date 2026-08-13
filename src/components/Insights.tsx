@@ -35,8 +35,8 @@ export default function Insights() {
       <div className="mx-auto max-w-7xl px-6">
         <div className="mb-14 flex flex-col justify-between gap-8 md:flex-row md:items-end" data-reveal>
           <div>
-            <p className="mb-4 flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-cyber-blue">
-              <span className="h-px w-10 bg-cyber-blue" />
+            <p className="mb-4 flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-teal">
+              <span className="h-px w-10 bg-teal" />
               Insights
             </p>
             <h2 className="max-w-2xl font-display text-4xl font-bold leading-tight tracking-tight md:text-6xl">
@@ -53,7 +53,7 @@ export default function Insights() {
                 onClick={() => setFilter(f)}
                 className={`rounded-full border px-4 py-2 text-xs font-medium uppercase tracking-wider transition-all ${
                   filter === f
-                    ? 'border-cyber-blue bg-cyber-blue text-void'
+                    ? 'border-teal bg-teal text-void'
                     : 'border-white/10 text-white/50 hover:border-white/30 hover:text-white'
                 }`}
               >
@@ -74,22 +74,22 @@ export default function Insights() {
                 <span
                   className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-wider ${
                     post.accent === 'orange'
-                      ? 'border-neon-orange/30 bg-neon-orange/15 text-neon-orange'
-                      : 'border-cyber-blue/30 bg-cyber-blue/15 text-cyber-blue'
+                      ? 'border-gold/30 bg-gold/15 text-gold'
+                      : 'border-teal/30 bg-teal/15 text-teal'
                   }`}
                 >
                   {post.category}
                 </span>
-                <ArrowUpRight size={18} className="text-white/30 transition-all duration-300 group-hover:rotate-45 group-hover:text-cyber-blue" />
+                <ArrowUpRight size={18} className="text-white/30 transition-all duration-300 group-hover:rotate-45 group-hover:text-teal" />
               </div>
 
-              <h3 className="mt-8 font-display text-xl font-semibold leading-snug text-white transition-colors duration-300 group-hover:text-cyber-blue">
+              <h3 className="mt-8 font-display text-xl font-semibold leading-snug text-white transition-colors duration-300 group-hover:text-teal">
                 {post.title}
               </h3>
 
               <div className="mt-8 flex items-center gap-4 border-t border-white/10 pt-5 text-xs text-white/40">
                 <span className="flex items-center gap-1.5">
-                  <CalendarDays size={13} className="text-neon-orange" />
+                  <CalendarDays size={13} className="text-gold" />
                   {post.date}
                 </span>
               </div>

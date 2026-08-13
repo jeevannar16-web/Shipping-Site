@@ -33,7 +33,7 @@ export function TrackingSimulator() {
   return (
     <div className="rounded-2xl border border-white/10 bg-carbon p-8 md:p-10">
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyber-blue/10 text-cyber-blue">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal/10 text-teal">
           <Search size={18} />
         </div>
         <div>
@@ -47,12 +47,12 @@ export function TrackingSimulator() {
           value={id}
           onChange={(e) => setId(e.target.value)}
           placeholder="Enter consignment number"
-          className="flex-1 rounded-xl border border-white/10 bg-void px-4 py-3 text-sm text-white placeholder-white/25 outline-none transition-colors focus:border-cyber-blue"
+          className="flex-1 rounded-xl border border-white/10 bg-void px-4 py-3 text-sm text-white placeholder-white/25 outline-none transition-colors focus:border-teal"
           aria-label="Consignment number"
         />
         <button
           type="submit"
-          className="flex items-center justify-center gap-2 rounded-xl bg-cyber-blue px-6 py-3 text-sm font-semibold text-void transition-all hover:shadow-[0_0_30px_rgba(0,240,255,0.35)]"
+          className="flex items-center justify-center gap-2 rounded-xl bg-teal px-6 py-3 text-sm font-semibold text-void transition-all hover:shadow-[0_0_30px_rgba(45,212,191,0.35)]"
         >
           Track <Search size={15} />
         </button>
@@ -63,7 +63,7 @@ export function TrackingSimulator() {
           <button
             key={s}
             onClick={() => setId(s)}
-            className="rounded-full border border-white/10 px-3 py-1 font-mono text-xs text-white/50 transition-all hover:border-cyber-blue/50 hover:text-cyber-blue"
+            className="rounded-full border border-white/10 px-3 py-1 font-mono text-xs text-white/50 transition-all hover:border-teal/50 hover:text-teal"
           >
             {s}
           </button>
@@ -71,7 +71,7 @@ export function TrackingSimulator() {
       </div>
 
       {error && (
-        <p className="mt-4 rounded-lg border border-neon-orange/30 bg-neon-orange/5 px-4 py-2 text-xs text-neon-orange">
+        <p className="mt-4 rounded-lg border border-gold/30 bg-gold/5 px-4 py-2 text-xs text-gold">
           Consignment not found. Try one of the sample numbers above.
         </p>
       )}
@@ -79,8 +79,8 @@ export function TrackingSimulator() {
       {tracking && (
         <div className="mt-8" key={tracking.id} data-anim="hub-panel">
           <div className="flex items-center justify-between">
-            <p className="font-mono text-xs text-cyber-blue">{tracking.id}</p>
-            <span className="flex items-center gap-1.5 rounded-full bg-cyber-blue/10 px-3 py-1 text-[10px] uppercase tracking-wider text-cyber-blue">
+            <p className="font-mono text-xs text-teal">{tracking.id}</p>
+            <span className="flex items-center gap-1.5 rounded-full bg-teal/10 px-3 py-1 text-[10px] uppercase tracking-wider text-teal">
               <Clock size={11} /> In transit
             </span>
           </div>
@@ -92,21 +92,21 @@ export function TrackingSimulator() {
               return (
                 <li key={step.label} className="relative flex gap-4 pb-6 last:pb-0">
                   {i < TRACKING_STEPS.length - 1 && (
-                    <span className={`absolute left-[15px] top-9 h-full w-px ${done ? 'bg-cyber-blue/40' : 'bg-white/10'}`} />
+                    <span className={`absolute left-[15px] top-9 h-full w-px ${done ? 'bg-teal/40' : 'bg-white/10'}`} />
                   )}
                   <span
                     className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors ${
                       current
-                        ? 'border-cyber-blue bg-cyber-blue/15 text-cyber-blue'
+                        ? 'border-teal bg-teal/15 text-teal'
                         : done
-                          ? 'border-cyber-blue/50 bg-cyber-blue/10 text-cyber-blue'
+                          ? 'border-teal/50 bg-teal/10 text-teal'
                           : 'border-white/10 bg-carbon text-white/20'
                     }`}
                   >
                     {done ? <CheckCircle2 size={15} /> : <Icon size={14} />}
                   </span>
                   <div className="pt-1">
-                    <p className={`text-sm font-medium ${current ? 'text-cyber-blue' : done ? 'text-white' : 'text-white/35'}`}>
+                    <p className={`text-sm font-medium ${current ? 'text-teal' : done ? 'text-white' : 'text-white/35'}`}>
                       {step.label}
                     </p>
                     {current && <p className="mt-1 text-xs text-white/50">{step.desc}</p>}
@@ -131,7 +131,7 @@ const MODES = [
 export function QuoteSimulator() {
   const [mode, setMode] = useState('air')
   const [weight, setWeight] = useState(100)
-  const [origin, setOrigin] = useState('Melbourne')
+  const [origin, setOrigin] = useState('Kathmandu')
   const [dest, setDest] = useState('Los Angeles')
 
   const selected = MODES.find((m) => m.id === mode)!
@@ -140,7 +140,7 @@ export function QuoteSimulator() {
   return (
     <div className="rounded-2xl border border-white/10 bg-carbon p-8 md:p-10">
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neon-orange/10 text-neon-orange">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold/10 text-gold">
           <Search size={18} className="rotate-90" />
         </div>
         <div>
@@ -159,7 +159,7 @@ export function QuoteSimulator() {
                 onClick={() => setMode(m.id)}
                 className={`flex flex-col items-center gap-1.5 rounded-xl border py-3 transition-all ${
                   mode === m.id
-                    ? 'border-neon-orange bg-neon-orange/10 text-neon-orange'
+                    ? 'border-gold bg-gold/10 text-gold'
                     : 'border-white/10 text-white/50 hover:border-white/25 hover:text-white'
                 }`}
               >
@@ -176,7 +176,7 @@ export function QuoteSimulator() {
             <select
               value={origin}
               onChange={(e) => setOrigin(e.target.value)}
-              className="w-full appearance-none rounded-xl border border-white/10 bg-void px-3 py-2.5 text-sm text-white outline-none focus:border-neon-orange"
+              className="w-full appearance-none rounded-xl border border-white/10 bg-void px-3 py-2.5 text-sm text-white outline-none focus:border-gold"
             >
               {['Melbourne', 'Sydney', 'Auckland', 'Hong Kong'].map((c) => (
                 <option key={c} className="bg-void">{c}</option>
@@ -188,7 +188,7 @@ export function QuoteSimulator() {
             <select
               value={dest}
               onChange={(e) => setDest(e.target.value)}
-              className="w-full appearance-none rounded-xl border border-white/10 bg-void px-3 py-2.5 text-sm text-white outline-none focus:border-neon-orange"
+              className="w-full appearance-none rounded-xl border border-white/10 bg-void px-3 py-2.5 text-sm text-white outline-none focus:border-gold"
             >
               {['Los Angeles', 'London', 'Hong Kong', 'Auckland'].map((c) => (
                 <option key={c} className="bg-void">{c}</option>
@@ -200,7 +200,7 @@ export function QuoteSimulator() {
         <div>
           <div className="flex items-center justify-between">
             <label className="text-[10px] uppercase tracking-wider text-white/40">Estimated weight</label>
-            <span className="font-mono text-sm text-neon-orange">{weight} kg</span>
+            <span className="font-mono text-sm text-gold">{weight} kg</span>
           </div>
           <input
             type="range"
@@ -209,16 +209,16 @@ export function QuoteSimulator() {
             step={10}
             value={weight}
             onChange={(e) => setWeight(Number(e.target.value))}
-            className="mt-2 w-full accent-neon-orange"
+            className="mt-2 w-full accent-gold"
             aria-label="Estimated weight"
           />
         </div>
 
-        <div className="rounded-xl border border-neon-orange/20 bg-void/60 p-5 text-center">
+        <div className="rounded-xl border border-gold/20 bg-void/60 p-5 text-center">
           <p className="text-[10px] uppercase tracking-[0.25em] text-white/40">
             Estimated {selected.label.toLowerCase()} cost
           </p>
-          <p className="mt-2 font-display text-4xl font-bold text-glow-orange text-neon-orange">
+          <p className="mt-2 font-display text-4xl font-bold text-glow-gold text-gold">
             AUD ${estimate.toLocaleString()}
           </p>
           <p className="mt-1 text-xs text-white/40">
@@ -228,7 +228,7 @@ export function QuoteSimulator() {
 
         <a
           href="#contact"
-          className="block rounded-xl bg-neon-orange py-3.5 text-center text-sm font-semibold text-void transition-all hover:shadow-[0_0_30px_rgba(255,85,0,0.35)]"
+          className="block rounded-xl bg-gold py-3.5 text-center text-sm font-semibold text-void transition-all hover:shadow-[0_0_30px_rgba(245,165,36,0.35)]"
         >
           Get an exact quote
         </a>

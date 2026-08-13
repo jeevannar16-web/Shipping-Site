@@ -7,9 +7,9 @@ export default function Testimonials() {
       <div className="mx-auto max-w-7xl px-6">
         <div className="mb-14 flex flex-col justify-between gap-6 md:flex-row md:items-end" data-reveal>
           <div>
-            <p className="mb-4 flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-cyber-blue">
-              <span className="h-px w-10 bg-cyber-blue" />
-              Trusted by businesses across APAC
+            <p className="mb-4 flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-teal">
+              <span className="h-px w-10 bg-teal" />
+              Trusted by businesses across the network
             </p>
             <h2 className="max-w-2xl font-display text-4xl font-bold leading-tight tracking-tight md:text-6xl">
               They let our team
@@ -28,14 +28,14 @@ export default function Testimonials() {
               key={t.name}
               className="group relative flex flex-col rounded-2xl border border-white/10 bg-carbon p-8 transition-all duration-500 hover:-translate-y-1 hover:border-white/25"
             >
-              <Quote size={26} className="text-neon-orange" />
+              <Quote size={26} className="text-gold" />
               <blockquote className="mt-6 flex-1 text-sm leading-relaxed text-white/60">
                 {t.quote}
               </blockquote>
               <figcaption className="mt-8 border-t border-white/10 pt-5">
                 <p className="font-display text-sm font-semibold text-white">{t.name}</p>
                 <p className="mt-1 text-xs leading-relaxed text-white/40">{t.role}</p>
-                <p className="mt-0.5 text-xs font-medium text-cyber-blue">{t.org}</p>
+                <p className="mt-0.5 text-xs font-medium text-teal">{t.org}</p>
               </figcaption>
             </figure>
           ))}

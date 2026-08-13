@@ -61,7 +61,7 @@ export default function Cursor() {
     <>
       <div
         ref={dotRef}
-        className="pointer-events-none fixed left-0 top-0 z-[100] hidden -translate-x-1/2 -translate-y-1/2 rounded-full bg-neon-orange transition-opacity duration-300 md:block"
+        className="pointer-events-none fixed left-0 top-0 z-[100] hidden -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold transition-opacity duration-300 md:block"
         style={{ width: 6, height: 6, marginLeft: -3, marginTop: -3, opacity: hovering ? 0.4 : 1 }}
       />
       <div
@@ -72,8 +72,8 @@ export default function Cursor() {
           height: hovering ? 48 : 34,
           marginLeft: hovering ? -24 : -17,
           marginTop: hovering ? -24 : -17,
-          borderColor: hovering ? 'rgba(0,240,255,0.9)' : 'rgba(255,85,0,0.5)',
-          boxShadow: hovering ? '0 0 20px rgba(0,240,255,0.25)' : '0 0 12px rgba(255,85,0,0.15)',
+          borderColor: hovering ? 'rgba(45,212,191,0.9)' : 'rgba(245,165,36,0.5)',
+          boxShadow: hovering ? '0 0 20px rgba(45,212,191,0.25)' : '0 0 12px rgba(245,165,36,0.15)',
         }}
       />
     </>

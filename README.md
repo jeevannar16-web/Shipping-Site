@@ -2,10 +2,10 @@
 
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="./public/favicon.svg">
-    <img src="./public/favicon.svg" alt="United Carriers logo" width="80" />
+    <img src="./public/favicon.svg" alt="Jeevan Global Logistics logo" width="80" />
   </picture>
 
-  # United Carriers
+  # Jeevan Global Logistics
 
   ### Global Freight Forwarding & Logistics — Award-Winning Interactive 3D Website
 
@@ -16,7 +16,7 @@
   [![Three.js](https://img.shields.io/badge/Three.js-000000?style=for-the-badge&logo=three.js&logoColor=white)](https://threejs.org/)
   [![GSAP](https://img.shields.io/badge/GSAP-88CE02?style=for-the-badge&logo=greensock&logoColor=black)](https://gsap.com/)
 
-  A high-end, Awwwards-style corporate website for **United Carriers** — a global freight
+  A high-end, Awwwards-style corporate website for **Jeevan Global Logistics** — a global freight
   forwarder and logistics provider. Built with a cinematic motion system, an interactive
   WebGL 3D globe, and a fully responsive dark industrial design.
 
@@ -94,7 +94,7 @@ npm run preview # serve the built site locally
 | Layer | Technology |
 | --- | --- |
 | **Framework** | React 19 + Vite 8 (TypeScript) |
-| **Styling** | Tailwind CSS v4 (dark design system, neon orange / cyber blue) |
+| **Styling** | Tailwind CSS v4 (dark design system, gold / teal) |
 | **3D / WebGL** | Three.js + React Three Fiber + Drei |
 | **Animation** | GSAP (ScrollTrigger) + Lenis smooth scroll |
 | **Icons** | Lucide React |
@@ -103,7 +103,7 @@ npm run preview # serve the built site locally
 ### Design tokens
 
 - Background — `#0a0a0c` (void), `#111114` (carbon), `#18181c` (graphite)
-- Accent — `#ff5500` (neon orange), `#00f0ff` (cyber blue)
+- Accent — `#f5a524` (gold), `#2dd4bf` (teal)
 - Headlines — Space Grotesk · Body — Inter
 
 ---
@@ -137,7 +137,7 @@ src/
 │   ├── useCountUp.ts        # Scroll-triggered number counter
 │   ├── useLerpDamped.ts     # Damped value lerp for camera
 │   └── useReducedMotion.ts  # prefers-reduced-motion detection
-├── data.ts                  # All site content (real United Carriers data)
+├── data.ts                  # All site content (editable site content)
 ├── App.tsx                  # Page composition + motion wiring
 ├── index.css                # Tailwind v4 theme + design tokens
 └── main.tsx
@@ -180,4 +180,4 @@ Both configs are included (`vercel.json`, `netlify.toml`) with build command `np
 
 ## 📄 License
 
-© 2026 United Carriers APAC Pty Ltd. All rights reserved.
+© 2026 Jeevan Global Logistics. All rights reserved.

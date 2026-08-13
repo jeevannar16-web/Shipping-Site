@@ -30,7 +30,7 @@ export function CargoPlane({ position = [0, 0, 0] as [number, number, number], s
         {/* Tail fin */}
         <mesh position={[0, 0.45, -1.0]} rotation={[0, 0, Math.PI / 2]}>
           <boxGeometry args={[0.08, 0.8, 0.7]} />
-          <meshStandardMaterial color="#ff5500" metalness={0.3} roughness={0.5} />
+          <meshStandardMaterial color="#f5a524" metalness={0.3} roughness={0.5} />
         </mesh>
         {/* Wings */}
         <mesh position={[0, 0.05, 0]} rotation={[0, 0, 0]}>
@@ -49,7 +49,7 @@ export function CargoPlane({ position = [0, 0, 0] as [number, number, number], s
         {/* Accent line */}
         <mesh position={[0, 0.18, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.285, 0.285, 2.2, 20, 1, false, 0, Math.PI / 3]} />
-          <meshStandardMaterial color="#00f0ff" emissive="#00f0ff" emissiveIntensity={0.5} />
+          <meshStandardMaterial color="#2dd4bf" emissive="#2dd4bf" emissiveIntensity={0.5} />
         </mesh>
       </group>
     </Float>
@@ -67,7 +67,7 @@ export function ContainerShip({ position = [0, 0, 0] as [number, number, number]
     }
   })
 
-  const containerColors = ['#ff5500', '#00f0ff', '#dfe6ee', '#ff7700', '#1f8fff', '#a0a8b4']
+  const containerColors = ['#f5a524', '#2dd4bf', '#dfe6ee', '#ff7700', '#1f8fff', '#a0a8b4']
 
   return (
     <Float speed={1.4} rotationIntensity={0.15} floatIntensity={0.5}>
@@ -80,7 +80,7 @@ export function ContainerShip({ position = [0, 0, 0] as [number, number, number]
         {/* Hull waterline */}
         <mesh position={[0, -0.3, 0]}>
           <boxGeometry args={[2.62, 0.18, 0.72]} />
-          <meshStandardMaterial color="#ff5500" emissive="#ff5500" emissiveIntensity={0.3} />
+          <meshStandardMaterial color="#f5a524" emissive="#f5a524" emissiveIntensity={0.3} />
         </mesh>
         {/* Bow */}
         <mesh position={[1.35, 0.1, 0]} rotation={[0, 0, 0]}>
@@ -94,7 +94,7 @@ export function ContainerShip({ position = [0, 0, 0] as [number, number, number]
         </mesh>
         <mesh position={[-0.8, 1.25, 0]}>
           <boxGeometry args={[0.4, 0.25, 0.45]} />
-          <meshStandardMaterial color="#00f0ff" emissive="#00f0ff" emissiveIntensity={0.6} />
+          <meshStandardMaterial color="#2dd4bf" emissive="#2dd4bf" emissiveIntensity={0.6} />
         </mesh>
         {/* Containers stack */}
         {Array.from({ length: 3 }).map((_, row) =>

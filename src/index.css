@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  --color-void: #0a0a0c;
-  --color-carbon: #111114;
-  --color-graphite: #18181c;
-  --color-neon-orange: #ff5500;
-  --color-cyber-blue: #00f0ff;
-  --font-display: "Space Grotesk", sans-serif;
-  --font-body: "Inter", sans-serif;
+  --color-void: #060a13;
+  --color-carbon: #0c1322;
+  --color-graphite: #141d31;
+  --color-gold: #f5a524;
+  --color-teal: #2dd4bf;
+  --font-display: "Sora", sans-serif;
+  --font-body: "Manrope", sans-serif;
 }
 
 html {
-  background: #0a0a0c;
+  background: #060a13;
 }
 
 html.lenis,
@@ -33,40 +33,40 @@ html.lenis body {
 
 body {
   font-family: var(--font-body);
-  color: #f5f5f5;
-  background: #0a0a0c;
+  color: #f5f7fa;
+  background: #060a13;
   overflow-x: hidden;
 }
 
 ::selection {
-  background: #ff5500;
-  color: #0a0a0c;
+  background: #f5a524;
+  color: #060a13;
 }
 
 ::-webkit-scrollbar {
   width: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: #0a0a0c;
+  background: #060a13;
 }
 ::-webkit-scrollbar-thumb {
-  background: #26262c;
+  background: #1b2642;
   border-radius: 6px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #ff5500;
+  background: #f5a524;
 }
 
 .font-display {
   font-family: var(--font-display);
 }
 
-.text-glow-orange {
-  text-shadow: 0 0 30px rgba(255, 85, 0, 0.55), 0 0 90px rgba(255, 85, 0, 0.25);
+.text-glow-gold {
+  text-shadow: 0 0 30px rgba(245, 165, 36, 0.55), 0 0 90px rgba(245, 165, 36, 0.25);
 }
 
-.text-glow-blue {
-  text-shadow: 0 0 30px rgba(0, 240, 255, 0.5), 0 0 90px rgba(0, 240, 255, 0.2);
+.text-glow-teal {
+  text-shadow: 0 0 30px rgba(45, 212, 191, 0.5), 0 0 90px rgba(45, 212, 191, 0.2);
 }
 
 .gradient-border {
@@ -74,8 +74,8 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 .gradient-border:hover {
-  border-color: rgba(255, 85, 0, 0.35);
-  box-shadow: 0 0 40px rgba(255, 85, 0, 0.08);
+  border-color: rgba(245, 165, 36, 0.35);
+  box-shadow: 0 0 40px rgba(245, 165, 36, 0.08);
 }
 
 .marquee-track {

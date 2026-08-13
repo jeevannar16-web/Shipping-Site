@@ -21,7 +21,7 @@ export default function LogisticsScene({
           <Suspense fallback={null}>
             <ambientLight intensity={0.7} color="#556" />
             <directionalLight position={[3, 3, 4]} intensity={1.6} color="#dfe8ff" />
-            <pointLight position={[0, -3, -3]} intensity={0.8} color="#00f0ff" />
+            <pointLight position={[0, -3, -3]} intensity={0.8} color="#2dd4bf" />
             {type === 'plane' ? (
               <CargoPlane position={[0, 0, 0]} scale={1.15} />
             ) : (

@@ -15,17 +15,17 @@ export default function Contact() {
 
   return (
     <section id="contact" className="relative overflow-hidden border-t border-white/5 py-28 md:py-36">
-      <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-[60rem] -translate-x-1/2 bg-neon-orange/6 blur-[140px]" />
-      <div className="pointer-events-none absolute bottom-0 right-0 h-72 w-[40rem] bg-cyber-blue/6 blur-[140px]" />
+      <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-[60rem] -translate-x-1/2 bg-gold/6 blur-[140px]" />
+      <div className="pointer-events-none absolute bottom-0 right-0 h-72 w-[40rem] bg-teal/6 blur-[140px]" />
 
       <div className="mx-auto max-w-7xl px-6">
         <div className="mb-16" data-reveal>
-          <p className="mb-4 flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-neon-orange">
-            <span className="h-px w-10 bg-neon-orange" />
+          <p className="mb-4 flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-gold">
+            <span className="h-px w-10 bg-gold" />
             Contact
           </p>
           <h2 className="max-w-3xl font-display text-4xl font-bold leading-tight tracking-tight text-white md:text-7xl">
-            Talk <span className="text-glow-orange text-neon-orange">with us.</span>
+            Talk <span className="text-glow-gold text-gold">with us.</span>
           </h2>
         </div>
 
@@ -33,7 +33,7 @@ export default function Contact() {
           <div className="bg-carbon p-8 md:p-12">
             {sent ? (
               <div className="flex h-full flex-col items-center justify-center py-24 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-cyber-blue/15 text-cyber-blue">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-teal/15 text-teal">
                   <Send size={26} />
                 </div>
                 <h3 className="mt-6 font-display text-2xl font-semibold text-white">Inquiry received</h3>
@@ -53,7 +53,7 @@ export default function Contact() {
                       required
                       type="text"
                       placeholder="Jane Doe"
-                      className="w-full rounded-xl border border-white/10 bg-void px-4 py-3 text-sm text-white placeholder-white/25 outline-none transition-colors focus:border-neon-orange"
+                      className="w-full rounded-xl border border-white/10 bg-void px-4 py-3 text-sm text-white placeholder-white/25 outline-none transition-colors focus:border-gold"
                     />
                   </div>
                   <div>
@@ -61,7 +61,7 @@ export default function Contact() {
                     <input
                       type="text"
                       placeholder="Acme Industries"
-                      className="w-full rounded-xl border border-white/10 bg-void px-4 py-3 text-sm text-white placeholder-white/25 outline-none transition-colors focus:border-neon-orange"
+                      className="w-full rounded-xl border border-white/10 bg-void px-4 py-3 text-sm text-white placeholder-white/25 outline-none transition-colors focus:border-gold"
                     />
                   </div>
                   <div>
@@ -70,7 +70,7 @@ export default function Contact() {
                       required
                       type="email"
                       placeholder="jane@company.com"
-                      className="w-full rounded-xl border border-white/10 bg-void px-4 py-3 text-sm text-white placeholder-white/25 outline-none transition-colors focus:border-neon-orange"
+                      className="w-full rounded-xl border border-white/10 bg-void px-4 py-3 text-sm text-white placeholder-white/25 outline-none transition-colors focus:border-gold"
                     />
                   </div>
                   <div>
@@ -78,7 +78,7 @@ export default function Contact() {
                     <input
                       type="tel"
                       placeholder="+61 400 000 000"
-                      className="w-full rounded-xl border border-white/10 bg-void px-4 py-3 text-sm text-white placeholder-white/25 outline-none transition-colors focus:border-neon-orange"
+                      className="w-full rounded-xl border border-white/10 bg-void px-4 py-3 text-sm text-white placeholder-white/25 outline-none transition-colors focus:border-gold"
                     />
                   </div>
                   <div className="sm:col-span-2">
@@ -86,7 +86,7 @@ export default function Contact() {
                     <select
                       value={reason}
                       onChange={(e) => setReason(e.target.value)}
-                      className="w-full appearance-none rounded-xl border border-white/10 bg-void px-4 py-3 text-sm text-white outline-none transition-colors focus:border-neon-orange"
+                      className="w-full appearance-none rounded-xl border border-white/10 bg-void px-4 py-3 text-sm text-white outline-none transition-colors focus:border-gold"
                     >
                       {REASONS.map((r) => (
                         <option key={r} value={r} className="bg-void">
@@ -99,8 +99,8 @@ export default function Contact() {
                     <label className="mb-2 block text-xs uppercase tracking-wider text-white/40">Origin → Destination</label>
                     <input
                       type="text"
-                      placeholder="e.g. Melbourne → Los Angeles"
-                      className="w-full rounded-xl border border-white/10 bg-void px-4 py-3 text-sm text-white placeholder-white/25 outline-none transition-colors focus:border-neon-orange"
+                      placeholder="e.g. Kathmandu → Los Angeles"
+                      className="w-full rounded-xl border border-white/10 bg-void px-4 py-3 text-sm text-white placeholder-white/25 outline-none transition-colors focus:border-gold"
                     />
                   </div>
                   <div className="sm:col-span-2">
@@ -108,14 +108,14 @@ export default function Contact() {
                     <textarea
                       rows={4}
                       placeholder="Tell us about your cargo, timeline and any special requirements…"
-                      className="w-full resize-none rounded-xl border border-white/10 bg-void px-4 py-3 text-sm text-white placeholder-white/25 outline-none transition-colors focus:border-neon-orange"
+                      className="w-full resize-none rounded-xl border border-white/10 bg-void px-4 py-3 text-sm text-white placeholder-white/25 outline-none transition-colors focus:border-gold"
                     />
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="group flex w-full items-center justify-center gap-3 rounded-xl bg-neon-orange py-4 text-sm font-semibold text-void transition-all hover:shadow-[0_0_40px_rgba(255,85,0,0.4)]"
+                  className="group flex w-full items-center justify-center gap-3 rounded-xl bg-gold py-4 text-sm font-semibold text-void transition-all hover:shadow-[0_0_40px_rgba(245,165,36,0.4)]"
                 >
                   Send Inquiry
                   <Send size={16} className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-0.5" />
@@ -132,22 +132,22 @@ export default function Contact() {
             </p>
 
             <div className="mt-10 space-y-4">
-              <a href={`mailto:${CONTACT.email}`} className="group flex items-center gap-4 rounded-xl border border-white/10 bg-carbon p-5 transition-all hover:border-cyber-blue/40">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-cyber-blue/10 text-cyber-blue">
+              <a href={`mailto:${CONTACT.email}`} className="group flex items-center gap-4 rounded-xl border border-white/10 bg-carbon p-5 transition-all hover:border-teal/40">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal/10 text-teal">
                   <Mail size={18} />
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase tracking-wider text-white/40">Email</p>
-                  <p className="truncate text-sm font-medium text-white group-hover:text-cyber-blue">{CONTACT.email}</p>
+                  <p className="truncate text-sm font-medium text-white group-hover:text-teal">{CONTACT.email}</p>
                 </div>
               </a>
-              <a href={CONTACT.phoneHref} className="group flex items-center gap-4 rounded-xl border border-white/10 bg-carbon p-5 transition-all hover:border-neon-orange/40">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-neon-orange/10 text-neon-orange">
+              <a href={CONTACT.phoneHref} className="group flex items-center gap-4 rounded-xl border border-white/10 bg-carbon p-5 transition-all hover:border-gold/40">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gold/10 text-gold">
                   <Phone size={18} />
                 </div>
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase tracking-wider text-white/40">Hotline</p>
-                  <p className="text-sm font-medium text-white group-hover:text-neon-orange">{CONTACT.phone}</p>
+                  <p className="text-sm font-medium text-white group-hover:text-gold">{CONTACT.phone}</p>
                 </div>
               </a>
               <div className="flex items-start gap-4 rounded-xl border border-white/10 bg-carbon p-5">
@@ -195,25 +195,25 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-12 md:grid-cols-4">
           <div className="md:col-span-2">
             <div className="flex items-center gap-3">
-              <div className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-neon-orange">
-                <span className="font-display text-lg font-bold text-void">U</span>
-                <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-cyber-blue" />
+              <div className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-gold">
+                <span className="font-display text-lg font-bold text-void">J</span>
+                <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-teal" />
               </div>
               <div className="leading-none">
                 <span className="font-display text-lg font-bold tracking-tight">
-                  United<span className="text-neon-orange">Carriers</span>
+                  Jeevan<span className="text-gold">Logistics</span>
                 </span>
                 <span className="mt-0.5 block text-[9px] uppercase tracking-[0.28em] text-white/40">
-                  Global Logistics
+                  Global Freight Forwarding
                 </span>
               </div>
             </div>
             <p className="mt-6 max-w-sm text-sm leading-relaxed text-white/50">
-              Freight forwarding, land transport, and customs brokerage, unified across APAC
-              under one accountable team.
+              Freight forwarding, customs brokerage, and transport — unified under one
+              accountable team.
             </p>
             <p className="mt-4 text-sm font-medium text-white/70">
-              One operator. <span className="text-neon-orange">Every leg of the journey.</span>
+              One operator. <span className="text-gold">Every leg of the journey.</span>
             </p>
           </div>
 
@@ -253,7 +253,7 @@ export function Footer() {
         </div>
 
         <div className="mt-14 flex flex-col justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/30 md:flex-row">
-          <p>© {year} United Carriers APAC Pty Ltd. All rights reserved.</p>
+          <p>© {year} Jeevan Global Logistics. All rights reserved.</p>
           <div className="flex flex-wrap gap-6">
             <a href="#" className="transition-colors hover:text-white/60">Privacy Policy</a>
             <a href="#" className="transition-colors hover:text-white/60">Terms & Conditions</a>
@@ -270,7 +270,7 @@ export function Footer() {
             {['QHSE', 'ISO 9001', 'ISO 14001', 'ISO 45001'].map((badge) => (
               <span
                 key={badge}
-                className="rounded-lg border border-white/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-white/60 transition-colors hover:border-cyber-blue/50 hover:text-cyber-blue"
+                className="rounded-lg border border-white/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-white/60 transition-colors hover:border-teal/50 hover:text-teal"
               >
                 {badge}
               </span>

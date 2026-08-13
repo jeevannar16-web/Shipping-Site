@@ -3,7 +3,7 @@ import { Menu, X, ArrowUpRight, Mail, Phone } from 'lucide-react'
 import { NAV_LINKS, CONTACT } from '../data'
 
 const CLOCKS = [
-  { city: 'Melbourne', tz: 'Australia/Melbourne' },
+  { city: 'Kathmandu', tz: 'Asia/Kathmandu' },
   { city: 'Hong Kong', tz: 'Asia/Hong_Kong' },
   { city: 'London', tz: 'Europe/London' },
   { city: 'Los Angeles', tz: 'America/Los_Angeles' },
@@ -50,7 +50,7 @@ function ClockItem({ city, tz }: { city: string; tz: string }) {
   const time = useClock(tz)
   return (
     <div className="flex items-center gap-2">
-      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-cyber-blue" />
+      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-teal" />
       <span className="text-xs text-white/40">{city}</span>
       <span className="font-mono text-xs tabular-nums text-white/70">{time}</span>
     </div>
@@ -90,17 +90,17 @@ export default function Navbar() {
         }`}
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <a href="#" className="flex items-center gap-3" aria-label="United Carriers home">
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-neon-orange">
-              <span className="font-display text-lg font-bold text-void">U</span>
-              <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-cyber-blue" />
+          <a href="#" className="flex items-center gap-3" aria-label="Jeevan Global Logistics home">
+            <div className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-gold">
+              <span className="font-display text-lg font-bold text-void">J</span>
+              <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-teal" />
             </div>
             <div className="leading-none">
               <span className="font-display text-lg font-bold tracking-tight">
-                United<span className="text-neon-orange">Carriers</span>
+                Jeevan<span className="text-gold">Logistics</span>
               </span>
               <span className="mt-0.5 block text-[9px] uppercase tracking-[0.28em] text-white/40">
-                Global Logistics
+                Global Freight Forwarding
               </span>
             </div>
           </a>
@@ -112,9 +112,9 @@ export default function Navbar() {
                 href={link.href}
                 className="group relative text-sm text-white/70 transition-colors hover:text-white"
               >
-                <span className="mr-1 text-[10px] text-neon-orange">{link.num}</span>
+                <span className="mr-1 text-[10px] text-gold">{link.num}</span>
                 {link.label}
-                <span className="absolute -bottom-1 left-0 h-px w-0 bg-neon-orange transition-all duration-300 group-hover:w-full" />
+                <span className="absolute -bottom-1 left-0 h-px w-0 bg-gold transition-all duration-300 group-hover:w-full" />
               </a>
             ))}
           </nav>
@@ -122,13 +122,13 @@ export default function Navbar() {
           <div className="flex items-center gap-3">
             <a
               href="#contact"
-              className="hidden items-center gap-2 rounded-full border border-white/15 px-5 py-2 text-sm font-medium text-white transition-all hover:border-neon-orange hover:bg-neon-orange hover:text-void sm:flex"
+              className="hidden items-center gap-2 rounded-full border border-white/15 px-5 py-2 text-sm font-medium text-white transition-all hover:border-gold hover:bg-gold hover:text-void sm:flex"
             >
               Work With Us
             </a>
             <button
               onClick={() => setOpen(true)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 text-white transition-all hover:border-cyber-blue hover:text-cyber-blue"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 text-white transition-all hover:border-teal hover:text-teal"
               aria-label="Open menu"
               aria-expanded={open}
             >
@@ -146,16 +146,16 @@ export default function Navbar() {
         aria-modal="true"
         aria-label="Navigation"
       >
-        <div className="pointer-events-none absolute -left-32 top-1/3 h-96 w-96 rounded-full bg-neon-orange/10 blur-[120px]" />
-        <div className="pointer-events-none absolute -right-32 top-1/2 h-96 w-96 rounded-full bg-cyber-blue/10 blur-[120px]" />
+        <div className="pointer-events-none absolute -left-32 top-1/3 h-96 w-96 rounded-full bg-gold/10 blur-[120px]" />
+        <div className="pointer-events-none absolute -right-32 top-1/2 h-96 w-96 rounded-full bg-teal/10 blur-[120px]" />
 
         <div className="flex items-center justify-between px-6 py-4">
           <span className="font-display text-lg font-bold">
-            United<span className="text-neon-orange">Carriers</span>
+            Jeevan<span className="text-gold">Logistics</span>
           </span>
           <button
             onClick={() => setOpen(false)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 text-white transition-all hover:border-neon-orange hover:text-neon-orange"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 text-white transition-all hover:border-gold hover:text-gold"
             aria-label="Close menu"
           >
             <X size={18} />
@@ -171,14 +171,14 @@ export default function Navbar() {
               className="group flex items-center gap-4 overflow-hidden py-2 md:gap-8"
               tabIndex={open ? 0 : -1}
             >
-              <span className="text-sm text-neon-orange md:text-base">{link.num}</span>
+              <span className="text-sm text-gold md:text-base">{link.num}</span>
               <span
-                className="font-display text-4xl font-bold tracking-tight text-white/90 transition-all duration-500 group-hover:translate-x-2 group-hover:text-cyber-blue md:text-6xl lg:text-7xl"
+                className="font-display text-4xl font-bold tracking-tight text-white/90 transition-all duration-500 group-hover:translate-x-2 group-hover:text-teal md:text-6xl lg:text-7xl"
                 style={{ transitionDelay: `${open ? i * 60 : 0}ms`, transform: open ? 'none' : 'translateY(110%)' }}
               >
                 {link.label}
               </span>
-              <ArrowUpRight className="h-6 w-6 text-white/0 transition-all duration-500 group-hover:text-cyber-blue md:h-10 md:w-10" />
+              <ArrowUpRight className="h-6 w-6 text-white/0 transition-all duration-500 group-hover:text-teal md:h-10 md:w-10" />
             </a>
           ))}
         </nav>
@@ -187,13 +187,13 @@ export default function Navbar() {
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <UTCLine />
             <div className="flex flex-col gap-2 text-xs uppercase tracking-[0.2em] text-white/35 md:flex-row md:items-center md:gap-8">
-              <a href={`mailto:${CONTACT.email}`} className="flex items-center gap-2 transition-colors hover:text-cyber-blue">
-                <Mail size={13} className="text-cyber-blue" /> {CONTACT.email}
+              <a href={`mailto:${CONTACT.email}`} className="flex items-center gap-2 transition-colors hover:text-teal">
+                <Mail size={13} className="text-teal" /> {CONTACT.email}
               </a>
-              <a href={CONTACT.phoneHref} className="flex items-center gap-2 transition-colors hover:text-neon-orange">
-                <Phone size={13} className="text-neon-orange" /> {CONTACT.phone}
+              <a href={CONTACT.phoneHref} className="flex items-center gap-2 transition-colors hover:text-gold">
+                <Phone size={13} className="text-gold" /> {CONTACT.phone}
               </a>
-              <span>© {new Date().getFullYear()} United Carriers</span>
+              <span>© {new Date().getFullYear()} Jeevan Global Logistics</span>
             </div>
           </div>
         </div>

@@ -175,7 +175,7 @@ export default function App() {
 
       <section id="tools" className="mx-auto max-w-7xl px-6 py-24" data-reveal>
         <div className="mb-12 text-center">
-          <p className="mb-3 text-xs uppercase tracking-[0.3em] text-cyber-blue">Digital tools</p>
+          <p className="mb-3 text-xs uppercase tracking-[0.3em] text-teal">Digital tools</p>
           <h2 className="font-display text-3xl font-bold tracking-tight text-white md:text-5xl">
             Track and estimate, <span className="text-white/40">in seconds.</span>
           </h2>

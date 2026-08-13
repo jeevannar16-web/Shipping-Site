@@ -96,7 +96,7 @@ function WireGrid({ radius }: { radius: number }) {
   return (
     <lineSegments ref={ref}>
       <primitive object={geometry} attach="geometry" />
-      <lineBasicMaterial color="#00f0ff" transparent opacity={0.15} />
+      <lineBasicMaterial color="#2dd4bf" transparent opacity={0.15} />
     </lineSegments>
   )
 }
@@ -131,7 +131,7 @@ function CountryMarker({
     <group position={pos}>
       <mesh ref={pulseRef}>
         <sphereGeometry args={[0.05, 16, 16]} />
-        <meshBasicMaterial color={isActive ? '#ff5500' : '#00f0ff'} transparent opacity={0.5} depthWrite={false} />
+        <meshBasicMaterial color={isActive ? '#f5a524' : '#2dd4bf'} transparent opacity={0.5} depthWrite={false} />
       </mesh>
       <mesh
         ref={dotRef}
@@ -146,9 +146,9 @@ function CountryMarker({
         }}
       >
         <sphereGeometry args={[isActive ? 0.032 : 0.022, 16, 16]} />
-        <meshBasicMaterial color={isActive ? '#ff5500' : '#00f0ff'} />
+        <meshBasicMaterial color={isActive ? '#f5a524' : '#2dd4bf'} />
       </mesh>
-      <pointLight color={isActive ? '#ff5500' : '#00f0ff'} intensity={8} distance={1.8} decay={2} />
+      <pointLight color={isActive ? '#f5a524' : '#2dd4bf'} intensity={8} distance={1.8} decay={2} />
     </group>
   )
 }
@@ -161,7 +161,7 @@ function RouteArc({ points }: { points: THREE.Vector3[] }) {
       new THREE.BufferAttribute(new Float32Array(points.flatMap((p) => [p.x, p.y, p.z])), 3),
     )
     const material = new THREE.LineBasicMaterial({
-      color: '#00f0ff',
+      color: '#2dd4bf',
       transparent: true,
       opacity: 0.35,
     })
@@ -330,7 +330,7 @@ function Globe({ activeCountryId, onHover }: { activeCountryId: string | null; o
       ))}
       <ambientLight intensity={0.6} color="#334" />
       <directionalLight position={[5, 3, 5]} intensity={1.4} color="#dfe8ff" />
-      <pointLight position={[0, -6, -4]} intensity={0.8} color="#00f0ff" />
+      <pointLight position={[0, -6, -4]} intensity={0.8} color="#2dd4bf" />
     </group>
   )
 }
@@ -338,7 +338,7 @@ function Globe({ activeCountryId, onHover }: { activeCountryId: string | null; o
 function SceneFallback() {
   return (
     <div className="flex h-full w-full items-center justify-center">
-      <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-neon-orange" />
+      <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-gold" />
     </div>
   )
 }
@@ -359,7 +359,7 @@ export default function GlobeScene({
       {failed ? (
         <div className="flex h-full w-full items-center justify-center">
           <div className="max-w-xs rounded-2xl border border-white/10 bg-carbon/80 p-8 text-center">
-            <div className="mx-auto h-20 w-20 rounded-full bg-gradient-to-br from-neon-orange/20 to-cyber-blue/20" />
+            <div className="mx-auto h-20 w-20 rounded-full bg-gradient-to-br from-gold/20 to-teal/20" />
             <p className="mt-4 font-display text-lg font-semibold text-white">Globe unavailable</p>
             <p className="mt-2 text-sm text-white/50">3D couldn't load on this device.</p>
           </div>
