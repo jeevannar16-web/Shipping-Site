@@ -152,8 +152,8 @@ export default function ViaductScene() {
 
   return (
     <SceneCanvas fallbackLabel="About" tone="blue" camera={{ position: [0, 26, 34], fov: 35 }}>
-      <color attach="background" args={['#0b0b0c']} />
-      <fog attach="fog" args={['#1a1410', 60, 140]} />
+      <color attach="background" args={['#101410']} />
+      <fog attach="fog" args={['#101410', 60, 140]} />
       <ambientLight intensity={0.6} />
       <directionalLight position={[-30, 40, -20]} intensity={2.2} color="#ffc98a" />
       <directionalLight position={[10, 4, 10]} intensity={0.3} color="#2b4bff" />

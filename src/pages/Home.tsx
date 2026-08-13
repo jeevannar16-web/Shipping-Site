@@ -48,7 +48,7 @@ function useSectionScrub(ref: RefObject<HTMLElement | null>, scrub?: ScrubRef) {
 }
 
 /** P1 — fixed right-edge rail showing which of the 6 film scenes is on screen. */
-const SCENE_RAIL_LABELS = ['Land', 'Terminal', 'Linehaul', 'Ocean', 'Terminal', 'Land']
+const SCENE_RAIL_LABELS = ['Network', 'Terminal', 'Linehaul', 'Highway', 'Yard', 'Ocean']
 
 function SceneRail() {
   const [active, setActive] = useState<number | null>(null)
@@ -150,7 +150,7 @@ function HeroSection() {
 
         <div className="pointer-events-none relative z-10 mx-auto w-full max-w-7xl px-6 py-24 md:px-10">
           <p className="mb-6 flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-orange">
-            <span className="h-px w-10 bg-orange" /> 01 — Land
+            <span className="h-px w-10 bg-orange" /> 01 — Network
           </p>
           <LineMask as="h1" className="font-display text-[clamp(3rem,9vw,8.5rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-[#ededed]">
             Every Leg
@@ -217,6 +217,12 @@ function TruckSection({ scrub }: { scrub: ScrubRef }) {
   return (
     <section ref={wrapRef} className={`scene bg-[#E6E1D8]`}>
       <div className="pin">
+        <div className="absolute left-6 top-8 z-20 md:left-10">
+          <p className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.3em] text-orange">
+            <span className="h-px w-8 bg-orange" />
+            03 — Linehaul
+          </p>
+        </div>
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center overflow-hidden">
           <span
             ref={wordRef}
@@ -227,7 +233,7 @@ function TruckSection({ scrub }: { scrub: ScrubRef }) {
         </div>
         <div className="absolute inset-0">
           <SuspenseBox label="Linehaul">
-            <SceneStage label="Linehaul" tone="orange" camera={{ position: [0, 1.7, 18], fov: 35 }} look={[0, 1.7, 0]}>
+            <SceneStage label="Linehaul" tone="orange">
               <TruckScene />
             </SceneStage>
           </SuspenseBox>
@@ -261,7 +267,7 @@ export default function Home() {
 
       <StickyScene index="2" mode="TERMINAL" bg="bg-[#E6E1D8]" text="text-[#0a0a0a]" line="One team, every mode.">
         <SuspenseBox label="Freight">
-          <SceneStage label="Freight" tone="orange" camera={{ position: [0, 5.4, 42], fov: 35 }} look={[0, 5, 0]}>
+          <SceneStage label="Freight" tone="orange">
             <StackerScene />
           </SceneStage>
         </SuspenseBox>
@@ -269,12 +275,24 @@ export default function Home() {
 
       <TruckSection scrub={truckScrub} />
 
-      <StickyScene index="4" mode="OCEAN" bg="bg-[#1E56A0]" line="Ocean freight, end to end." scrub={oceanScrub} sub="FCL, LCL and specialised cargo — across every major trade lane.">
+      <StickyScene index="4" mode="HIGHWAY" bg="bg-[#101410]" text="text-[#ededed]" line="Built for every lane.">
+        <SuspenseBox label="About">
+          <ViaductScene />
+        </SuspenseBox>
+      </StickyScene>
+
+      <StickyScene index="5" mode="YARD" bg="bg-[#B8C4CC]" text="text-[#0a0a0a]" line="Powering the network.">
+        <SuspenseBox label="Terminal">
+          <TerminalScene />
+        </SuspenseBox>
+      </StickyScene>
+
+      <StickyScene index="6" mode="OCEAN" bg="bg-[#1E56A0]" line="Ocean freight, end to end." scrub={oceanScrub} sub="FCL, LCL and specialised cargo — across every major trade lane.">
         <SuspenseBox label="Ocean">
-            <SceneStage label="Ocean" tone="blue" camera={{ position: [0, 3.025, 45], fov: 35 }} look={[0, 2, 0]}>
-              <ShipScene />
-            </SceneStage>
-          </SuspenseBox>
+          <SceneStage label="Ocean" tone="blue" camera={{ position: [0, 30, 20], fov: 60 }}>
+            <ShipScene />
+          </SceneStage>
+        </SuspenseBox>
         <div className="absolute left-6 top-8 z-10 md:left-10">
           <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-white backdrop-blur">
             <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-orange" />
@@ -298,17 +316,19 @@ export default function Home() {
         </div>
       </StickyScene>
 
-      <StickyScene index="5" mode="TERMINAL" bg="bg-[#B8C4CC]" text="text-[#0a0a0a]" line="Powering the network.">
-        <SuspenseBox label="Terminal">
-          <TerminalScene />
-        </SuspenseBox>
-      </StickyScene>
-
-      <StickyScene index="6" mode="LAND" bg="bg-[#101410]" text="text-[#ededed]" line="Built for every lane.">
-        <SuspenseBox label="About">
-          <ViaductScene />
-        </SuspenseBox>
-      </StickyScene>
+      {/* SERVICES MARQUEE */}
+      <section className="border-y border-white/[0.07] py-5">
+        <div className="overflow-hidden">
+          <div className="marquee-track flex w-max whitespace-nowrap">
+            {[...SERVICES, ...SERVICES].map((s, i) => (
+              <span key={i} className="mx-8 inline-flex items-center gap-8 font-display text-sm uppercase tracking-[0.18em] text-white/45">
+                {s.title}
+                <span className="text-orange">✦</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ——— Services intro (from SHOT 3 copy) ——— */}
       <section className="bg-[#efeae3]">
@@ -338,20 +358,6 @@ export default function Home() {
         <p className="px-[6vw] pb-[10vh] font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
           Under one group — air, ocean, customs, warehouse.
         </p>
-      </section>
-
-      {/* SERVICES MARQUEE */}
-      <section className="border-y border-white/[0.07] py-5">
-        <div className="overflow-hidden">
-          <div className="marquee-track flex w-max whitespace-nowrap">
-            {[...SERVICES, ...SERVICES].map((s, i) => (
-              <span key={i} className="mx-8 inline-flex items-center gap-8 font-display text-sm uppercase tracking-[0.18em] text-white/45">
-                {s.title}
-                <span className="text-orange">✦</span>
-              </span>
-            ))}
-          </div>
-        </div>
       </section>
 
       {/* STATS */}

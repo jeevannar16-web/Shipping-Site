@@ -40,24 +40,24 @@ function SkyDome() {
   )
 }
 
-/** S5 — LONG container yard: (2.4,2.6,6), 6 cols × step 2.5 × 4 rows z step 6.2, stacks 1–3. */
+/** YARD — LONG container block: containers LONG axis X (6,2.6,2.4), 4 rows × step 6.3, 6 cols z step 2.6, stacks 1–3. */
 const YARD_COLORS = ['#7a3222', '#b45a1e', '#2e5b40', '#24457a', '#6a6a6a', '#8b3a2a']
 
 function ContainerYard() {
   const meshes = useMemo(() => {
-    const geo = new THREE.BoxGeometry(2.4, 2.6, 6)
+    const geo = new THREE.BoxGeometry(6, 2.6, 2.4)
     const mats = YARD_COLORS.map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.7, metalness: 0.15, flatShading: true }))
     const inst = mats.map(() => new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial(), 216))
     const m = new THREE.Matrix4()
     let idx = 0
-    for (let c = 0; c < 6; c++) {
-      const x = -6.25 + c * 2.5
-      for (let r = 0; r < 4; r++) {
-        const z = -9.3 + r * 6.2
-        const stack = 1 + ((c * 7 + r * 3) % 3)
+    for (let r = 0; r < 4; r++) {
+      const x = -9.45 + r * 6.3
+      for (let c = 0; c < 6; c++) {
+        const z = -6.5 + c * 2.6
+        const stack = 1 + ((r + c) % 3)
         for (let s = 0; s < stack; s++) {
           const y = 1.3 + s * 2.6
-          const mi = (c * 7 + r * 3 + s) % YARD_COLORS.length
+          const mi = (r * 7 + c * 3 + s) % YARD_COLORS.length
           m.makeTranslation(x, y, z)
           inst[mi].setMatrixAt(idx++, m)
         }
@@ -95,7 +95,7 @@ function Lanes() {
   )
 }
 
-/** S5 — gantry crane: white legs (1,12,1) at (±10,6,±8), beam (24,1.4,1.8) y 11.5, trolley #222 y 10.7 x -6→6. */
+/** YARD — gantry crane: white legs (1,12,1) at (±11,6,±9), beam (24,1.4,1.8) y 11.5, trolley #222 y 10.7 x -6→6. */
 function GantryCrane() {
   const trolleyRef = useRef<THREE.Group>(null)
   const spreaderRef = useRef<THREE.Group>(null)
@@ -149,27 +149,27 @@ function GantryCrane() {
 
   return (
     <group position={[0, 0, 0]}>
-      {/* S5 — 4 white legs (1,12,1) at (±10,6,±8) */}
-      {[-10, 10].map((x) =>
-        [-8, 8].map((z) => (
+      {/* YARD — 4 white legs (1,12,1) at (±11,6,±9) */}
+      {[-11, 11].map((x) =>
+        [-9, 9].map((z) => (
           <mesh key={`${x}-${z}`} position={[x, 6, z]}>
             <boxGeometry args={[1, 12, 1]} />
             <meshStandardMaterial color="#f2f2f2" roughness={0.5} metalness={0.2} />
           </mesh>
         )),
       )}
-      {/* S5 — main beam (24,1.4,1.8) y 11.5 */}
+      {/* YARD — main beam (24,1.4,1.8) y 11.5 */}
       <mesh position={[0, 11.5, 0]}>
         <boxGeometry args={[24, 1.4, 1.8]} />
         <meshStandardMaterial color="#3a3f45" roughness={0.4} metalness={0.4} />
       </mesh>
-      {/* S5 — trolley (2.5,1,2.5) #222 y 10.7 */}
+      {/* YARD — trolley (2.5,1,2.5) #222 y 10.7 */}
       <group ref={trolleyRef} position={[-6, 10.7, 0]}>
         <mesh>
           <boxGeometry args={[2.5, 1, 2.5]} />
           <meshStandardMaterial color="#222222" roughness={0.4} />
         </mesh>
-        {/* S5 — cables trolley → spreader, r .06 */}
+        {/* YARD — cables trolley → spreader, r .06 */}
         {[1, -1].map((off, i) => (
           <mesh
             key={i}
@@ -182,14 +182,14 @@ function GantryCrane() {
             <meshStandardMaterial color="#2a2a2a" metalness={0.8} />
           </mesh>
         ))}
-        {/* S5 — spreader + hung LONG container same size (2.4,2.6,6), orange, y 3..9 */}
+        {/* YARD — spreader + hung LONG container same size (6,2.6,2.4), orange, y 3..9 */}
         <group ref={spreaderRef} position={[0, 9 - 10.7, 0]}>
           <mesh>
-            <boxGeometry args={[2.5, 0.4, 6.2]} />
+            <boxGeometry args={[6.4, 0.4, 2.6]} />
             <meshStandardMaterial color="#c46a2b" roughness={0.5} />
           </mesh>
           <mesh ref={containerRef} position={[0, -1.5, 0]}>
-            <boxGeometry args={[2.4, 2.6, 6]} />
+            <boxGeometry args={[6, 2.6, 2.4]} />
             <meshStandardMaterial color="#c46a2b" roughness={0.7} metalness={0.15} flatShading />
           </mesh>
         </group>
@@ -198,11 +198,11 @@ function GantryCrane() {
   )
 }
 
-/** S5 — camera (0,8,48), lookAt (0,6,0), slow push. */
+/** YARD — camera (0,13,26), lookAt (0,5,0). */
 function CameraPush() {
   useFrame((state) => {
-    state.camera.position.set(0, 8, 48)
-    state.camera.lookAt(0, 6, 0)
+    state.camera.position.set(0, 13, 26)
+    state.camera.lookAt(0, 5, 0)
   })
   return null
 }
@@ -210,14 +210,14 @@ function CameraPush() {
 export default function TerminalScene() {
   const fitRef = useRef<THREE.Group>(null)
   return (
-    <SceneCanvas fallbackLabel="Terminal" tone="orange" camera={{ position: [0, 8, 48], fov: 45 }}>
+    <SceneCanvas fallbackLabel="Terminal" tone="orange" camera={{ position: [0, 13, 26], fov: 50 }}>
       <color attach="background" args={['#B8C4CC']} />
-      <fog attach="fog" args={['#B8C4CC', 45, 110]} />
-      <ambientLight intensity={1.1} />
-      <directionalLight position={[22, 34, 12]} intensity={1.9} color="#fff2dd" />
+      <fog attach="fog" args={['#B8C4CC', 40, 110]} />
+      <ambientLight intensity={0.7} />
+      <directionalLight position={[-6, 12, 8]} intensity={1.2} color="#ffffff" />
 
       <SkyDome />
-      {/* V6 — dark apron #2E2E2E 400×400 + white lanes (sibling of measured group) */}
+      {/* YARD — dark apron #2E2E2E 400×400 + white lanes (sibling of measured group) */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
         <planeGeometry args={[400, 400]} />
         <meshStandardMaterial color="#2e2e2e" roughness={0.9} />
@@ -225,7 +225,7 @@ export default function TerminalScene() {
       <Lanes />
 
       <group ref={fitRef}>
-        <VisualTest label="TERMINAL" target={() => fitRef.current} y={[200, 560]} x={[150, 1130]} />
+        <VisualTest label="YARD" target={() => fitRef.current} y={[100, 680]} x={[0, 1280]} />
         <ContainerYard />
         <GantryCrane />
       </group>

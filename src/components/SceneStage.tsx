@@ -2,7 +2,7 @@ import { useEffect, type ReactNode } from 'react'
 import { useThree } from '@react-three/fiber'
 import SceneCanvas from './SceneCanvas'
 
-/** Point the camera at a target once (fixed framing used by the pixel harness). */
+/** Point the camera at a target once (used when a scene has no internal Rig). */
 export function CameraRig({ pos, look }: { pos: [number, number, number]; look: [number, number, number] }) {
   const camera = useThree((s) => s.camera)
   useEffect(() => {
@@ -14,6 +14,13 @@ export function CameraRig({ pos, look }: { pos: [number, number, number]; look: 
   return null
 }
 
+const GlobalLights = (
+  <>
+    <ambientLight intensity={0.7} />
+    <directionalLight position={[-6, 12, 8]} intensity={1.2} color="#ffffff" />
+  </>
+)
+
 export function SceneStage({
   label,
   tone,
@@ -23,21 +30,14 @@ export function SceneStage({
 }: {
   label: string
   tone: 'orange' | 'blue' | 'violet'
-  camera: { position: [number, number, number]; fov: number }
-  look: [number, number, number]
+  camera?: { position: [number, number, number]; fov: number }
+  look?: [number, number, number]
   children: ReactNode
 }) {
-  const lights = (
-    <>
-      <ambientLight intensity={0.9} />
-      <directionalLight position={[8, 18, 10]} intensity={1.8} color="#fff6e8" />
-      <directionalLight position={[-8, 6, -6]} intensity={0.4} color="#ffffff" />
-    </>
-  )
   return (
     <SceneCanvas fallbackLabel={label} tone={tone} camera={camera}>
-      {lights}
-      <CameraRig pos={camera.position} look={look} />
+      {GlobalLights}
+      {camera && look ? <CameraRig pos={camera.position} look={look} /> : null}
       {children}
     </SceneCanvas>
   )
