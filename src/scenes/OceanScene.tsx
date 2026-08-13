@@ -53,11 +53,11 @@ function Hull() {
 
   return (
     <group>
-      {/* hull spans y -1.2 .. 2.6 */}
-      <mesh geometry={geo} position={[0, -1.2, 0]}>
+      {/* hull — top at y 2.6, waterline y 0 → 2.6 units of dark side above water */}
+      <mesh geometry={geo} position={[0, -0.9, 0]}>
         <meshStandardMaterial color="#14213d" roughness={0.55} metalness={0.25} flatShading />
       </mesh>
-      {/* white waterline stripe at sea level */}
+      {/* white waterline stripe above water */}
       <mesh geometry={stripeGeo} position={[0, 1.2, 0]}>
         <meshStandardMaterial color="#f2f2f2" roughness={0.6} />
       </mesh>
@@ -147,14 +147,25 @@ function FoamDots() {
   )
 }
 
+/** V5 — WAKE IS FLAT. Bow V opacity .5 + 2 side streaks length 26 opacity .35. */
 function Wake({ scrub }: { scrub?: ScrubRef }) {
   const aRef = useRef<THREE.Mesh>(null)
   const bRef = useRef<THREE.Mesh>(null)
   const cRef = useRef<THREE.Mesh>(null)
+  const bowV = useMemo(() => {
+    const s = new THREE.Shape()
+    s.moveTo(0, 0)
+    s.lineTo(6, 6.5)
+    s.lineTo(-6, 6.5)
+    s.closePath()
+    const g = new THREE.ShapeGeometry(s)
+    g.rotateX(-Math.PI / 2)
+    return g
+  }, [])
   useFrame(() => {
     if (scrub && scrub.current !== undefined) {
       const p = clamp01(scrub.current)
-      const op = 0.15 + 0.35 * Math.sin(p * Math.PI)
+      const op = 0.2 + 0.3 * p
       const set = (m: THREE.Mesh | null) => {
         if (m) (m.material as THREE.MeshBasicMaterial).opacity = op
       }
@@ -165,19 +176,18 @@ function Wake({ scrub }: { scrub?: ScrubRef }) {
   })
   return (
     <group>
-      {/* bow V-plane (bow faces -Z) */}
-      <mesh ref={aRef} rotation={[0, 0, 0]} position={[0, 0.07, -15]}>
-        <planeGeometry args={[9, 5]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.5} />
+      {/* bow V — flat on the water, apex at the stern, opening behind (bow faces -Z) */}
+      <mesh ref={aRef} geometry={bowV} position={[0, 0.05, -15]}>
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.5} depthWrite={false} />
       </mesh>
-      {/* trailing streaks */}
-      <mesh ref={bRef} rotation={[-Math.PI / 2, 0, 0]} position={[4.3, 0.06, 3]}>
-        <planeGeometry args={[1.4, 32]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.5} />
+      {/* trailing streaks — flat, length 26 */}
+      <mesh ref={bRef} rotation={[-Math.PI / 2, 0, -0.06]} position={[4.3, 0.05, 1]}>
+        <planeGeometry args={[1.4, 26]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.35} depthWrite={false} />
       </mesh>
-      <mesh ref={cRef} rotation={[-Math.PI / 2, 0, 0]} position={[-4.3, 0.06, 3]}>
-        <planeGeometry args={[1.4, 32]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.5} />
+      <mesh ref={cRef} rotation={[-Math.PI / 2, 0, 0.06]} position={[-4.3, 0.05, 1]}>
+        <planeGeometry args={[1.4, 26]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.35} depthWrite={false} />
       </mesh>
     </group>
   )
@@ -202,10 +212,10 @@ function Ship({ scrub }: { scrub?: ScrubRef }) {
     <group ref={ref}>
       <Hull />
       <Containers />
-      {/* bridge at stern (+Z), h 5, on deck y 2.6 */}
+      {/* V5 — bridge white h 5.5 at stern, taller than container top */}
       <group position={[0, 2.6, 10.5]}>
         <mesh>
-          <boxGeometry args={[6, 5, 2.4]} />
+          <boxGeometry args={[6, 5.5, 2.4]} />
           <meshStandardMaterial color="#f2f2f2" roughness={0.6} />
         </mesh>
         <mesh position={[0, 1.6, 1.22]}>
@@ -231,7 +241,7 @@ function Sea() {
   })
   return (
     <group>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.2, 0]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
         <planeGeometry args={[90, 90]} />
         <meshStandardMaterial color="#1e56a0" roughness={0.4} metalness={0.1} />
       </mesh>
@@ -260,7 +270,7 @@ export default function OceanScene({ scrub }: { scrub?: ScrubRef }) {
         <Ship scrub={scrub} />
       </group>
       <Wake scrub={scrub} />
-      <AutoFitCamera target={modelRef} coverage={0.85} axis={[0, 0.9, 0.34]} fov={35} />
+      <AutoFitCamera target={modelRef} coverage={0.92} axis={[0, 0.72, 0.45]} fov={35} label="ocean" />
     </SceneCanvas>
   )
 }

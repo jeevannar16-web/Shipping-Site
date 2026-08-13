@@ -198,16 +198,19 @@ function Arcs() {
   )
 }
 
-/** G1 — orange marker dots + tags; hide a tag when it faces away or sits left of 52vw. */
+/** V1 — orange marker dots + tags; hide a tag when it faces away or sits left of 52vw. */
 function Markers() {
   const groupRef = useRef<THREE.Group>(null)
   const labelRefs = useRef<Array<HTMLDivElement | null>>([])
+  const hoverRefs = useRef<Array<THREE.Mesh | null>>([])
   const base = useMemo(() => MARKERS.map((m) => latLng(m.lat, m.lng, RADIUS * 0.99)), [])
   const center = useMemo(() => new THREE.Vector3(), [])
   const worldPos = useMemo(() => new THREE.Vector3(), [])
   const normal = useMemo(() => new THREE.Vector3(), [])
   const camDir = useMemo(() => new THREE.Vector3(), [])
   const screen = useMemo(() => new THREE.Vector3(), [])
+  const raycaster = useMemo(() => new THREE.Raycaster(), [])
+  const pointerNdc = useMemo(() => new THREE.Vector2(), [])
 
   useFrame((state) => {
     const g = groupRef.current
@@ -215,6 +218,16 @@ function Markers() {
     g.updateMatrixWorld()
     g.getWorldPosition(center)
     const vw = state.size.width
+    let hovered = -1
+    pointerNdc.set(state.pointer.x, state.pointer.y)
+    raycaster.setFromCamera(pointerNdc, state.camera)
+    for (let i = 0; i < base.length; i++) {
+      const hitMesh = hoverRefs.current[i]
+      if (hitMesh && hitMesh.visible) {
+        const hit = raycaster.intersectObject(hitMesh, false)
+        if (hit.length > 0) hovered = i
+      }
+    }
     for (let i = 0; i < base.length; i++) {
       worldPos.copy(base[i]).applyMatrix4(g.matrixWorld)
       normal.copy(worldPos).sub(center).normalize()
@@ -225,6 +238,7 @@ function Markers() {
       const screenX = (screen.x * 0.5 + 0.5) * vw
       const hidden = camDir.dot(normal) < 0.1 || screenX < vw * 0.52
       el.style.opacity = hidden ? '0' : '1'
+      el.classList.toggle('globe-tag-active', i === hovered)
     }
   })
 
@@ -237,6 +251,15 @@ function Markers() {
             <mesh>
               <sphereGeometry args={[0.05, 8, 8]} />
               <meshBasicMaterial color="#ff4a00" />
+            </mesh>
+            <mesh
+              visible={false}
+              ref={(mesh) => {
+                hoverRefs.current[i] = mesh
+              }}
+            >
+              <sphereGeometry args={[0.25, 6, 6]} />
+              <meshBasicMaterial color="#000000" />
             </mesh>
             <Html
               position={[0, 0.18, 0]}
@@ -267,10 +290,10 @@ function Markers() {
   )
 }
 
-/** G1 — group at (3.1,-0.2,0): pointer drag with velocity + damping, parallax tilt. */
+/** V1 — group at (3.1,-0.2,0): target-rotation drag (damped), auto-spin after 3s idle. */
 function Rig() {
   const ref = useRef<THREE.Group>(null)
-  const drag = useRef({ down: false, lastX: 0, v: 0 })
+  const drag = useRef({ down: false, lastX: 0, lastY: 0, targetY: 0, targetX: 0, idleAt: -6000 })
   const domEl = useThree((s) => s.gl.domElement)
 
   useEffect(() => {
@@ -278,15 +301,25 @@ function Rig() {
     const onDown = (e: PointerEvent) => {
       d.down = true
       d.lastX = e.clientX
+      d.lastY = e.clientY
+      try {
+        domEl.setPointerCapture(e.pointerId)
+      } catch {
+        /* pointer capture unsupported */
+      }
     }
     const onMove = (e: PointerEvent) => {
       if (!d.down) return
       const dx = e.clientX - d.lastX
+      const dy = e.clientY - d.lastY
       d.lastX = e.clientX
-      d.v += dx * 0.004
+      d.lastY = e.clientY
+      d.targetY += dx * 0.005
+      d.targetX = THREE.MathUtils.clamp(d.targetX + dy * 0.003, -0.6, 0.6)
     }
     const onUp = () => {
       d.down = false
+      d.idleAt = performance.now()
     }
     domEl.addEventListener('pointerdown', onDown)
     window.addEventListener('pointermove', onMove)
@@ -298,13 +331,13 @@ function Rig() {
     }
   }, [domEl])
 
-  useFrame((state) => {
+  useFrame((_, delta) => {
     const g = ref.current
     if (!g) return
-    g.rotation.y += drag.current.v
-    drag.current.v *= 0.94
-    if (Math.abs(drag.current.v) < 0.0005) g.rotation.y += 0.0008
-    g.rotation.x = THREE.MathUtils.lerp(g.rotation.x, -state.pointer.y * 0.05, 0.05)
+    const d = drag.current
+    if (!d.down && performance.now() - d.idleAt > 3000) d.targetY += 0.0008
+    g.rotation.y = THREE.MathUtils.damp(g.rotation.y, d.targetY, 4, delta)
+    g.rotation.x = THREE.MathUtils.damp(g.rotation.x, d.targetX, 4, delta)
   })
 
   return (

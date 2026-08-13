@@ -3,7 +3,6 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { LineMask, FadeUp, Counter, Magnetic, usePageReveals, registerGsap } from '../lib/motion'
 import { useTransitionNavigate } from '../lib/navigation'
 import { HOME_STATS, SERVICES, HUBS, FAQS } from '../data'
-import { ScenePoster } from '../components/SceneCanvas'
 import type { ScrubRef } from '../lib/scrub'
 
 const GlobeScene = lazy(() => import('../scenes/GlobeScene'))
@@ -13,8 +12,18 @@ const OceanScene = lazy(() => import('../scenes/OceanScene'))
 const TerminalScene = lazy(() => import('../scenes/TerminalScene'))
 const ViaductScene = lazy(() => import('../scenes/ViaductScene'))
 
-function SuspenseBox({ label, tone, children }: { label: string; tone?: 'orange' | 'blue' | 'violet'; children: ReactNode }) {
-  return <Suspense fallback={<ScenePoster label={label} tone={tone} />}>{children}</Suspense>
+/** P1 — skeleton while a scene's canvas chunk loads (no blank flash). */
+function SceneSkeleton({ label }: { label: string }) {
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+      <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-white/40">{label}</span>
+      <span className="h-px w-24 animate-pulse bg-orange/50" />
+    </div>
+  )
+}
+
+function SuspenseBox({ label = 'scene', children }: { label?: string; children: ReactNode }) {
+  return <Suspense fallback={<SceneSkeleton label={label} />}>{children}</Suspense>
 }
 
 /** S1 — drive a scrub ref from a 220vh sticky wrapper's scroll progress. */
@@ -35,6 +44,53 @@ function useSectionScrub(ref: RefObject<HTMLElement | null>, scrub?: ScrubRef) {
     })
     return () => st.kill()
   }, [scrub, ref])
+}
+
+/** P1 — fixed right-edge rail showing which of the 6 film scenes is on screen. */
+const SCENE_RAIL_LABELS = ['Land', 'Terminal', 'Linehaul', 'Ocean', 'Terminal', 'Land']
+
+function SceneRail() {
+  const [active, setActive] = useState<number | null>(null)
+
+  useEffect(() => {
+    const sections = Array.from(document.querySelectorAll<HTMLElement>('section.scene'))
+    if (sections.length === 0) {
+      setActive(0)
+      return
+    }
+    const onScroll = () => {
+      const dists = sections.map((s) => {
+        const r = s.getBoundingClientRect()
+        return Math.abs(r.top - window.innerHeight * 0.5)
+      })
+      const nearest = dists.indexOf(Math.min(...dists))
+      setActive(nearest)
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  return (
+    <div className="fixed right-5 top-1/2 z-[120] hidden -translate-y-1/2 flex-col items-end gap-4 md:flex">
+      {SCENE_RAIL_LABELS.map((label, i) => (
+        <div key={i} className="flex items-center gap-2.5">
+          <span
+            className={`font-mono text-[9px] tracking-[0.22em] uppercase transition-all duration-300 ${
+              active === i ? 'text-orange opacity-100' : 'opacity-0'
+            }`}
+          >
+            0{i + 1} {label}
+          </span>
+          <span
+            className={`h-1.5 rounded-full transition-all duration-300 ${
+              active === i ? 'w-5 bg-orange' : 'w-1.5 bg-white/25'
+            }`}
+          />
+        </div>
+      ))}
+    </div>
+  )
 }
 
 /** S1 — sticky scene wrapper: kicker + giant line over a full-bleed canvas. */
@@ -60,8 +116,8 @@ function StickyScene({
   const wrapRef = useRef<HTMLElement>(null)
   useSectionScrub(wrapRef, scrub)
   return (
-    <section ref={wrapRef} className={`relative h-[220vh] overflow-hidden ${bg}`}>
-      <div className="sticky top-0 flex h-screen flex-col overflow-hidden">
+    <section ref={wrapRef} className={`scene ${bg}`}>
+      <div className="pin flex flex-col">
         <div className="absolute inset-0">{children}</div>
         <div className="relative z-10 mx-auto flex w-full max-w-7xl min-h-0 flex-1 flex-col justify-end px-6 pb-14 md:px-10">
           <p className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.3em] text-orange">
@@ -85,13 +141,13 @@ function HeroSection() {
     <section className="relative h-[220vh] overflow-hidden">
       <div className="sticky top-0 flex h-screen items-center overflow-hidden" data-cursor="drag">
         <div className="absolute inset-0">
-          <SuspenseBox label="Global" tone="violet">
+          <SuspenseBox label="Global">
             <GlobeScene />
           </SuspenseBox>
         </div>
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-void via-void/70 to-transparent lg:w-3/5" />
 
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-6 py-24 md:px-10">
+        <div className="pointer-events-none relative z-10 mx-auto w-full max-w-7xl px-6 py-24 md:px-10">
           <p className="mb-6 flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-orange">
             <span className="h-px w-10 bg-orange" /> 01 — Land
           </p>
@@ -105,7 +161,7 @@ function HeroSection() {
             <p className="text-sm leading-relaxed text-dim">
               Freight forwarding, customs brokerage, and transport — unified under one accountable team.
             </p>
-            <div className="mt-8 flex flex-wrap gap-4">
+            <div className="pointer-events-auto mt-8 flex flex-wrap gap-4">
               <Magnetic>
                 <button
                   onClick={() => go('/contact')}
@@ -158,8 +214,8 @@ function TruckSection({ scrub }: { scrub: ScrubRef }) {
     return () => st.kill()
   }, [])
   return (
-    <section ref={wrapRef} className="relative h-[220vh] overflow-hidden bg-[#efeae3]">
-      <div className="sticky top-0 h-screen overflow-hidden">
+    <section ref={wrapRef} className={`scene bg-[#E6E1D8]`}>
+      <div className="pin">
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center overflow-hidden">
           <span
             ref={wordRef}
@@ -169,7 +225,7 @@ function TruckSection({ scrub }: { scrub: ScrubRef }) {
           </span>
         </div>
         <div className="absolute inset-0">
-          <SuspenseBox label="Linehaul" tone="blue">
+          <SuspenseBox label="Linehaul">
             <TruckPaperScene scrub={scrub} />
           </SuspenseBox>
         </div>
@@ -197,18 +253,19 @@ export default function Home() {
   return (
     <div className="relative">
       {/* ——— THE FILM (6 sticky scenes) ——— */}
+      <SceneRail />
       <HeroSection />
 
-      <StickyScene index="2" mode="TERMINAL" bg="bg-[#efeae3]" text="text-[#0a0a0a]" line="One team, every mode.">
-        <SuspenseBox label="Freight" tone="orange">
+      <StickyScene index="2" mode="TERMINAL" bg="bg-[#E6E1D8]" text="text-[#0a0a0a]" line="One team, every mode.">
+        <SuspenseBox label="Freight">
           <ReachStackerScene />
         </SuspenseBox>
       </StickyScene>
 
       <TruckSection scrub={truckScrub} />
 
-      <StickyScene index="4" mode="OCEAN" line="Ocean freight, end to end." scrub={oceanScrub} sub="FCL, LCL and specialised cargo — across every major trade lane.">
-        <SuspenseBox label="Ocean" tone="blue">
+      <StickyScene index="4" mode="OCEAN" bg="bg-[#1E56A0]" line="Ocean freight, end to end." scrub={oceanScrub} sub="FCL, LCL and specialised cargo — across every major trade lane.">
+        <SuspenseBox label="Ocean">
           <OceanScene scrub={oceanScrub} />
         </SuspenseBox>
         <div className="absolute left-6 top-8 z-10 md:left-10">
@@ -219,14 +276,14 @@ export default function Home() {
         </div>
       </StickyScene>
 
-      <StickyScene index="5" mode="TERMINAL" line="Powering the network.">
-        <SuspenseBox label="Terminal" tone="orange">
+      <StickyScene index="5" mode="TERMINAL" bg="bg-[#B8C4CC]" text="text-[#0a0a0a]" line="Powering the network.">
+        <SuspenseBox label="Terminal">
           <TerminalScene />
         </SuspenseBox>
       </StickyScene>
 
-      <StickyScene index="6" mode="LAND" line="Built for every lane.">
-        <SuspenseBox label="About" tone="blue">
+      <StickyScene index="6" mode="LAND" bg="bg-[#101410]" text="text-[#ededed]" line="Built for every lane.">
+        <SuspenseBox label="About">
           <ViaductScene />
         </SuspenseBox>
       </StickyScene>

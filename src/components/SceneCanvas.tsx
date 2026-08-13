@@ -69,7 +69,7 @@ export default function SceneCanvas({
         <ScenePoster label={fallbackLabel} tone={tone} />
       ) : (
         <ErrorBoundary fallback={<ScenePoster label={fallbackLabel} tone={tone} />}>
-          <div ref={wrapRef} className="absolute inset-0">
+          <div ref={wrapRef} className="absolute inset-0 touch-none">
             <Canvas
               frameloop={inView ? 'always' : 'never'}
               dpr={[1, 1.5]}

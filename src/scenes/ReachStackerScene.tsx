@@ -287,11 +287,18 @@ function StackerScene() {
         </mesh>
       ))}
 
-      {/* held container — OPAQUE (R1), #E8E8E8, ribs via texture (R2) */}
+      {/* held container — OPAQUE (R1), EXACT material per V3 */}
       <group ref={containerRef} position={[-4.6, 1.4, 0]}>
         <mesh>
           <boxGeometry args={CONTAINER} />
-          <meshStandardMaterial map={ribs} color="#e8e8e8" roughness={0.7} metalness={0.15} flatShading />
+          <meshStandardMaterial
+            color="#E8E8E8"
+            roughness={0.9}
+            metalness={0}
+            transparent={false}
+            opacity={1}
+            map={ribs}
+          />
         </mesh>
       </group>
 
@@ -324,7 +331,7 @@ export default function ReachStackerScene() {
       <group ref={modelRef}>
         <StackerScene />
       </group>
-      <AutoFitCamera target={modelRef} coverage={0.8} axis={[0, 0.35, 1]} fov={35} />
+      <AutoFitCamera target={modelRef} coverage={0.85} axis={[0, 0.35, 1]} fov={35} parallax={0.4} label="stacker" />
     </SceneCanvas>
   )
 }

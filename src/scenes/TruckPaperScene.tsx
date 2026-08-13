@@ -108,22 +108,17 @@ function TruckRig({ scrub }: { scrub?: ScrubRef }) {
   const wheelSpins = useRef(new Float32Array(10).fill(0))
 
   useFrame((_, dt) => {
-    const t = performance.now() / 1000
     if (scrub && scrub.current !== undefined) {
       const p = clamp01(scrub.current)
       wheelRefs.current.forEach((w, i) => {
         if (w) w.rotation.y = p * 28 + i * 0.01
       })
-      if (groupRef.current) groupRef.current.position.y = 0
     } else {
       wheelRefs.current.forEach((w, i) => {
         if (!w) return
         wheelSpins.current[i] += dt * 7
         w.rotation.y = wheelSpins.current[i]
       })
-      if (groupRef.current) {
-        groupRef.current.position.y = Math.sin(t * 2.2) * 0.02
-      }
     }
   })
 
@@ -169,6 +164,12 @@ function TruckRig({ scrub }: { scrub?: ScrubRef }) {
           <meshStandardMaterial color="#1a1a1a" roughness={0.8} />
         </mesh>
 
+        {/* V4 — soft shadow plane under the full truck length */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-0.45, 0.005, 0]}>
+          <planeGeometry args={[13.5, 3.2]} />
+          <meshBasicMaterial color="#000000" transparent opacity={0.14} />
+        </mesh>
+
         {/* wheels: r .55, trailer 3 + cab 2 axles (R3/R5) */}
         {AXLES.map((x, i) =>
           [1, -1].map((side) => (
@@ -203,7 +204,7 @@ export default function TruckPaperScene({ scrub }: { scrub?: ScrubRef }) {
       <group ref={modelRef}>
         <TruckRig scrub={scrub} />
       </group>
-      <AutoFitCamera target={modelRef} coverage={0.75} axis={[0, 0.15, 1]} fov={30} />
+      <AutoFitCamera target={modelRef} coverage={0.85} axis={[0, 0.15, 1]} fov={30} parallax={0.4} label="truck-paper" />
     </SceneCanvas>
   )
 }

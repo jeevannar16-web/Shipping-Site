@@ -95,6 +95,21 @@ body {
   color: transparent;
 }
 
+/* S1 — sticky scene wrapper: kicker + giant line over a full-bleed canvas. */
+
+/* V2 — kill dead voids: scene pins inside a 200vh wrapper, canvas sits in .pin */
+section.scene {
+  position: relative;
+  height: 200vh;
+  background: #0b0b0c;
+}
+section.scene > .pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
 /* Line-mask reveal helper (y:110% -> 0 inside overflow-hidden) */
 .line-mask {
   display: block;
@@ -265,14 +280,15 @@ body {
   }
 }
 
-/* I1 — globe marker tag: scale-up + reveal second line on hover */
+/* V1 — globe marker tag: scale-up + reveal second line on dot hover */
 .globe-tag {
   pointer-events: auto;
   transform: scale(1);
   transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-.globe-tag:hover {
-  transform: scale(1.1);
+.globe-tag:hover,
+.globe-tag.globe-tag-active {
+  transform: scale(1.08);
 }
 .globe-tag .globe-tag-sub {
   display: block;
@@ -281,7 +297,8 @@ body {
   overflow: hidden;
   transition: max-height 0.3s ease, opacity 0.3s ease;
 }
-.globe-tag:hover .globe-tag-sub {
+.globe-tag:hover .globe-tag-sub,
+.globe-tag.globe-tag-active .globe-tag-sub {
   max-height: 2em;
   opacity: 1;
 }
@@ -331,11 +348,11 @@ body {
   transform: scaleX(1);
 }
 
-/* I1 — smooth FAQ accordion (grid-rows collapse) */
+/* I1 — smooth FAQ accordion (grid-rows collapse), 300ms */
 .acc-panel {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .acc-panel.open {
   grid-template-rows: 1fr;
