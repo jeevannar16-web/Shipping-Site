@@ -3,8 +3,6 @@ export const BRAND = {
   short: 'Jeevan',
   tagline: 'Every leg of the journey.',
   email: 'jeevannar16@gmail.com',
-  phone: 'Your phone number',
-  phoneHref: 'tel:',
   address: 'Kathmandu, Nepal',
   hours: 'Monday - Friday / 9AM - 6PM',
   countries: ['Nepal', 'India', 'China'],
@@ -302,9 +300,86 @@ export const NAV_LINKS = [
 
 export const CONTACT = {
   email: 'jeevannar16@gmail.com',
-  phone: 'Your phone number',
-  phoneHref: 'tel:',
   address: 'Kathmandu, Nepal',
   hours: 'Monday - Friday / 9AM - 6PM',
   countries: ['Nepal', 'India', 'China'],
 }
+
+export const NEWS_TICKER = [
+  'JEEVAN GLOBAL LOGISTICS EXPANDS APAC NETWORK',
+  'US TARIFFS: REFUNDS. SECTION 301 DUTIES AND IMPORTS',
+  'NEW: KATHMANDU OPERATIONAL HQ LIVE 24/7',
+  'AIR FREIGHT RATES OUT OF APAC STABILIZE',
+  'CUSTOMS DIGITAL CLEARANCE NOW IN 3 MARKETS',
+  'PROJECT CARGO TEAM DEPLOYS FOR ENERGY SECTOR',
+]
+
+export const PRELOADER_COUNTRIES = [
+  'NEPAL',
+  'INDIA',
+  'CHINA',
+  'HONG KONG',
+  'AUSTRALIA',
+  'USA',
+  'UNITED KINGDOM',
+  'GERMANY',
+  'JAPAN',
+  'UAE',
+]
+
+export const PRELOADER_SERVICES = [
+  'OCEAN FREIGHT',
+  'AIR FREIGHT',
+  'CUSTOMS BROKERAGE',
+  'WAREHOUSING & 3PL',
+  'PROJECT CARGO',
+  'DOMESTIC & LINEHAUL',
+]
+
+export const HOME_STATS = [
+  { value: 9, suffix: '', label: 'Countries' },
+  { value: 5, suffix: '', label: 'Freight Modes' },
+  { value: 24, suffix: '/7', label: 'Support' },
+  { value: 774, suffix: '+', label: 'Shipments / month' },
+  { value: 95, suffix: '%', label: 'On-time' },
+]
+
+export const INDUSTRIES = [
+  { title: 'Retail & FMCG', desc: 'High-frequency distribution and demanding lead times across APAC retail lanes.' },
+  { title: 'Manufacturing', desc: 'MRO, raw material and finished goods flows for production reliability.' },
+  { title: 'Energy & Infrastructure', desc: 'Project cargo and oversized equipment with engineered routing.' },
+  { title: 'Healthcare', desc: 'Temperature-controlled, time-critical movement of medical goods.' },
+  { title: 'Agriculture', desc: 'Seasonal, perishable cargo handled with careful scheduling.' },
+  { title: 'Defence & Sensitive Cargo', desc: 'Specialist, discreet logistics under strict compliance.' },
+]
+
+export const LOCATIONS = [
+  { type: 'HEAD OFFICE', city: 'KATHMANDU', code: 'NEPAL', detail: 'Operational HQ · 24/7' },
+  { type: 'GATEWAY', city: 'INDIA', code: 'NEW DELHI', detail: 'Air + ocean gateway' },
+  { type: 'GATEWAY', city: 'CHINA', code: 'SHANGHAI', detail: 'Ocean + project cargo' },
+  { type: 'GATEWAY', city: 'HONG KONG', code: 'HKG', detail: 'Airfreight hub' },
+]
+
+export const REASONS = [
+  'Air Freight',
+  'Sea Freight',
+  'Brokerage',
+  'Consolidation Programs',
+  '3PL',
+  'Crossdock / By-pass',
+  'Domestic & Interstate',
+  'APAC Emerging Markets',
+  'Tariff / Compliance Audits',
+  'Careers',
+  'Partnership',
+  'Other',
+]
+
+export const INSIGHT_CATEGORIES = [
+  { label: 'CASE STUDIES', count: 3 },
+  { label: 'CUSTOMS ADVICE', count: 2 },
+  { label: 'GLOBAL', count: 3 },
+  { label: 'ASIA PACIFIC', count: 4 },
+  { label: 'AMERICAS', count: 2 },
+  { label: 'LINKEDIN', count: 6 },
+]
