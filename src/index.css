@@ -34,6 +34,10 @@ html.lenis body {
   overflow: hidden;
 }
 
+html {
+  overflow-x: clip;
+}
+
 body {
   font-family: var(--font-mono);
   color: #f2f2f2;
@@ -166,12 +170,43 @@ section.scene > .pin {
   animation: spin 1s linear infinite;
 }
 
-/* Custom cursor: hide the native cursor only on fine pointers */
+/* V11 — custom cursor (CursorManager): dot + trailing ring + label */
 @media (pointer: fine) {
-  .cursor-none-fine,
-  .cursor-none-fine a,
-  .cursor-none-fine button {
-    cursor: none;
+  .cursor-dot {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 6px;
+    height: 6px;
+    margin: -3px 0 0 -3px;
+    background: #ff4a00;
+    border-radius: 9999px;
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  .cursor-ring {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 48px;
+    height: 48px;
+    margin: -24px 0 0 -24px;
+    border: 1px solid rgba(255, 74, 0, 0.55);
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 9997;
+    color: #fff;
+  }
+
+  .cursor-ring span {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
   }
 }
 

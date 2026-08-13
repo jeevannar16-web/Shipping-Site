@@ -2,6 +2,7 @@ import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import SceneCanvas from '../components/SceneCanvas'
+import { VisualTest } from '../dev/VisualTest'
 
 /** Bright sky gradient #B8C4CC → #D8DDE0 inside a dome. */
 function SkyDome() {
@@ -197,33 +198,37 @@ function GantryCrane() {
   )
 }
 
-/** S5 — camera (0,16,30), lookAt (0,6,0), slow push. */
+/** S5 — camera (0,8,48), lookAt (0,6,0), slow push. */
 function CameraPush() {
   useFrame((state) => {
-    state.camera.position.set(0, 16, 30)
+    state.camera.position.set(0, 8, 48)
     state.camera.lookAt(0, 6, 0)
   })
   return null
 }
 
 export default function TerminalScene() {
+  const fitRef = useRef<THREE.Group>(null)
   return (
-    <SceneCanvas fallbackLabel="Terminal" tone="orange" camera={{ position: [0, 16, 30], fov: 45 }}>
+    <SceneCanvas fallbackLabel="Terminal" tone="orange" camera={{ position: [0, 8, 48], fov: 45 }}>
       <color attach="background" args={['#B8C4CC']} />
       <fog attach="fog" args={['#B8C4CC', 45, 110]} />
       <ambientLight intensity={1.1} />
       <directionalLight position={[22, 34, 12]} intensity={1.9} color="#fff2dd" />
 
       <SkyDome />
-      {/* V6 — dark apron #2E2E2E 400×400 + white lanes */}
+      {/* V6 — dark apron #2E2E2E 400×400 + white lanes (sibling of measured group) */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
         <planeGeometry args={[400, 400]} />
         <meshStandardMaterial color="#2e2e2e" roughness={0.9} />
       </mesh>
       <Lanes />
 
-      <ContainerYard />
-      <GantryCrane />
+      <group ref={fitRef}>
+        <VisualTest label="TERMINAL" target={() => fitRef.current} y={[200, 560]} x={[150, 1130]} />
+        <ContainerYard />
+        <GantryCrane />
+      </group>
       <CameraPush />
     </SceneCanvas>
   )

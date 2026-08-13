@@ -5,7 +5,7 @@ import Preloader from './components/chrome/Preloader'
 import NewsTicker from './components/chrome/NewsTicker'
 import Header from './components/chrome/Header'
 import Footer from './components/chrome/Footer'
-import Cursor from './components/chrome/Cursor'
+import CursorManager from './components/CursorManager'
 import PageTransition from './components/chrome/PageTransition'
 import Home from './pages/Home'
 import About from './pages/About'
@@ -87,7 +87,7 @@ export default function App() {
           </>
         )}
         <PageTransition />
-        <Cursor />
+        <CursorManager />
       </div>
     </LenisProvider>
   )

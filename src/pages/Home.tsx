@@ -5,10 +5,11 @@ import { useTransitionNavigate } from '../lib/navigation'
 import { HOME_STATS, SERVICES, HUBS, FAQS } from '../data'
 import type { ScrubRef } from '../lib/scrub'
 
+import { SceneStage } from '../components/SceneStage'
 const GlobeScene = lazy(() => import('../scenes/GlobeScene'))
-const ReachStackerScene = lazy(() => import('../scenes/ReachStackerScene'))
-const TruckPaperScene = lazy(() => import('../scenes/TruckPaperScene'))
-const OceanScene = lazy(() => import('../scenes/OceanScene'))
+const StackerScene = lazy(() => import('../scenes/StackerScene'))
+const TruckScene = lazy(() => import('../scenes/TruckScene'))
+const ShipScene = lazy(() => import('../scenes/ShipScene'))
 const TerminalScene = lazy(() => import('../scenes/TerminalScene'))
 const ViaductScene = lazy(() => import('../scenes/ViaductScene'))
 
@@ -139,8 +140,8 @@ function HeroSection() {
   const go = useTransitionNavigate()
   return (
     <section className="scene bg-[#0a0a0a]">
-      <div className="pin flex items-center" data-cursor="drag">
-        <div className="absolute inset-0">
+      <div className="pin flex items-center">
+        <div className="absolute inset-0" data-cursor="DRAG">
           <SuspenseBox label="Global">
             <GlobeScene />
           </SuspenseBox>
@@ -226,7 +227,9 @@ function TruckSection({ scrub }: { scrub: ScrubRef }) {
         </div>
         <div className="absolute inset-0">
           <SuspenseBox label="Linehaul">
-            <TruckPaperScene scrub={scrub} />
+            <SceneStage label="Linehaul" tone="orange" camera={{ position: [0, 1.7, 18], fov: 35 }} look={[0, 1.7, 0]}>
+              <TruckScene />
+            </SceneStage>
           </SuspenseBox>
         </div>
         <div className="absolute bottom-12 left-1/2 z-10 flex -translate-x-1/2 items-center gap-10">
@@ -258,7 +261,9 @@ export default function Home() {
 
       <StickyScene index="2" mode="TERMINAL" bg="bg-[#E6E1D8]" text="text-[#0a0a0a]" line="One team, every mode.">
         <SuspenseBox label="Freight">
-          <ReachStackerScene />
+          <SceneStage label="Freight" tone="orange" camera={{ position: [0, 5.4, 42], fov: 35 }} look={[0, 5, 0]}>
+            <StackerScene />
+          </SceneStage>
         </SuspenseBox>
       </StickyScene>
 
@@ -266,8 +271,10 @@ export default function Home() {
 
       <StickyScene index="4" mode="OCEAN" bg="bg-[#1E56A0]" line="Ocean freight, end to end." scrub={oceanScrub} sub="FCL, LCL and specialised cargo — across every major trade lane.">
         <SuspenseBox label="Ocean">
-          <OceanScene scrub={oceanScrub} />
-        </SuspenseBox>
+            <SceneStage label="Ocean" tone="blue" camera={{ position: [0, 3.025, 45], fov: 35 }} look={[0, 2, 0]}>
+              <ShipScene />
+            </SceneStage>
+          </SuspenseBox>
         <div className="absolute left-6 top-8 z-10 md:left-10">
           <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-white backdrop-blur">
             <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-orange" />
