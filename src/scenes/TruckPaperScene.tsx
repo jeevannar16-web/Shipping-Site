@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
 import SceneCanvas from '../components/SceneCanvas'
-import { useAutoFit } from './fitCamera'
+import { AutoFitCamera } from './fitCamera'
 
 /** R2 — trailer rib texture (no thin rib meshes). */
 function useTrailerTexture() {
@@ -173,18 +173,6 @@ function TruckRig() {
 
 export default function TruckPaperScene() {
   const modelRef = useRef<THREE.Group>(null)
-  const dashRef = useRef<THREE.Group>(null)
-  useAutoFit(modelRef, { coverage: 0.7, axis: [0, 0.15, 1], fov: 30 })
-
-  useFrame((state) => {
-    const t = state.clock.elapsedTime
-    if (dashRef.current) {
-      const off = (t * 4) % 1.5
-      dashRef.current.children.forEach((c, i) => {
-        c.position.x = -9 + ((i * 1.5 + off) % 18)
-      })
-    }
-  })
 
   return (
     <SceneCanvas fallbackLabel="Linehaul" tone="blue" camera={{ position: [0, 2.4, 19], fov: 30 }}>
@@ -200,20 +188,38 @@ export default function TruckPaperScene() {
       </mesh>
 
       {/* scrolling ground dashes */}
-      <group ref={dashRef} position={[0, 0.02, 0]}>
-        {Array.from({ length: 12 }).map((_, i) => (
-          <mesh key={i} position={[i * 1.5 - 9, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[0.15, 1.2]} />
-            <meshBasicMaterial color="#cfc8bc" />
-          </mesh>
-        ))}
-      </group>
+      <DashScroll />
 
       <ContactShadows position={[0, 0, 0]} opacity={0.4} scale={40} blur={2.5} far={7} resolution={512} color="#000000" />
 
       <group ref={modelRef}>
         <TruckRig />
       </group>
+      <AutoFitCamera target={modelRef} coverage={0.7} axis={[0, 0.15, 1]} fov={30} />
     </SceneCanvas>
+  )
+}
+
+/** Rendered inside the Canvas — scrolls the ground dash line left. */
+function DashScroll() {
+  const dashRef = useRef<THREE.Group>(null)
+  useFrame((state) => {
+    const t = state.clock.elapsedTime
+    if (dashRef.current) {
+      const off = (t * 4) % 1.5
+      dashRef.current.children.forEach((c, i) => {
+        c.position.x = -9 + ((i * 1.5 + off) % 18)
+      })
+    }
+  })
+  return (
+    <group ref={dashRef} position={[0, 0.02, 0]}>
+      {Array.from({ length: 12 }).map((_, i) => (
+        <mesh key={i} position={[i * 1.5 - 9, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[0.15, 1.2]} />
+          <meshBasicMaterial color="#cfc8bc" />
+        </mesh>
+      ))}
+    </group>
   )
 }

@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import SceneCanvas from '../components/SceneCanvas'
-import { useAutoFit } from './fitCamera'
+import { AutoFitCamera } from './fitCamera'
 
 const CONTAINER_COLORS = ['#b4362b', '#24457a', '#2e5b40', '#c46a2b', '#d0d0d0', '#6b2b8a']
 const CONTAINER: [number, number, number] = [2.2, 1.2, 2.2]
@@ -224,7 +224,6 @@ function Sea() {
 
 export default function OceanScene() {
   const modelRef = useRef<THREE.Group>(null)
-  useAutoFit(modelRef, { coverage: 0.8, axis: [0, 0.85, 0.35], fov: 35 })
 
   return (
     <SceneCanvas fallbackLabel="Ocean" tone="blue" camera={{ position: [0, 38, 14], fov: 35 }}>
@@ -238,6 +237,7 @@ export default function OceanScene() {
         <Ship />
       </group>
       <Wake />
+      <AutoFitCamera target={modelRef} coverage={0.8} axis={[0, 0.85, 0.35]} fov={35} />
     </SceneCanvas>
   )
 }

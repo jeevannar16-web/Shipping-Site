@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type RefObject } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 
@@ -26,7 +26,7 @@ export function fitCameraTo(
  * model always stays framed with margin at any viewport size.
  */
 export function useAutoFit(
-  groupRef: React.RefObject<THREE.Group | null>,
+  groupRef: RefObject<THREE.Group | null>,
   { coverage, axis, fov }: { coverage: number; axis: [number, number, number]; fov: number },
 ) {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
@@ -48,4 +48,23 @@ export function useAutoFit(
     fitCameraTo(groupRef.current, c, optsRef.current.coverage, optsRef.current.axis)
     fitted.current = true
   })
+}
+
+/**
+ * Render INSIDE the Canvas. R3F hooks can only run within the Canvas tree,
+ * so scenes place <AutoFitCamera target={ref} ... /> as a canvas child.
+ */
+export function AutoFitCamera({
+  target,
+  coverage,
+  axis,
+  fov,
+}: {
+  target: RefObject<THREE.Group | null>
+  coverage: number
+  axis: [number, number, number]
+  fov: number
+}) {
+  useAutoFit(target, { coverage, axis, fov })
+  return null
 }

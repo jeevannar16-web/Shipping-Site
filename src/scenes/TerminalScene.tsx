@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import SceneCanvas from '../components/SceneCanvas'
-import { useAutoFit } from './fitCamera'
+import { AutoFitCamera } from './fitCamera'
 
 const COLORS = ['#d6451e', '#e06f27', '#3a7d44', '#2b4bff', '#8a8a8a', '#c7a03c', '#b03a2e', '#3f6f8f']
 
@@ -135,7 +135,6 @@ function GantryCrane() {
 
 export default function TerminalScene() {
   const modelRef = useRef<THREE.Group>(null)
-  useAutoFit(modelRef, { coverage: 0.8, axis: [0, 0.4, 1], fov: 50 })
 
   return (
     <SceneCanvas fallbackLabel="Terminal" tone="orange" camera={{ position: [0, 6, 24], fov: 50 }}>
@@ -156,6 +155,7 @@ export default function TerminalScene() {
         <ContainerYard />
         <GantryCrane />
       </group>
+      <AutoFitCamera target={modelRef} coverage={0.8} axis={[0, 0.4, 1]} fov={50} />
     </SceneCanvas>
   )
 }

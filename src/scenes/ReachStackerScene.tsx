@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
 import SceneCanvas from '../components/SceneCanvas'
-import { useAutoFit } from './fitCamera'
+import { AutoFitCamera } from './fitCamera'
 
 const STACK_COLORS = ['#24457a', '#b45a1e', '#d0d0d0']
 const CONTAINER: [number, number, number] = [5.5, 2.4, 2.4]
@@ -305,7 +305,6 @@ function StackerScene() {
 
 export default function ReachStackerScene() {
   const modelRef = useRef<THREE.Group>(null)
-  useAutoFit(modelRef, { coverage: 0.7, axis: [0, 0.35, 1], fov: 35 })
 
   return (
     <SceneCanvas fallbackLabel="Freight" tone="orange" camera={{ position: [0, 5.5, 16.5], fov: 35 }}>
@@ -325,6 +324,7 @@ export default function ReachStackerScene() {
       <group ref={modelRef}>
         <StackerScene />
       </group>
+      <AutoFitCamera target={modelRef} coverage={0.7} axis={[0, 0.35, 1]} fov={35} />
     </SceneCanvas>
   )
 }
