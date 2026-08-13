@@ -19,6 +19,10 @@ function useNearViewport<T extends HTMLElement>(margin = '160% 0px 160% 0px') {
   const ref = useRef<T | null>(null)
   const [near, setNear] = useState(false)
 
+  // Latch approach: once the section approaches the viewport, keep the canvas
+  // mounted for the entire session. Unmounting/remounting canvases while
+  // scrolling repeatedly creates and discards GPU contexts, which triggers
+  // "WebGLRenderer: Context Lost" and leaves stale frames on screen.
   useEffect(() => {
     const el = ref.current
     if (!el || typeof IntersectionObserver === 'undefined') {
@@ -26,7 +30,12 @@ function useNearViewport<T extends HTMLElement>(margin = '160% 0px 160% 0px') {
       return
     }
     const io = new IntersectionObserver(
-      ([entry]) => setNear(entry.isIntersecting),
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setNear(true)
+          io.disconnect()
+        }
+      },
       { rootMargin: margin, threshold: 0 },
     )
     io.observe(el)
@@ -151,9 +160,18 @@ export default function SceneShell({
             {showCanvas ? (
               <ErrorBoundary fallback={poster ?? null}>
                 <Canvas
-                  dpr={[1, 1.75]}
+                  dpr={[1, 1.5]}
                   camera={{ position: [0, 0, 9], fov: 42 }}
-                  gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+                  gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
+                  onCreated={({ gl }) => {
+                    gl.domElement.addEventListener('webglcontextlost', (e) => {
+                      e.preventDefault()
+                      setFailed(true)
+                    })
+                    gl.domElement.addEventListener('webglcontextrestored', () => {
+                      setFailed(false)
+                    })
+                  }}
                   onError={() => setFailed(true)}
                 >
                   <SceneProgressContext.Provider value={progress.current}>

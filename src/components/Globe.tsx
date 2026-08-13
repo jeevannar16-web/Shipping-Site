@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, Suspense, useCallback, useEffect } from 'react'
+import { useMemo, useRef, useState, Suspense, useEffect } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls, Stars } from '@react-three/drei'
 import * as THREE from 'three'
@@ -352,7 +352,6 @@ export default function GlobeScene({
 }) {
   const [ready, setReady] = useState(false)
   const [failed, setFailed] = useState(false)
-  const onCreated = useCallback(() => setReady(true), [])
 
   return (
     <div className="relative h-full w-full">
@@ -366,11 +365,18 @@ export default function GlobeScene({
         </div>
       ) : (
         <Canvas
-          dpr={[1, 2]}
+          dpr={[1, 1.5]}
           camera={{ position: [0, 0.4, 5.8], fov: 45 }}
-          onCreated={onCreated}
+          onCreated={({ gl }) => {
+            setReady(true)
+            gl.domElement.addEventListener('webglcontextlost', (e) => {
+              e.preventDefault()
+              setFailed(true)
+            })
+            gl.domElement.addEventListener('webglcontextrestored', () => setFailed(false))
+          }}
           onError={() => setFailed(true)}
-          gl={{ antialias: true, alpha: true, failIfMajorPerformanceCaveat: false }}
+          gl={{ antialias: false, alpha: true, failIfMajorPerformanceCaveat: false }}
           fallback={<div className="flex h-full w-full items-center justify-center"><SceneFallback /></div>}
         >
           <Suspense fallback={null}>
