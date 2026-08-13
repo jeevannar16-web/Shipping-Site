@@ -187,32 +187,6 @@ body {
   }
 }
 
-/* F1/F2 — hero one-time blue band sweep (left->right), settles solid #F2F2F2 */
-.hero-sweep {
-  -webkit-background-clip: text;
-  background-clip: text;
-  background-image: linear-gradient(
-    90deg,
-    #f2f2f2 0%,
-    #f2f2f2 38%,
-    #2b4bff 38%,
-    #2b4bff 62%,
-    #f2f2f2 62%,
-    #f2f2f2 100%
-  );
-  background-size: 220% 100%;
-  color: transparent;
-  animation: hero-sweep 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-@keyframes hero-sweep {
-  0% {
-    background-position: 100% 0;
-  }
-  100% {
-    background-position: 0% 0;
-  }
-}
-
 /* F7 — section typography scale */
 .section-heading {
   color: #f2f2f2;
@@ -298,8 +272,7 @@ body {
   .spinner,
   .bob,
   .slow-scroll,
-  .label-fade,
-  .hero-sweep {
+  .label-fade {
     animation: none;
   }
 }

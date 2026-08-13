@@ -2,6 +2,7 @@ import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import SceneCanvas from '../components/SceneCanvas'
+import { useAutoFit } from './fitCamera'
 
 const COLORS = ['#d6451e', '#e06f27', '#3a7d44', '#2b4bff', '#8a8a8a', '#c7a03c', '#b03a2e', '#3f6f8f']
 
@@ -133,10 +134,13 @@ function GantryCrane() {
 }
 
 export default function TerminalScene() {
+  const modelRef = useRef<THREE.Group>(null)
+  useAutoFit(modelRef, { coverage: 0.8, axis: [0, 0.4, 1], fov: 50 })
+
   return (
     <SceneCanvas fallbackLabel="Terminal" tone="orange" camera={{ position: [0, 6, 24], fov: 50 }}>
       <color attach="background" args={['#cdd5dc']} />
-      <fog attach="fog" args={['#cdd5dc', 36, 95]} />
+      <fog attach="fog" args={['#cdd5dc', 80, 220]} />
       <ambientLight intensity={1.25} />
       <directionalLight position={[22, 34, 12]} intensity={1.9} color="#fff2dd" />
       <directionalLight position={[-10, 8, -14]} intensity={0.35} color="#ffffff" />
@@ -144,23 +148,14 @@ export default function TerminalScene() {
       <SkyDome />
       {/* concrete ground */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
-        <planeGeometry args={[90, 70]} />
+        <planeGeometry args={[200, 150]} />
         <meshStandardMaterial color="#c9ced2" roughness={0.9} />
       </mesh>
 
-      <ContainerYard />
-      <GantryCrane />
-      <CameraPush />
+      <group ref={modelRef}>
+        <ContainerYard />
+        <GantryCrane />
+      </group>
     </SceneCanvas>
   )
-}
-
-function CameraPush() {
-  useFrame((state) => {
-    const t = state.clock.elapsedTime
-    state.camera.position.z = 24 - Math.sin(t * 0.05) * 2
-    state.camera.position.y = 6 + Math.sin(t * 0.08) * 0.4
-    state.camera.lookAt(0, 3, 0)
-  })
-  return null
 }

@@ -16,24 +16,44 @@ export function Container({ color = '#c46a2b', size = [2.4, 2.6, 6] as [number, 
   )
 }
 
+/** R2 — ribbed trailer face texture (no thin rib meshes). */
+function useRibbedTexture(color: string) {
+  return useMemo(() => {
+    const c = document.createElement('canvas')
+    c.width = 128
+    c.height = 256
+    const ctx = c.getContext('2d')!
+    ctx.fillStyle = color
+    ctx.fillRect(0, 0, 128, 256)
+    ctx.fillStyle = 'rgba(0,0,0,0.14)'
+    for (let y = 4; y < 256; y += 18) {
+      ctx.fillRect(2, y, 124, 5)
+    }
+    const tex = new THREE.CanvasTexture(c)
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping
+    tex.repeat.set(1, 1)
+    tex.needsUpdate = true
+    return tex
+  }, [color])
+}
+
 /** Procedural low-poly semi truck. Wheels spin when `driving`. */
 export function Truck({
   cabColor = '#d0d0d0',
   containerColor = '#f0f0f0',
-  ribCount = 12,
+  ribCount: _ribCount = 12,
   driving = true,
   bob = true,
-  shadow = false,
 }: {
   cabColor?: string
   containerColor?: string
   ribCount?: number
   driving?: boolean
   bob?: boolean
-  shadow?: boolean
 }) {
   const wheelRefs = useRef<(THREE.Mesh | null)[]>([])
   const groupRef = useRef<THREE.Group | null>(null)
+  const ribTex = useRibbedTexture(containerColor)
 
   useFrame((_, dt) => {
     if (driving) {
@@ -45,8 +65,6 @@ export function Truck({
       groupRef.current.position.y = Math.sin(performance.now() / 220) * 0.02
     }
   })
-
-  const ribs = useMemo(() => Array.from({ length: ribCount }), [ribCount])
 
   const wheels: [number, number, number][] = [
     [-0.95, 0.42, 0.9], [0.95, 0.42, 0.9],
@@ -77,21 +95,11 @@ export function Truck({
         <boxGeometry args={[1.9, 0.7, 0.06]} />
         <meshStandardMaterial color="#222" roughness={0.5} metalness={0.4} />
       </mesh>
-      {/* trailer */}
+      {/* trailer — ribs painted on faces (R2) */}
       <mesh position={[0, 1.85, -1.9]}>
         <boxGeometry args={[2.4, 2.6, 7.5]} />
-        <meshStandardMaterial color={containerColor} roughness={0.7} metalness={0.2} />
+        <meshStandardMaterial map={ribTex} color="#ffffff" roughness={0.7} metalness={0.2} />
       </mesh>
-      {/* corrugation ribs */}
-      {ribs.map((_, i) => {
-        const z = -1.9 + (i / (ribCount - 1) - 0.5) * 7.4
-        return (
-          <mesh key={i} position={[0, 1.85, z]}>
-            <boxGeometry args={[2.44, 2.64, 0.03]} />
-            <meshStandardMaterial color={i % 2 ? '#101010' : '#e8e8e8'} roughness={0.9} />
-          </mesh>
-        )
-      })}
       {/* exhaust stacks */}
       <mesh position={[0.75, 1.6, 2.75]}>
         <cylinderGeometry args={[0.09, 0.09, 0.7, 8]} />
@@ -101,25 +109,27 @@ export function Truck({
         <cylinderGeometry args={[0.09, 0.09, 0.7, 8]} />
         <meshStandardMaterial color="#333" metalness={0.7} roughness={0.4} />
       </mesh>
-      {/* wheels — group orients axle along X, inner mesh spins on Y */}
+      {/* wheels — R3: tire #141414 + hub disc #9a9a9a, 24 segs, axis on X */}
       {wheels.map((p, i) => (
         <group key={i} position={p} rotation={[0, 0, Math.PI / 2]}>
-          <mesh
-            ref={(el) => {
-              wheelRefs.current[i] = el
-            }}
-          >
-            <cylinderGeometry args={[0.42, 0.42, 0.25, 12]} />
-            <meshStandardMaterial color="#0c0c0c" roughness={0.9} />
+          <mesh>
+            <cylinderGeometry args={[0.42, 0.42, 0.25, 24]} />
+            <meshStandardMaterial color="#141414" roughness={0.9} />
           </mesh>
+          {[0.16, -0.16].map((off, j) => (
+            <mesh
+              key={j}
+              position={[0, off, 0]}
+              ref={(el) => {
+                wheelRefs.current[i * 2 + j] = el
+              }}
+            >
+              <cylinderGeometry args={[0.16, 0.16, 0.05, 16]} />
+              <meshStandardMaterial color="#9a9a9a" roughness={0.5} metalness={0.4} />
+            </mesh>
+          ))}
         </group>
       ))}
-      {shadow && (
-        <mesh position={[0, 0.02, -0.5]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[3.4, 9]} />
-          <meshBasicMaterial color="#000" transparent opacity={0.22} />
-        </mesh>
-      )}
     </group>
   )
 }
@@ -203,14 +213,14 @@ export function CurvedRoad({
         dashes.map((d, i) => (
           <mesh key={`d${i}`} position={d.pos} rotation={[0, d.rot, 0]}>
             <planeGeometry args={[0.18, 1.1]} />
-            <meshBasicMaterial color="#f2f2f2" transparent opacity={0.75} />
+            <meshBasicMaterial color="#f2f2f2" />
           </mesh>
         ))}
       {edgeLines &&
         edges.map((e, i) => (
           <mesh key={`e${i}`} position={e.pos} rotation={[0, e.rot, 0]}>
             <planeGeometry args={[0.09, 1]} />
-            <meshBasicMaterial color="#f2f2f2" transparent opacity={0.9} />
+            <meshBasicMaterial color="#f2f2f2" />
           </mesh>
         ))}
     </group>
@@ -271,22 +281,5 @@ export function InstancedTrees({
       <primitive object={dark} />
       <primitive object={light} />
     </group>
-  )
-}
-
-/** Background starfield for the space hero. */
-export function Starfield({ count = 300 }: { count?: number }) {
-  const positions = useMemo(() => {
-    const arr = new Float32Array(count * 3)
-    for (let i = 0; i < count * 3; i++) arr[i] = (Math.random() - 0.5) * 80
-    return arr
-  }, [count])
-  return (
-    <points>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-      </bufferGeometry>
-      <pointsMaterial size={0.12} color="#ffffff" sizeAttenuation transparent opacity={0.85} />
-    </points>
   )
 }

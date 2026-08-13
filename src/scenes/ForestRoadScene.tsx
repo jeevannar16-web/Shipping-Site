@@ -14,7 +14,7 @@ function TruckDrive() {
   })
   return (
     <group ref={ref} rotation={[0, 0, 0]}>
-      <Truck cabColor="#1a1a1a" containerColor="#f2f2f2" ribCount={10} shadow />
+      <Truck cabColor="#1a1a1a" containerColor="#f2f2f2" ribCount={10} />
     </group>
   )
 }

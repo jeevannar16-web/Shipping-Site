@@ -19,7 +19,7 @@ export default function Home() {
 
   return (
     <div className="relative">
-      {/* HERO — SHOT 2: dot-matrix globe at 68% / 55% */}
+      {/* HERO — SHOT 2: dot-matrix globe, planet fills right half */}
       <section className="relative flex min-h-screen items-center overflow-hidden">
         <div className="absolute inset-0">
           <SuspenseBox label="Global" tone="violet">
@@ -32,13 +32,11 @@ export default function Home() {
           <p className="mb-6 flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-orange">
             <span className="h-px w-10 bg-orange" /> One Operator
           </p>
-          <LineMask as="h1" className="font-display text-[clamp(3rem,9vw,8.5rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-white">
-            <span className="hero-sweep">Every Leg</span>
+          <LineMask as="h1" className="font-display text-[clamp(3rem,9vw,8.5rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-[#ededed]">
+            Every Leg
           </LineMask>
-          <LineMask as="h1" delay={0.18} className="font-display text-[clamp(3rem,9vw,8.5rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-white">
-            <span className="hero-sweep" style={{ animationDelay: '0.2s' }}>
-              Of The Journey
-            </span>
+          <LineMask as="h1" delay={0.18} className="font-display text-[clamp(3rem,9vw,8.5rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-[#ededed]">
+            Of The Journey
           </LineMask>
           <FadeUp className="mt-8 max-w-md">
             <p className="text-sm leading-relaxed text-dim">

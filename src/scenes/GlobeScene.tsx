@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import * as THREE from 'three'
 import SceneCanvas from '../components/SceneCanvas'
-import { Starfield } from './builders'
 
-const RADIUS = 2.8
+const RADIUS = 3.2
 const DOT_TOTAL = 4500
 
 function latLng(lat: number, lng: number, r = RADIUS) {
@@ -30,57 +29,28 @@ const MARKERS: { id: string; label: string; lat: number; lng: number }[] = [
   { id: 'np', label: 'NEPAL', lat: 28, lng: 84 },
 ]
 
-const FRESNEL_VERT = `
-  varying vec3 vNormal;
-  varying vec3 vView;
-  void main() {
-    vNormal = normalize(normalMatrix * normal);
-    vec4 mv = modelViewMatrix * vec4(position, 1.0);
-    vView = normalize(-mv.xyz);
-    gl_Position = projectionMatrix * mv;
-  }
-`
-const FRESNEL_FRAG = `
-  uniform float uTime;
-  varying vec3 vNormal;
-  varying vec3 vView;
-  void main() {
-    float r = RADIUS;
-    float rim = pow(1.0 - abs(dot(normalize(vNormal), normalize(vView))), 2.0);
-    float up = clamp(normalize(vNormal).y, 0.0, 1.0);
-    vec3 top = vec3(1.0, 0.29, 0.0);
-    vec3 bottom = vec3(0.17, 0.29, 1.0);
-    vec3 col = mix(bottom, top, pow(up, 0.7));
-    float pulse = 0.85 + 0.15 * sin(uTime * 1.5);
-    gl_FragColor = vec4(col, rim * pulse * 0.9);
-  }
-`
+/** Canvas-generated round alpha map so every point renders as a clean circle. */
+function useDotAlphaMap() {
+  return useMemo(() => {
+    const c = document.createElement('canvas')
+    c.width = 64
+    c.height = 64
+    const ctx = c.getContext('2d')!
+    const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32)
+    g.addColorStop(0, '#ffffff')
+    g.addColorStop(0.4, '#ffffff')
+    g.addColorStop(1, '#000000')
+    ctx.fillStyle = g
+    ctx.fillRect(0, 0, 64, 64)
+    const tex = new THREE.CanvasTexture(c)
+    tex.needsUpdate = true
+    return tex
+  }, [])
+}
 
-/** F1 — dot-matrix planet: 4500 fibonacci points, land only via equirect mask. */
+/** G1 — full fibonacci sphere, 4500 points, radius 3.2, #CFCFCF round dots. */
 function DotPlanet() {
-  const [tex, setTex] = useState<THREE.Texture | null>(null)
-  const matRef = useRef<THREE.ShaderMaterial>(null)
-
-  // safe 1x1 white texture so a failed mask load keeps ALL dots (fallback)
-  const fallback = useMemo(() => {
-    const t = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1)
-    t.needsUpdate = true
-    return t
-  }, [])
-
-  useEffect(() => {
-    const loader = new THREE.TextureLoader()
-    loader.load(
-      '/earth-mask.png',
-      (t) => {
-        t.colorSpace = THREE.NoColorSpace
-        t.anisotropy = 4
-        setTex(t)
-      },
-      undefined,
-      () => setTex(null),
-    )
-  }, [])
+  const alphaMap = useDotAlphaMap()
 
   const { positions } = useMemo(() => {
     const pos = new Float32Array(DOT_TOTAL * 3)
@@ -96,98 +66,76 @@ function DotPlanet() {
     return { positions: pos }
   }, [])
 
-  useFrame((state) => {
-    if (!matRef.current) return
-    const cam = state.camera as THREE.PerspectiveCamera
-    const size = state.size
-    const d = cam.position.length()
-    const halfH = 'fov' in cam ? d * Math.tan((cam.fov * Math.PI) / 360) : d
-    const uPC = size.height / (2 * halfH)
-    matRef.current.uniforms.uPC.value = uPC
-  })
-
-  const material = useMemo(
-    () =>
-      new THREE.ShaderMaterial({
-        transparent: true,
-        depthWrite: false,
-        uniforms: {
-          uTex: { value: fallback },
-          uPC: { value: 0 },
-          uSize: { value: 0.03 },
-        },
-        vertexShader: `
-          attribute vec3 position;
-          uniform float uPC;
-          uniform float uSize;
-          varying vec2 vUv;
-          void main() {
-            vec3 n = normalize(position);
-            vUv = vec2(
-              mod((atan(n.z, -n.x) + 3.14159265359) / 6.28318530718 + 0.5, 1.0),
-              1.0 - acos(clamp(n.y, -1.0, 1.0)) / 3.14159265359
-            );
-            vec4 mv = modelViewMatrix * vec4(position, 1.0);
-            gl_Position = projectionMatrix * mv;
-            gl_PointSize = clamp(uPC * uSize / max(-mv.z, 0.1), 1.0, 14.0);
-          }
-        `,
-        fragmentShader: `
-          uniform sampler2D uTex;
-          varying vec2 vUv;
-          void main() {
-            vec2 c = gl_PointCoord - 0.5;
-            if (dot(c, c) > 0.25) discard;
-            float lum = texture2D(uTex, vUv).r;
-            if (lum < 0.5) discard;
-            gl_FragColor = vec4(vec3(0.725), 1.0);
-          }
-        `,
-      }),
-    [fallback],
-  )
-
-  useEffect(() => {
-    if (material.uniforms.uTex.value instanceof THREE.Texture && tex) {
-      material.uniforms.uTex.value = tex
-      material.needsUpdate = true
-    }
-  }, [tex, material])
-
   return (
     <points>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <primitive object={material} ref={matRef} attach="material" />
+      <pointsMaterial
+        color="#cfcfcf"
+        size={0.05}
+        sizeAttenuation
+        depthWrite={false}
+        alphaMap={alphaMap}
+        alphaTest={0.5}
+      />
     </points>
   )
 }
 
-function FresnelShell() {
-  const mat = useMemo(() => new THREE.ShaderMaterial(createShell()), [])
-  useFrame((state) => {
-    mat.uniforms.uTime.value = state.clock.elapsedTime
-  })
+/** Canvas radial-gradient sprite for a soft additive glow. */
+function useGlowTexture(color: string) {
+  return useMemo(() => {
+    const c = document.createElement('canvas')
+    c.width = 256
+    c.height = 256
+    const ctx = c.getContext('2d')!
+    const g = ctx.createRadialGradient(128, 128, 0, 128, 128, 128)
+    g.addColorStop(0, color)
+    g.addColorStop(0.35, color)
+    g.addColorStop(1, 'rgba(0,0,0,0)')
+    ctx.fillStyle = g
+    ctx.fillRect(0, 0, 256, 256)
+    const tex = new THREE.CanvasTexture(c)
+    tex.needsUpdate = true
+    return tex
+  }, [color])
+}
+
+/** G1 — two additive glow sprites at globe top (orange) / bottom (blue) edges. */
+function Glow() {
+  const orange = useGlowTexture('#ff4a00')
+  const blue = useGlowTexture('#2b4bff')
   return (
-    <mesh material={mat}>
-      <sphereGeometry args={[2.95, 64, 64]} />
-    </mesh>
+    <group>
+      <sprite position={[0, RADIUS, 0]} scale={[10, 10, 1]}>
+        <spriteMaterial map={orange} transparent opacity={0.8} blending={THREE.AdditiveBlending} depthWrite={false} />
+      </sprite>
+      <sprite position={[0, -RADIUS, 0]} scale={[11, 11, 1]}>
+        <spriteMaterial map={blue} transparent opacity={0.8} blending={THREE.AdditiveBlending} depthWrite={false} />
+      </sprite>
+    </group>
   )
 }
 
-function createShell() {
-  return {
-    transparent: true,
-    side: THREE.BackSide,
-    depthWrite: false,
-    uniforms: { uTime: { value: 0 } },
-    vertexShader: FRESNEL_VERT,
-    fragmentShader: FRESNEL_FRAG,
-  }
+/** Starfield across the whole hero. */
+function Stars({ count = 400 }: { count?: number }) {
+  const positions = useMemo(() => {
+    const arr = new Float32Array(count * 3)
+    for (let i = 0; i < count * 3; i++) arr[i] = (Math.random() - 0.5) * 80
+    return arr
+  }, [count])
+  return (
+    <points>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+      </bufferGeometry>
+      <pointsMaterial size={0.12} color="#ffffff" sizeAttenuation transparent opacity={0.5} />
+    </points>
+  )
 }
 
-/** F1 — arc with dash draw-on (2s) + travelling dot, respawn every 3s. */
+/** G1 — arc with dash draw-on (2s) + travelling dot, respawn every 3s. */
 function Arc({ from, to, offset }: { from: [number, number]; to: [number, number]; offset: number }) {
   const a = useMemo(() => latLng(from[0], from[1]), [from])
   const b = useMemo(() => latLng(to[0], to[1]), [to])
@@ -201,12 +149,11 @@ function Arc({ from, to, offset }: { from: [number, number]; to: [number, number
 
   const meshRef = useRef<THREE.Mesh>(null)
   const dotRef = useRef<THREE.Mesh>(null)
-  const groupRef = useRef<THREE.Group>(null)
 
   useFrame((state) => {
     const t = state.clock.elapsedTime
-    const phase = (t * 0.333 + offset) % 1 // cycle 3s
-    const draw = Math.min(phase / 0.667, 1) // draw over 2s
+    const phase = (t * 0.333 + offset) % 1
+    const draw = Math.min(phase / 0.667, 1)
     const g = meshRef.current?.geometry as THREE.TubeGeometry | undefined
     if (g && g.index) {
       g.setDrawRange(0, Math.floor(g.index.count * draw))
@@ -222,7 +169,7 @@ function Arc({ from, to, offset }: { from: [number, number]; to: [number, number
   })
 
   return (
-    <group ref={groupRef}>
+    <group>
       <mesh ref={meshRef} geometry={tube}>
         <meshBasicMaterial color="#ff4a00" transparent opacity={0.5} blending={THREE.AdditiveBlending} depthWrite={false} />
       </mesh>
@@ -251,7 +198,7 @@ function Arcs() {
   )
 }
 
-/** F1 — 9 orange marker dots + tags; hide a tag when its point faces away. */
+/** G1 — orange marker dots + tags; hide a tag when its point faces away. */
 function Markers() {
   const groupRef = useRef<THREE.Group>(null)
   const labelRefs = useRef<Array<HTMLDivElement | null>>([])
@@ -289,15 +236,17 @@ function Markers() {
               position={[0, 0.18, 0]}
               center
               distanceFactor={30}
-              zIndexRange={[20, 0]}
+              zIndexRange={[30, 0]}
               style={{ pointerEvents: 'none' }}
             >
               <div
                 ref={(el) => {
                   labelRefs.current[i] = el
                 }}
-                className="whitespace-nowrap rounded border border-[#333] bg-[#0a0a0a] px-2.5 py-0.5 font-mono text-[9px] tracking-[0.14em] text-white shadow-[0_2px_12px_rgba(0,0,0,0.5)] transition-opacity duration-300"
+                className="flex items-center gap-1.5 whitespace-nowrap px-2 py-0.5 font-mono text-[10px] leading-none tracking-[0.14em] text-white transition-opacity duration-300"
+                style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 30 }}
               >
+                <span className="inline-block h-[3px] w-[3px] rounded-full bg-[#ff4a00]" />
                 {m.label}
               </div>
             </Html>
@@ -308,27 +257,21 @@ function Markers() {
   )
 }
 
-/** F1 — slow rotation + parallax + positions globe center at 68% / 55%. */
+/** G1 — group at (3.1,-0.2,0), rotation 0.0008/frame, parallax .05. */
 function Rig() {
   const ref = useRef<THREE.Group>(null)
 
-  useFrame((state, delta) => {
+  useFrame((state) => {
     const g = ref.current
     if (!g) return
-    const cam = state.camera as THREE.PerspectiveCamera
-    const d = cam.position.length()
-    const halfH = 'fov' in cam ? d * Math.tan((cam.fov * Math.PI) / 360) : d
-    const halfW = halfH * state.size.width / Math.max(state.size.height, 1)
-    g.position.x = 0.36 * halfW
-    g.position.y = 0.1 * halfH
-    g.rotation.y += 0.048 * delta
+    g.rotation.y += 0.0008
     g.rotation.x = THREE.MathUtils.lerp(g.rotation.x, -state.pointer.y * 0.05, 0.05)
   })
 
   return (
-    <group ref={ref}>
+    <group ref={ref} position={[3.1, -0.2, 0]}>
       <DotPlanet />
-      <FresnelShell />
+      <Glow />
       <Arcs />
       <Markers />
     </group>
@@ -337,9 +280,9 @@ function Rig() {
 
 export default function GlobeScene() {
   return (
-    <SceneCanvas fallbackLabel="Global" tone="violet" camera={{ position: [0, 0, 19.3], fov: 45 }}>
+    <SceneCanvas fallbackLabel="Global" tone="violet" camera={{ position: [0, 0, 10], fov: 45 }}>
       <ambientLight intensity={0.5} />
-      <Starfield count={300} />
+      <Stars count={400} />
       <Rig />
     </SceneCanvas>
   )

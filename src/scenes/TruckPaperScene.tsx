@@ -1,36 +1,118 @@
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
+import { ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
 import SceneCanvas from '../components/SceneCanvas'
+import { useAutoFit } from './fitCamera'
 
-/** F5 — side-view truck, total length 13. Cab (2.4,2.0,2.2) + trailer (9.5,2.6,2.4), wheels r .55. */
+/** R2 — trailer rib texture (no thin rib meshes). */
+function useTrailerTexture() {
+  return useMemo(() => {
+    const c = document.createElement('canvas')
+    c.width = 256
+    c.height = 128
+    const ctx = c.getContext('2d')!
+    ctx.fillStyle = '#f0f0f0'
+    ctx.fillRect(0, 0, 256, 128)
+    ctx.fillStyle = 'rgba(120,120,120,0.5)'
+    for (let x = 5; x < 256; x += 21) {
+      ctx.fillRect(x, 2, 3, 124)
+    }
+    ctx.strokeStyle = 'rgba(90,90,90,0.5)'
+    ctx.lineWidth = 2
+    ctx.strokeRect(1, 1, 254, 126)
+    const tex = new THREE.CanvasTexture(c)
+    tex.needsUpdate = true
+    return tex
+  }, [])
+}
+
+/** R2 — cab front face: windshield painted on. */
+function useCabFrontTexture() {
+  return useMemo(() => {
+    const c = document.createElement('canvas')
+    c.width = 128
+    c.height = 128
+    const ctx = c.getContext('2d')!
+    ctx.fillStyle = '#d6d6d6'
+    ctx.fillRect(0, 0, 128, 128)
+    ctx.fillStyle = '#0a0a0a'
+    ctx.fillRect(0, 14, 128, 54)
+    ctx.strokeStyle = '#9a9a9a'
+    ctx.lineWidth = 4
+    ctx.strokeRect(-1, 44, 130, 6)
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)'
+    ctx.lineWidth = 2
+    ctx.strokeRect(6, 22, 116, 32)
+    const tex = new THREE.CanvasTexture(c)
+    tex.needsUpdate = true
+    return tex
+  }, [])
+}
+
+/** R2 — cab side faces: door line + window painted on. */
+function useCabSideTexture() {
+  return useMemo(() => {
+    const c = document.createElement('canvas')
+    c.width = 128
+    c.height = 128
+    const ctx = c.getContext('2d')!
+    ctx.fillStyle = '#d6d6d6'
+    ctx.fillRect(0, 0, 128, 128)
+    ctx.fillStyle = '#0a0a0a'
+    ctx.fillRect(4, 12, 122, 46)
+    ctx.fillStyle = 'rgba(120,120,120,0.8)'
+    ctx.fillRect(52, 0, 4, 128)
+    const tex = new THREE.CanvasTexture(c)
+    tex.needsUpdate = true
+    return tex
+  }, [])
+}
+
+/** G4 — R3 wheel: tire #141414 + hub disc #9a9a9a, bottom y=0, axis along X. */
+function Wheel({ x, z, refs, iBase }: { x: number; z: number; refs: React.MutableRefObject<(THREE.Mesh | null)[]>; iBase: number }) {
+  return (
+    <group position={[x, 0.55, z]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh>
+        <cylinderGeometry args={[0.55, 0.55, 0.32, 24]} />
+        <meshStandardMaterial color="#141414" roughness={0.9} />
+      </mesh>
+      {[0.22, -0.22].map((off, i) => (
+        <mesh
+          key={i}
+          position={[0, off, 0]}
+          ref={(el) => {
+            refs.current[iBase + i] = el
+          }}
+        >
+          <cylinderGeometry args={[0.2, 0.2, 0.06, 16]} />
+          <meshStandardMaterial color="#9a9a9a" roughness={0.5} metalness={0.4} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+/** G4 — side-view truck: trailer -6.5..+3.0, cab +3.2..+5.6, wheels r .55. */
 function TruckRig() {
-  const dashRef = useRef<THREE.Group>(null)
   const groupRef = useRef<THREE.Group>(null)
   const wheelRefs = useRef<Array<THREE.Mesh | null>>([])
 
-  const dashes = useMemo(() => {
-    const arr: number[] = []
-    for (let i = 0; i < 12; i++) arr.push(i * 3)
-    return arr
-  }, [])
+  const trailerTex = useTrailerTexture()
+  const cabFront = useCabFrontTexture()
+  const cabSide = useCabSideTexture()
+
+  const AXLES = [-4.8, -3.6, -2.4, 3.8, 5.0]
 
   const wheelSpins = useRef(new Float32Array(10).fill(0))
 
-  useFrame((state, dt) => {
-    const t = state.clock.elapsedTime
-    // ground dashes scroll left
-    if (dashRef.current) {
-      const off = (t * 4) % 3
-      dashRef.current.children.forEach((c, i) => {
-        c.position.x = -18 + ((i * 3 + off) % 36)
-      })
-    }
+  useFrame((_, dt) => {
+    const t = performance.now() / 1000
     // wheel spin + bob
     wheelRefs.current.forEach((w, i) => {
       if (!w) return
       wheelSpins.current[i] += dt * 7
-      w.rotation.z = -wheelSpins.current[i]
+      w.rotation.y = wheelSpins.current[i]
     })
     if (groupRef.current) {
       groupRef.current.position.y = Math.sin(t * 2.2) * 0.02
@@ -38,118 +120,100 @@ function TruckRig() {
   })
 
   return (
-    <>
-      {/* scrolling ground dash line */}
-      <group ref={dashRef} position={[0, 0.02, 0]}>
-        {dashes.map((x, i) => (
-          <mesh key={i} position={[x - 18, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[0.15, 1.2]} />
-            <meshBasicMaterial color="#d8d2c8" />
-          </mesh>
-        ))}
-      </group>
-
-      <group ref={groupRef}>
-        {/* trailer (9.5 long along x) */}
-        <mesh position={[-1.9, 1.3, 0]}>
+    <group ref={groupRef}>
+        {/* trailer (9.5 long along x, -6.5..+3.0) */}
+        <mesh position={[-1.75, 1.3, 0]}>
           <boxGeometry args={[9.5, 2.6, 2.4]} />
-          <meshStandardMaterial color="#f0f0f0" roughness={0.7} metalness={0.2} flatShading />
+          <meshStandardMaterial attach="material-0" map={trailerTex} roughness={0.7} metalness={0.2} />
+          <meshStandardMaterial attach="material-1" color="#f0f0f0" roughness={0.7} metalness={0.2} />
+          <meshStandardMaterial attach="material-2" map={trailerTex} roughness={0.7} metalness={0.2} />
+          <meshStandardMaterial attach="material-3" color="#f0f0f0" roughness={0.7} metalness={0.2} />
+          <meshStandardMaterial attach="material-4" map={trailerTex} roughness={0.7} metalness={0.2} />
+          <meshStandardMaterial attach="material-5" map={trailerTex} roughness={0.7} metalness={0.2} />
         </mesh>
-        {/* trailer ribs */}
-        {Array.from({ length: 12 }).map((_, i) => {
-          const x = -6.6 + ((i + 0.5) / 12) * 9.5
-          return (
-            <mesh key={i} position={[x, 1.3, 1.21]}>
-              <boxGeometry args={[0.04, 2.62, 0.02]} />
-              <meshStandardMaterial color="#d9d9d9" roughness={0.9} />
-            </mesh>
-          )
-        })}
-        {/* cab (2.4,2.0,2.2) */}
-        <mesh position={[4.6, 1.1, 0]}>
+
+        {/* cab (2.4,2.0,2.2), +3.2..+5.6 */}
+        <mesh position={[4.4, 1.1, 0]}>
           <boxGeometry args={[2.4, 2.0, 2.2]} />
-          <meshStandardMaterial color="#d6d6d6" roughness={0.6} />
+          <meshStandardMaterial attach="material-0" map={cabFront} roughness={0.6} />
+          <meshStandardMaterial attach="material-1" color="#d6d6d6" roughness={0.6} />
+          <meshStandardMaterial attach="material-2" color="#d6d6d6" roughness={0.6} />
+          <meshStandardMaterial attach="material-3" color="#d6d6d6" roughness={0.6} />
+          <meshStandardMaterial attach="material-4" map={cabSide} roughness={0.6} />
+          <meshStandardMaterial attach="material-5" map={cabSide} roughness={0.6} />
         </mesh>
-        {/* windshield (front, +x) */}
-        <mesh position={[5.62, 1.25, 0]}>
-          <boxGeometry args={[0.08, 0.8, 1.7]} />
-          <meshStandardMaterial color="#0a0a0a" roughness={0.2} metalness={0.7} />
+
+        {/* bumper */}
+        <mesh position={[5.62, 0.6, 0]}>
+          <boxGeometry args={[0.15, 0.7, 2.2]} />
+          <meshStandardMaterial color="#3d3d3d" roughness={0.5} metalness={0.4} />
         </mesh>
-        {/* door line on camera-facing side (+z) */}
-        <mesh position={[4.6, 1.1, 1.11]}>
-          <boxGeometry args={[0.05, 1.7, 0.03]} />
-          <meshStandardMaterial color="#bdbdbd" roughness={0.9} />
+
+        {/* one exhaust stack — inside cab bounding box */}
+        <mesh position={[3.4, 2.05, 0.6]}>
+          <cylinderGeometry args={[0.09, 0.1, 0.85, 12]} />
+          <meshStandardMaterial color="#3a3a3a" roughness={0.4} metalness={0.6} />
         </mesh>
-        {/* cab side window line */}
-        <mesh position={[3.5, 1.5, 1.11]}>
-          <boxGeometry args={[0.02, 0.6, 0.03]} />
-          <meshStandardMaterial color="#8f8f8f" roughness={0.9} />
-        </mesh>
+
         {/* chassis */}
-        <mesh position={[1.2, 0.45, 0]}>
-          <boxGeometry args={[11, 0.22, 2.0]} />
+        <mesh position={[1.1, 0.45, 0]}>
+          <boxGeometry args={[11.4, 0.22, 2.0]} />
           <meshStandardMaterial color="#1a1a1a" roughness={0.8} />
         </mesh>
-        {/* shadow plane */}
-        <mesh position={[1, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[15, 4.5]} />
-          <meshBasicMaterial color="#000" transparent opacity={0.18} />
-        </mesh>
-        {/* wheels: r .55, cab 2 + trailer 3 axles */}
-        {[
-          [4.1, 0.55], [3.1, 0.55],
-          [0.4, 0.55], [-1.3, 0.55], [-3.0, 0.55],
-        ].map(([x, r], axle) => (
-          <group key={axle}>
-            {[1, -1].map((side) => (
-              <mesh key={side} position={[x, r, (2.05 / 2) * side]} rotation={[Math.PI / 2, 0, 0]}>
-                <cylinderGeometry args={[r, r, 0.32, 14]} />
-                <meshStandardMaterial color="#0c0c0c" roughness={0.9} />
-              </mesh>
-            ))}
-          </group>
-        ))}
-        {/* hub spokes so spin is visible */}
-        {[
-          [4.1, 0], [3.1, 1], [0.4, 2], [-1.3, 3], [-3.0, 4],
-        ].map(([x, axle]) =>
-          [1, -1].map((side, si) => (
-            <group key={`s${axle}-${side}`} position={[x, 0.55, (2.05 / 2) * side]} rotation={[Math.PI / 2, 0, 0]}>
-              <mesh ref={(el) => (wheelRefs.current[axle * 2 + si] = el)}>
-                <boxGeometry args={[0.72, 0.06, 0.02]} />
-                <meshStandardMaterial color="#3a3a3a" roughness={0.6} />
-              </mesh>
-            </group>
+
+        {/* wheels: r .55, trailer 3 + cab 2 axles (R3/R5) */}
+        {AXLES.map((x, i) =>
+          [1, -1].map((side) => (
+            <Wheel key={`${x}-${side}`} x={x} z={side * 1.1} refs={wheelRefs} iBase={i * 2 + (side === 1 ? 0 : 1)} />
           )),
         )}
       </group>
-    </>
   )
 }
 
 export default function TruckPaperScene() {
+  const modelRef = useRef<THREE.Group>(null)
+  const dashRef = useRef<THREE.Group>(null)
+  useAutoFit(modelRef, { coverage: 0.7, axis: [0, 0.15, 1], fov: 30 })
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime
+    if (dashRef.current) {
+      const off = (t * 4) % 1.5
+      dashRef.current.children.forEach((c, i) => {
+        c.position.x = -9 + ((i * 1.5 + off) % 18)
+      })
+    }
+  })
+
   return (
     <SceneCanvas fallbackLabel="Linehaul" tone="blue" camera={{ position: [0, 2.4, 19], fov: 30 }}>
-      <color attach="background" args={['#efeae3']} />
+      <color attach="background" args={['#e6e1d8']} />
       <ambientLight intensity={0.9} />
       <directionalLight position={[4, 14, 10]} intensity={1.6} color="#fff6e8" />
       <directionalLight position={[-6, 3, -4]} intensity={0.35} color="#ffffff" />
 
-      {/* ground */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
-        <planeGeometry args={[30, 60]} />
-        <meshStandardMaterial color="#efeae3" roughness={1} />
+      {/* R6 — studio cove floor */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.001, 0]}>
+        <planeGeometry args={[120, 120]} />
+        <meshStandardMaterial color="#e6e1d8" roughness={1} />
       </mesh>
 
-      <TruckRig />
-      <CameraLook />
+      {/* scrolling ground dashes */}
+      <group ref={dashRef} position={[0, 0.02, 0]}>
+        {Array.from({ length: 12 }).map((_, i) => (
+          <mesh key={i} position={[i * 1.5 - 9, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[0.15, 1.2]} />
+            <meshBasicMaterial color="#cfc8bc" />
+          </mesh>
+        ))}
+      </group>
+
+      <ContactShadows position={[0, 0, 0]} opacity={0.4} scale={40} blur={2.5} far={7} resolution={512} color="#000000" />
+
+      <group ref={modelRef}>
+        <TruckRig />
+      </group>
     </SceneCanvas>
   )
-}
-
-function CameraLook() {
-  useFrame((state) => {
-    state.camera.lookAt(0, 2, 0)
-  })
-  return null
 }
