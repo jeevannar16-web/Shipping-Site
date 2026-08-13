@@ -4,6 +4,7 @@ import { ShipContent, ShipPoster } from './3d/ShipScene'
 import { PlaneContent, PlanePoster } from './3d/PlaneScene'
 import { ForkliftContent, ForkliftPoster } from './3d/ForkliftScene'
 import { VaultContent, VaultPoster } from './3d/VaultScene'
+import { TruckTelemetry, ShipRates, WarehouseInventory } from './SceneOverlays'
 
 export function TruckSection() {
   return (
@@ -13,6 +14,7 @@ export function TruckSection() {
       title="Land & Linehaul Transport"
       description="Scheduled linehaul and metro fleets move your cargo across every major route — tracked and accountable at every kilometer."
       poster={<TruckPoster />}
+      overlay={<TruckTelemetry />}
     >
       <TruckContent />
     </SceneShell>
@@ -27,6 +29,7 @@ export function ShipSection() {
       title="Ocean Freight & Maritime"
       description="FCL, LCL and specialised cargo movements — driven by structured carrier selection and full vessel visibility."
       poster={<ShipPoster />}
+      overlay={<ShipRates />}
     >
       <ShipContent />
     </SceneShell>
@@ -55,6 +58,7 @@ export function ForkliftSection() {
       title="Warehousing & 3PL"
       description="High-bay storage, pick and pack, and fulfilment — fully integrated with your freight and transport operations."
       poster={<ForkliftPoster />}
+      overlay={<WarehouseInventory />}
     >
       <ForkliftContent />
     </SceneShell>

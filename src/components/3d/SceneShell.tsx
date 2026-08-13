@@ -15,6 +15,22 @@ export function useSceneProgress() {
   return useContext(SceneProgressContext)
 }
 
+/** Reactive scroll progress (0→1) for DOM overlay widgets, synced via rAF. */
+export function useSceneProgressValue() {
+  const { value } = useSceneProgress()
+  const [v, setV] = useState(value)
+  useEffect(() => {
+    let raf = 0
+    const tick = () => {
+      raf = requestAnimationFrame(tick)
+      setV((prev) => (Math.abs(prev - value) > 0.0005 ? value : prev))
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [value])
+  return v
+}
+
 function useNearViewport<T extends HTMLElement>(margin = '160% 0px 160% 0px') {
   const ref = useRef<T | null>(null)
   const [near, setNear] = useState(false)
@@ -84,6 +100,7 @@ export default function SceneShell({
   description,
   children,
   poster,
+  overlay,
 }: {
   id: string
   kicker: string
@@ -91,6 +108,7 @@ export default function SceneShell({
   description: string
   children: ReactNode
   poster?: ReactNode
+  overlay?: ReactNode
 }) {
   const reduced = useReducedMotion()
   const progress = useRef<SceneProgress>({ value: 0 })
@@ -138,73 +156,75 @@ export default function SceneShell({
   const showCanvas = !reduced && near && !failed
 
   return (
-    <section
-      id={id}
-      ref={sectionRef}
-      className={`relative overflow-hidden bg-void ${reduced ? 'flex min-h-screen items-center py-32' : 'h-[280vh]'}`}
-    >
-      {reduced ? (
-        <div className="relative mx-auto max-w-7xl px-6">
-          {poster}
-          <div className="mt-8 max-w-xl">
-            <p className="mb-3 flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-gold">
-              <span className="h-px w-10 bg-gold" /> {kicker}
-            </p>
-            <h2 className="font-display text-4xl font-bold leading-tight tracking-tight md:text-5xl">{title}</h2>
-            <p className="mt-5 text-base leading-relaxed text-white/55">{description}</p>
-          </div>
-        </div>
-      ) : (
-        <div className="sticky top-0 h-screen w-full overflow-hidden">
-          <div ref={viewportRef} className="absolute inset-0">
-            {showCanvas ? (
-              <ErrorBoundary fallback={poster ?? null}>
-                <Canvas
-                  dpr={[1, 1.5]}
-                  camera={{ position: [0, 0, 9], fov: 42 }}
-                  gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
-                  onCreated={({ gl }) => {
-                    gl.domElement.addEventListener('webglcontextlost', (e) => {
-                      e.preventDefault()
-                      setFailed(true)
-                    })
-                    gl.domElement.addEventListener('webglcontextrestored', () => {
-                      setFailed(false)
-                    })
-                  }}
-                  onError={() => setFailed(true)}
-                >
-                  <SceneProgressContext.Provider value={progress.current}>
-                    {children}
-                  </SceneProgressContext.Provider>
-                </Canvas>
-              </ErrorBoundary>
-            ) : (
-              poster ?? (
-                <ScenePoster
-                  icon={<span className="font-display text-6xl text-white/20">{kicker.slice(-2)}</span>}
-                  label={title}
-                />
-              )
-            )}
-          </div>
-
-          <div ref={copyRef} className="pointer-events-none absolute left-0 right-0 top-0 flex h-full items-center px-6 md:px-16">
-            <div className="max-w-xl">
+    <SceneProgressContext.Provider value={progress.current}>
+      <section
+        id={id}
+        ref={sectionRef}
+        className={`relative overflow-hidden bg-void ${reduced ? 'flex min-h-screen items-center py-32' : 'h-[280vh]'}`}
+      >
+        {reduced ? (
+          <div className="relative mx-auto max-w-7xl px-6">
+            {poster}
+            <div className="mt-8 max-w-xl">
               <p className="mb-3 flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-gold">
                 <span className="h-px w-10 bg-gold" /> {kicker}
               </p>
-              <h2 className="font-display text-4xl font-bold leading-tight tracking-tight text-white md:text-6xl">{title}</h2>
-              <p className="mt-5 max-w-md text-base leading-relaxed text-white/55">{description}</p>
+              <h2 className="font-display text-4xl font-bold leading-tight tracking-tight md:text-5xl">{title}</h2>
+              <p className="mt-5 text-base leading-relaxed text-white/55">{description}</p>
             </div>
           </div>
+        ) : (
+          <div className="sticky top-0 h-screen w-full overflow-hidden">
+            <div ref={viewportRef} className="absolute inset-0">
+              {showCanvas ? (
+                <ErrorBoundary fallback={poster ?? null}>
+                  <Canvas
+                    dpr={[1, 1.5]}
+                    camera={{ position: [0, 0, 9], fov: 42 }}
+                    gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
+                    onCreated={({ gl }) => {
+                      gl.domElement.addEventListener('webglcontextlost', (e) => {
+                        e.preventDefault()
+                        setFailed(true)
+                      })
+                      gl.domElement.addEventListener('webglcontextrestored', () => {
+                        setFailed(false)
+                      })
+                    }}
+                    onError={() => setFailed(true)}
+                  >
+                    {children}
+                  </Canvas>
+                </ErrorBoundary>
+              ) : (
+                poster ?? (
+                  <ScenePoster
+                    icon={<span className="font-display text-6xl text-white/20">{kicker.slice(-2)}</span>}
+                    label={title}
+                  />
+                )
+              )}
+            </div>
 
-          <div className="pointer-events-none absolute bottom-6 left-6 flex items-center gap-3 text-[10px] uppercase tracking-[0.3em] text-white/30 md:left-16">
-            <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-gold" />
-            Scroll to explore
+            <div ref={copyRef} className="pointer-events-none absolute left-0 right-0 top-0 flex h-full items-center px-6 md:px-16">
+              <div className="max-w-xl">
+                <p className="mb-3 flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-gold">
+                  <span className="h-px w-10 bg-gold" /> {kicker}
+                </p>
+                <h2 className="font-display text-4xl font-bold leading-tight tracking-tight text-white md:text-6xl">{title}</h2>
+                <p className="mt-5 max-w-md text-base leading-relaxed text-white/55">{description}</p>
+              </div>
+            </div>
+
+            {overlay}
+
+            <div className="pointer-events-none absolute bottom-6 left-6 flex items-center gap-3 text-[10px] uppercase tracking-[0.3em] text-white/30 md:left-16">
+              <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-gold" />
+              Scroll to explore
+            </div>
           </div>
-        </div>
-      )}
-    </section>
+        )}
+      </section>
+    </SceneProgressContext.Provider>
   )
 }
