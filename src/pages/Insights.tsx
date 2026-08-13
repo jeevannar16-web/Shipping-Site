@@ -12,13 +12,13 @@ export default function Insights() {
   return (
     <div className="relative">
       {/* header */}
-      <section className="mx-auto max-w-7xl px-6 pt-20 md:px-10">
-        <LineMask as="h1" className="font-display text-[clamp(3rem,12vw,10rem)] font-extrabold uppercase leading-[0.9] tracking-tight text-ink">
+      <section className="section-pad px-[6vw]">
+        <LineMask as="h1" className="font-display font-extrabold uppercase tracking-tight text-ink section-heading">
           Insights
         </LineMask>
       </section>
 
-      <div className="mx-auto max-w-7xl px-6 py-16 md:px-10">
+      <div className="section-pad px-[6vw] pt-0">
         <div className="grid gap-12 md:grid-cols-12">
           {/* sidebar */}
           <aside className="md:col-span-4">

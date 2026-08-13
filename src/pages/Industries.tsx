@@ -30,7 +30,7 @@ export default function Industries() {
       </section>
 
       {/* industry cards */}
-      <section className="mx-auto max-w-7xl px-6 py-20 md:px-10">
+      <section className="section-pad px-[6vw]">
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {INDUSTRIES.map((ind, i) => (
             <FadeUp

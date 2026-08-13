@@ -22,13 +22,13 @@ export default function About() {
             <span className="h-px w-10 bg-blue" /> About Jeevan
           </p>
           <LineMask as="h1" className="font-display text-[clamp(2.4rem,6.5vw,6.5rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-ink">
-            Your trusted partner for
+            Global freight forwarding and logistics
           </LineMask>
         </div>
       </section>
 
       {/* story */}
-      <section className="mx-auto max-w-7xl px-6 py-24 md:px-10">
+      <section className="section-pad px-[6vw]">
         <div className="grid gap-12 md:grid-cols-2">
           <div>
             <LineMask as="h2" className="font-display text-[clamp(2.2rem,5vw,4.5rem)] font-extrabold uppercase leading-[0.95] tracking-tight text-ink">
@@ -62,8 +62,8 @@ export default function About() {
       </section>
 
       {/* WHY US */}
-      <section className="border-t border-white/[0.07] bg-panel/40 py-24">
-        <div className="mx-auto max-w-7xl px-6 md:px-10">
+      <section className="border-t border-white/[0.07] bg-panel/40 section-pad">
+        <div className="px-[6vw]">
           <p className="mb-4 flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-orange">
             <span className="h-px w-10 bg-orange" /> Why Us
           </p>

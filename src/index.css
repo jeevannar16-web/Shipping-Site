@@ -187,6 +187,97 @@ body {
   }
 }
 
+/* F1/F2 — hero one-time blue band sweep (left->right), settles solid #F2F2F2 */
+.hero-sweep {
+  -webkit-background-clip: text;
+  background-clip: text;
+  background-image: linear-gradient(
+    90deg,
+    #f2f2f2 0%,
+    #f2f2f2 38%,
+    #2b4bff 38%,
+    #2b4bff 62%,
+    #f2f2f2 62%,
+    #f2f2f2 100%
+  );
+  background-size: 220% 100%;
+  color: transparent;
+  animation: hero-sweep 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes hero-sweep {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0% 0;
+  }
+}
+
+/* F7 — section typography scale */
+.section-heading {
+  color: #f2f2f2;
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 7vw, 7rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+.section-copy {
+  color: #8a8a8a;
+  max-width: 52ch;
+}
+.section-pad {
+  padding-block: 10vh;
+}
+.grid-88 {
+  width: 88vw;
+  margin-inline: auto;
+}
+.bordered-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1px;
+  background: #222;
+  border: 1px solid #222;
+}
+.bordered-grid > * {
+  background: #141416;
+  min-width: 0;
+}
+@media (min-width: 768px) {
+  .bordered-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .bordered-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* F5 — side truck value labels fade in */
+@keyframes label-fade {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.label-fade {
+  animation: label-fade 0.9s ease-out forwards;
+  opacity: 0;
+}
+.label-fade-2 {
+  animation-delay: 0.35s;
+}
+.label-fade-3 {
+  animation-delay: 0.7s;
+}
+
 /* Vertical marquee (preloader lists) */
 .vmarquee-track {
   animation: vmarquee 18s linear infinite;
@@ -205,7 +296,10 @@ body {
   .marquee-track-reverse,
   .ticker-track,
   .spinner,
-  .bob {
+  .bob,
+  .slow-scroll,
+  .label-fade,
+  .hero-sweep {
     animation: none;
   }
 }

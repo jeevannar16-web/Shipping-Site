@@ -19,24 +19,26 @@ export default function Home() {
 
   return (
     <div className="relative">
-      {/* HERO — SHOT 2 */}
-      <section className="relative flex min-h-[88vh] items-center overflow-hidden">
-        <div className="absolute inset-y-0 right-0 w-full lg:w-[58%]">
+      {/* HERO — SHOT 2: dot-matrix globe at 68% / 55% */}
+      <section className="relative flex min-h-screen items-center overflow-hidden">
+        <div className="absolute inset-0">
           <SuspenseBox label="Global" tone="violet">
             <GlobeScene />
           </SuspenseBox>
         </div>
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-void via-void/85 to-transparent lg:w-2/3" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-void via-void/70 to-transparent lg:w-3/5" />
 
         <div className="relative z-10 mx-auto w-full max-w-7xl px-6 py-24 md:px-10">
           <p className="mb-6 flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-orange">
             <span className="h-px w-10 bg-orange" /> One Operator
           </p>
-          <LineMask as="h1" className="font-display text-[clamp(3rem,9vw,8.5rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-white/70">
-            Every Leg
+          <LineMask as="h1" className="font-display text-[clamp(3rem,9vw,8.5rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-white">
+            <span className="hero-sweep">Every Leg</span>
           </LineMask>
-          <LineMask as="h1" delay={0.18} className="font-display text-[clamp(3rem,9vw,8.5rem)] font-extrabold uppercase leading-[0.92] tracking-tight">
-            <span className="bg-gradient-to-r from-blue via-orange to-violet bg-clip-text text-transparent">Of The Journey</span>
+          <LineMask as="h1" delay={0.18} className="font-display text-[clamp(3rem,9vw,8.5rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-white">
+            <span className="hero-sweep" style={{ animationDelay: '0.2s' }}>
+              Of The Journey
+            </span>
           </LineMask>
           <FadeUp className="mt-8 max-w-md">
             <p className="text-sm leading-relaxed text-dim">
@@ -45,13 +47,13 @@ export default function Home() {
             <div className="mt-8 flex flex-wrap gap-4">
               <button
                 onClick={() => go('/contact')}
-                className="rounded-full bg-orange px-7 py-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-void transition-all hover:shadow-[0_0_30px_rgba(255,74,0,0.45)]"
+                className="rounded-full border border-[#555] bg-transparent px-7 py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-white transition-all hover:bg-white hover:text-black"
               >
                 Talk With Us
               </button>
               <button
                 onClick={() => go('/services')}
-                className="rounded-full border border-[#333] px-7 py-3 text-[11px] uppercase tracking-[0.16em] text-ink transition-all hover:bg-ink hover:text-void"
+                className="rounded-full border border-[#555] bg-transparent px-7 py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-white transition-all hover:bg-white hover:text-black"
               >
                 Our Services
               </button>
@@ -64,16 +66,39 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SHOT 3 — REACH STACKER ON PAPER-WHITE */}
-      <section className="relative h-screen overflow-hidden bg-[#efeae3]">
-        <SuspenseBox label="Freight" tone="orange">
-          <ReachStackerScene />
-        </SuspenseBox>
-        <div className="pointer-events-none absolute inset-x-0 bottom-10 z-10 flex justify-center px-6">
-          <h2 className="max-w-4xl text-center font-display text-[clamp(2rem,6vw,5rem)] font-extrabold uppercase leading-[0.95] tracking-tight text-[#0a0a0a]">
-            Everything your freight needs. <span className="text-orange">Under one group.</span>
-          </h2>
+      {/* SHOT 3 — REACH STACKER ON PAPER-WHITE (heading BELOW canvas) */}
+      <section className="bg-[#efeae3]">
+        <div className="relative h-[80vh] overflow-hidden">
+          <SuspenseBox label="Freight" tone="orange">
+            <ReachStackerScene />
+          </SuspenseBox>
         </div>
+        <div className="section-pad px-[6vw]">
+          <h2 className="section-heading text-[#0a0a0a]">Everything your freight needs.</h2>
+          <div className="mt-8 grid gap-10 md:grid-cols-3">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-orange">01 — Air & Ocean</p>
+              <p className="section-copy mt-2 text-sm leading-relaxed text-neutral-600">
+                Express and priority lanes with disciplined schedules, from booking to final mile.
+              </p>
+            </div>
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-orange">02 — Customs & Compliance</p>
+              <p className="mt-2 text-sm leading-relaxed text-neutral-600">
+                Licensed in-house brokerage — classification, duties, and quarantine handled end to end.
+              </p>
+            </div>
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-orange">03 — Ground & 3PL</p>
+              <p className="mt-2 text-sm leading-relaxed text-neutral-600">
+                Warehousing, pick and pack, and linehaul transport managed under one accountable team.
+              </p>
+            </div>
+          </div>
+        </div>
+        <p className="px-[6vw] pb-[10vh] font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
+          Under one group — air, ocean, customs, warehouse.
+        </p>
       </section>
 
       {/* SHOT 4 — SIDE-VIEW TRUCK ON PAPER-WHITE */}
@@ -87,9 +112,13 @@ export default function Home() {
           <TruckPaperScene />
         </SuspenseBox>
         <div className="absolute bottom-12 left-1/2 z-10 flex -translate-x-1/2 items-center gap-10">
-          {['Speed', 'Reliability', 'Coverage'].map((w, i) => (
-            <div key={w} data-reveal className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-[#0a0a0a]">
-              <span className="font-mono text-orange">0{i + 1}</span> {w}
+          {[
+            ['01', 'Speed', 'label-fade'],
+            ['02', 'Reliability', 'label-fade label-fade-2'],
+            ['03', 'Coverage', 'label-fade label-fade-3'],
+          ].map(([n, w, fade]) => (
+            <div key={w} className={`flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-[#0a0a0a] ${fade}`}>
+              <span className="font-mono text-orange">{n}</span> {w}
             </div>
           ))}
         </div>
@@ -100,7 +129,6 @@ export default function Home() {
         <SuspenseBox label="Ocean" tone="blue">
           <OceanScene />
         </SuspenseBox>
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-void via-transparent to-transparent" />
         <div className="absolute left-6 top-8 z-10 md:left-10">
           <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-white backdrop-blur">
             <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-orange" />
@@ -108,7 +136,7 @@ export default function Home() {
           </p>
         </div>
         <div className="absolute bottom-10 right-6 z-10 hidden w-64 md:right-16 md:block">
-          <div className="rounded-2xl border border-white/10 bg-black/70 p-5 font-mono backdrop-blur">
+          <div className="rounded-2xl border border-white/10 bg-[#0a0a0a]/85 p-5 font-mono backdrop-blur">
             {[
               ['20ft Dry', 'From USD 1,150'],
               ['40ft High-Cube', 'From USD 1,950'],
@@ -138,7 +166,7 @@ export default function Home() {
       </section>
 
       {/* STATS */}
-      <section className="mx-auto max-w-7xl px-6 py-24 md:px-10">
+      <section className="section-pad px-[6vw]">
         <div className="grid grid-cols-2 gap-y-14 md:grid-cols-5">
           {HOME_STATS.map((s) => (
             <FadeUp key={s.label} className="border-l border-white/10 pl-5">
@@ -152,17 +180,17 @@ export default function Home() {
       </section>
 
       {/* WE MOVE FREIGHT */}
-      <section className="relative overflow-hidden border-t border-white/[0.07] py-28">
+      <section className="relative overflow-hidden border-t border-white/[0.07] section-pad">
         <p data-reveal-parallax="0.25" className="text-stroke pointer-events-none select-none whitespace-nowrap font-display text-[16vw] font-extrabold uppercase leading-none">
           We Move Freight
         </p>
-        <div className="mx-auto max-w-7xl px-6 md:px-10">
+        <div className="px-[6vw]">
           <div className="mt-10 max-w-3xl">
-            <LineMask as="h2" className="font-display text-[clamp(2.2rem,6vw,5rem)] font-extrabold uppercase leading-[0.95] tracking-tight text-ink">
+            <LineMask as="h2" className="section-heading">
               We own the outcome.
             </LineMask>
             <FadeUp className="mt-8 max-w-xl">
-              <p className="text-sm leading-relaxed text-dim">
+              <p className="section-copy text-sm leading-relaxed">
                 From booking to final-mile delivery, one team manages your shipment end to end. Real-time visibility,
                 in-house customs brokerage, and a network across 9 countries — engineered so your cargo arrives on time, every time.
               </p>
@@ -180,14 +208,14 @@ export default function Home() {
 
 function HubsStrip() {
   return (
-    <section data-reveal className="border-t border-white/[0.07] bg-panel/40 py-20">
-      <div className="mx-auto max-w-7xl px-6 md:px-10">
+    <section data-reveal className="border-t border-white/[0.07] bg-panel/40 section-pad">
+      <div className="grid-88">
         <p className="mb-8 flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-orange">
           <span className="h-px w-10 bg-orange" /> Global Network
         </p>
-        <div className="grid gap-10 md:grid-cols-3">
+        <div className="bordered-grid">
           {HUBS.slice(0, 3).map((h) => (
-            <div key={h.id} className="border-l border-white/10 pl-5">
+            <div key={h.id} className="p-10">
               <p className="font-display text-2xl font-bold uppercase tracking-tight text-ink">{h.country}</p>
               <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.16em] text-dim">
                 {h.region} · {h.timezone.split('/')[1]}
@@ -210,21 +238,21 @@ function HubsStrip() {
 function FaqSection() {
   const [open, setOpen] = useState<number | null>(0)
   return (
-    <section className="mx-auto max-w-4xl px-6 py-24 md:px-10">
+    <section className="grid-88 section-pad">
       <p className="mb-8 flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-orange">
         <span className="h-px w-10 bg-orange" /> FAQ
       </p>
-      <div className="space-y-0">
+      <div className="space-y-0 border border-[#222]">
         {FAQS.map((f, i) => (
-          <div key={i} className="border-b border-white/[0.07]">
+          <div key={i} className="border-b border-[#222] last:border-0">
             <button
               onClick={() => setOpen(open === i ? null : i)}
-              className="flex w-full items-center justify-between gap-6 py-6 text-left"
+              className="flex w-full items-center justify-between gap-6 bg-panel px-8 py-6 text-left"
             >
               <span className="font-mono text-sm uppercase tracking-[0.08em] text-ink">{f.q}</span>
               <span className={`font-mono text-xl text-orange transition-transform ${open === i ? 'rotate-45' : ''}`}>+</span>
             </button>
-            <div className={`overflow-hidden transition-all duration-300 ${open === i ? 'pb-6' : 'max-h-0'}`}>
+            <div className={`overflow-hidden bg-void transition-all duration-300 ${open === i ? 'pb-6' : 'max-h-0'}`}>
               <p className="max-w-2xl text-xs leading-relaxed text-dim" style={open === i ? { visibility: 'visible' } : { visibility: 'hidden' }}>
                 {f.a}
               </p>
@@ -232,7 +260,7 @@ function FaqSection() {
           </div>
         ))}
       </div>
-      <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.2em] text-white/35">
+      <p className="mt-8 px-8 font-mono text-[10px] uppercase tracking-[0.2em] text-white/35">
         More questions? Ask us via the contact page.
       </p>
     </section>
@@ -242,10 +270,10 @@ function FaqSection() {
 function HomeShowcase() {
   const go = useTransitionNavigate()
   return (
-    <section className="mx-auto max-w-7xl px-6 py-24 md:px-10">
-      <div className="grid gap-px overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.07] md:grid-cols-3">
+    <section className="grid-88 section-pad">
+      <div className="bordered-grid">
         {SERVICES.slice(0, 3).map((s, i) => (
-          <FadeUp key={s.title} delay={i * 0.1} className="bg-panel p-10">
+          <FadeUp key={s.title} delay={i * 0.1} className="p-10">
             <p className="mb-6 font-mono text-xs text-orange">0{i + 1}</p>
             <h3 className="font-display text-2xl font-bold uppercase tracking-tight text-ink">{s.title}</h3>
             <p className="mt-4 text-xs leading-relaxed text-dim">{s.desc}</p>

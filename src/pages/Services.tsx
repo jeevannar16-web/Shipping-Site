@@ -25,17 +25,14 @@ export default function Services() {
         <Suspense fallback={<ScenePoster label="Coverage" tone="orange" />}>
           <TerminalScene />
         </Suspense>
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-void via-transparent to-void/40" />
+        <div className="pointer-events-none absolute inset-0" />
 
         <div className="absolute bottom-16 left-6 z-10 md:left-10">
-          <p className="mb-4 flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-orange">
-            <span className="h-px w-10 bg-orange" /> Coverage
+          <p className="mb-4 flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-[#0f1114]/70">
+            <span className="h-px w-10 bg-[#0f1114]/70" /> Coverage
           </p>
-          <LineMask as="h1" className="font-display text-[clamp(2.6rem,7vw,7rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-ink">
-            Global Supply
-          </LineMask>
-          <LineMask as="h1" delay={0.1} className="font-display text-[clamp(2.6rem,7vw,7rem)] font-extrabold uppercase leading-[0.92] tracking-tight">
-            <span className="bg-gradient-to-r from-orange to-violet bg-clip-text text-transparent">Chain Coverage</span>
+          <LineMask as="h1" className="font-display text-[clamp(2.6rem,7vw,7rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-[#0f1114]">
+            Global Supply Chain Coverage
           </LineMask>
         </div>
       </section>
@@ -55,7 +52,7 @@ export default function Services() {
       </div>
 
       {/* six service blocks */}
-      <div className="mx-auto max-w-7xl px-6 py-20 md:px-10">
+      <div className="section-pad px-[6vw]">
         {SERVICES.map((s, i) => (
           <div
             key={s.title}

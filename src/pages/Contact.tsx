@@ -5,9 +5,9 @@ import { CONTACT, LOCATIONS, REASONS } from '../data'
 export default function Contact() {
   usePageReveals()
   return (
-    <div className="relative mx-auto max-w-7xl px-6 pt-20 md:px-10">
-      <LineMask as="h1" className="font-display text-[clamp(2.8rem,9vw,8rem)] font-extrabold uppercase leading-[0.9] tracking-tight text-ink">
-        Get in <span className="bg-gradient-to-r from-orange to-violet bg-clip-text text-transparent">Touch</span>
+    <div className="relative px-[6vw] pt-[10vh]">
+      <LineMask as="h1" className="font-display font-extrabold uppercase tracking-tight text-ink section-heading">
+        Get in Touch
       </LineMask>
       <FadeUp className="mt-6 max-w-lg">
         <p className="text-sm leading-relaxed text-dim">
@@ -15,7 +15,7 @@ export default function Contact() {
         </p>
       </FadeUp>
 
-      <div className="grid gap-12 py-20 md:grid-cols-12">
+      <div className="grid gap-12 section-pad md:grid-cols-12">
         {/* left column */}
         <div className="space-y-8 md:col-span-4">
           <InfoBlock label="Hotline" value={CONTACT.email} />

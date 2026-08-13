@@ -5,57 +5,77 @@ import SceneCanvas from '../components/SceneCanvas'
 
 const COLORS = ['#d6451e', '#e06f27', '#3a7d44', '#2b4bff', '#8a8a8a', '#c7a03c', '#b03a2e', '#3f6f8f']
 
-function Container({ color }: { color: string }) {
+/** Bright sky gradient #B8C4CC → #D8DDE0 inside a dome. */
+function SkyDome() {
+  const mat = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        depthWrite: false,
+        fog: false,
+        uniforms: {},
+        vertexShader: `
+          varying vec3 vWorldPos;
+          void main() {
+            vec4 wp = modelMatrix * vec4(position, 1.0);
+            vWorldPos = wp.xyz;
+            gl_Position = projectionMatrix * viewMatrix * wp;
+          }
+        `,
+        fragmentShader: `
+          varying vec3 vWorldPos;
+          void main() {
+            float h = normalize(vWorldPos).y * 0.5 + 0.5;
+            vec3 col = mix(vec3(0.722, 0.769, 0.80), vec3(0.847, 0.867, 0.878), pow(h, 0.7));
+            gl_FragColor = vec4(col, 1.0);
+          }
+        `,
+      }),
+    [],
+  )
+
   return (
-    <mesh>
-      <boxGeometry args={[2, 0.95, 0.9]} />
-      <meshStandardMaterial color={color} roughness={0.85} metalness={0.2} flatShading />
+    <mesh material={mat} frustumCulled={false}>
+      <sphereGeometry args={[90, 24, 16]} />
     </mesh>
   )
 }
 
+/** 8 × 20 stack yard, heights 1–4, instanced by color. */
 function ContainerYard() {
-  const rowsRef = useRef<THREE.Group>(null)
-
-  const containers = useMemo(() => {
-    const out: { pos: [number, number, number]; color: string }[] = []
-    const ROW_HEIGHTS = [0.95, 1.5, 1.1, 1.7, 1.2, 1.05, 1.65, 1.0, 1.8, 1.2]
-    const cols = 14
-    const totalRows = 10
-    for (let row = 0; row < totalRows; row++) {
-      for (let col = 0; col < cols; col++) {
-        const z = row * 2.15 - 12
-        const x = col * 1.95 - 13
-        const stack = ROW_HEIGHTS[row]
-        for (let s = 0; s < Math.ceil(stack); s++) {
-          out.push({
-            pos: [x, 0.475 + s * 0.98 + (s === 0 ? 0 : 0.02 * row), z],
-            color: COLORS[Math.floor(Math.random() * COLORS.length)],
-          })
+  const meshes = useMemo(() => {
+    const geo = new THREE.BoxGeometry(2, 0.95, 0.9)
+    const mats = COLORS.map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.7, metalness: 0.15, flatShading: true }))
+    const inst = mats.map(() => new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial(), 640))
+    const m = new THREE.Matrix4()
+    let idx = 0
+    for (let col = 0; col < 8; col++) {
+      for (let row = 0; row < 20; row++) {
+        const z = row * 1.0 - 9.5
+        const x = col * 2.1 - 7.35
+        const stack = 1 + Math.floor(Math.random() * 4) // 1..4
+        for (let s = 0; s < stack; s++) {
+          const y = 0.475 + s * 0.98 + (s === 0 ? 0 : 0.02 * row)
+          const color = COLORS[Math.floor(Math.random() * COLORS.length)]
+          const mi = COLORS.indexOf(color)
+          m.makeTranslation(x, y, z)
+          inst[mi].setMatrixAt(idx++, m)
         }
       }
     }
-    return out
+    inst.forEach((mm, mi) => {
+      mm.count = idx
+      mm.material = mats[mi]
+      mm.instanceMatrix.needsUpdate = true
+    })
+    return inst
   }, [])
 
-  useFrame((state) => {
-    if (rowsRef.current) {
-      rowsRef.current.position.z = Math.sin(state.clock.elapsedTime * 0.03) * 0.3
-    }
-  })
-
   return (
-    <group ref={rowsRef}>
-      {containers.map((c, i) => (
-        <group key={i} position={c.pos}>
-          <Container color={c.color} />
-        </group>
+    <group>
+      {meshes.map((mm, i) => (
+        <primitive key={i} object={mm} />
       ))}
-      {/* ground */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
-        <planeGeometry args={[60, 40]} />
-        <meshStandardMaterial color="#101012" roughness={1} />
-      </mesh>
     </group>
   )
 }
@@ -63,94 +83,73 @@ function ContainerYard() {
 function GantryCrane() {
   const trolleyRef = useRef<THREE.Group>(null)
   const spreaderRef = useRef<THREE.Group>(null)
-
-  const labelTexture = useMemo(() => {
-    const c = document.createElement('canvas')
-    c.width = 256
-    c.height = 64
-    const ctx = c.getContext('2d')!
-    ctx.fillStyle = '#ff4a00'
-    ctx.font = 'bold 40px monospace'
-    ctx.textAlign = 'center'
-    ctx.fillText('41T', 128, 44)
-    const tex = new THREE.CanvasTexture(c)
-    tex.minFilter = THREE.LinearFilter
-    return tex
-  }, [])
+  const beamRef = useRef<THREE.Group>(null)
 
   useFrame((state) => {
     const t = state.clock.elapsedTime
-    const cycle = t * 0.28
-    // move trolley across the beam, then back
+    const cycle = (t * Math.PI * 2) / 12 // full traverse every 12s
     const xPos = Math.sin(cycle) * 9
-    if (trolleyRef.current) {
-      trolleyRef.current.position.x = xPos
-    }
-    // spreader lowers when trolley is in the middle, rises at edges
+    if (trolleyRef.current) trolleyRef.current.position.x = xPos
+    if (beamRef.current) beamRef.current.rotation.z = Math.sin(cycle * 2) * 0.002
     if (spreaderRef.current) {
-      const inMiddle = Math.abs(Math.sin(cycle)) < 0.55
-      const target = inMiddle ? -3.4 : -1.2
-      spreaderRef.current.position.y += (target - spreaderRef.current.position.y) * 0.02
-      spreaderRef.current.position.x = xPos
+      const eased = 0.5 - 0.5 * Math.cos(cycle)
+      spreaderRef.current.position.y = -1.2 - eased * 2.6
     }
   })
 
   return (
-    <group position={[0, 0, -4]}>
-      {/* portico columns */}
-      {[-12, 12].map((x) => (
-        <mesh key={x} position={[x, 0, 0]}>
-          <boxGeometry args={[0.28, 14, 0.6]} />
-          <meshStandardMaterial color="#1b1b1e" roughness={0.6} metalness={0.6} />
-        </mesh>
-      ))}
+    <group position={[0, 0, 0]}>
+      {/* 4 legs (orange) */}
+      {[-11, 11].map((x) =>
+        [3, -3].map((z) => (
+          <mesh key={`${x}-${z}`} position={[x, 7, z]}>
+            <boxGeometry args={[0.3, 14, 0.3]} />
+            <meshStandardMaterial color="#ff6a1a" roughness={0.5} metalness={0.3} />
+          </mesh>
+        )),
+      )}
       {/* main beam */}
-      <group position={[0, 14.2, 0]}>
+      <group ref={beamRef} position={[0, 14.2, 0]}>
         <mesh>
-          <boxGeometry args={[26.5, 0.35, 1.1]} />
-          <meshStandardMaterial color="#202024" roughness={0.5} metalness={0.5} />
+          <boxGeometry args={[24, 0.4, 1.6]} />
+          <meshStandardMaterial color="#3a3f45" roughness={0.4} metalness={0.4} />
         </mesh>
-        {/* trolley */}
+        {/* red trolley */}
         <group ref={trolleyRef}>
           <mesh position={[0, 0.5, 0]}>
-            <boxGeometry args={[0.9, 0.8, 0.9]} />
-            <meshStandardMaterial color="#ff4a00" roughness={0.4} />
+            <boxGeometry args={[1.1, 0.9, 1.2]} />
+            <meshStandardMaterial color="#e02e2e" roughness={0.4} />
           </mesh>
-          {/* spreader */}
           <group ref={spreaderRef}>
-            <mesh position={[0, -1.2, 0]}>
-              <boxGeometry args={[0.7, 0.9, 0.7]} />
+            <mesh position={[0, -1.0, 0]}>
+              <boxGeometry args={[0.8, 1.5, 0.8]} />
               <meshStandardMaterial color="#2b4bff" roughness={0.5} />
             </mesh>
           </group>
         </group>
-        {/* "41T" label */}
-        <group position={[0, -0.4, 0.8]}>
-          <sprite scale={[1.4, 0.5, 1]}>
-            <spriteMaterial color="#ff4a00" transparent opacity={0.9} map={labelTexture} />
-          </sprite>
-        </group>
       </group>
-      {/* hook lifted container */}
-      <mesh position={[0, 1.6, 0]}>
-        <boxGeometry args={[1.9, 0.9, 0.85]} />
-        <meshStandardMaterial color="#d6451e" roughness={0.8} />
-      </mesh>
     </group>
   )
 }
 
 export default function TerminalScene() {
   return (
-    <SceneCanvas fallbackLabel="Terminal" tone="orange" camera={{ position: [0, 7, 22], fov: 50 }}>
-      <color attach="background" args={['#0b0b0c']} />
-      <fog attach="fog" args={['#0b0b0c', 16, 42]} />
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[12, 20, 8]} intensity={1.1} color="#ffd9c0" />
-      <pointLight position={[0, 6, -8]} intensity={40} color="#ff4a00" distance={22} />
+    <SceneCanvas fallbackLabel="Terminal" tone="orange" camera={{ position: [0, 6, 24], fov: 50 }}>
+      <color attach="background" args={['#cdd5dc']} />
+      <fog attach="fog" args={['#cdd5dc', 36, 95]} />
+      <ambientLight intensity={1.25} />
+      <directionalLight position={[22, 34, 12]} intensity={1.9} color="#fff2dd" />
+      <directionalLight position={[-10, 8, -14]} intensity={0.35} color="#ffffff" />
+
+      <SkyDome />
+      {/* concrete ground */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
+        <planeGeometry args={[90, 70]} />
+        <meshStandardMaterial color="#c9ced2" roughness={0.9} />
+      </mesh>
+
       <ContainerYard />
       <GantryCrane />
-      {/* slow camera push-in */}
       <CameraPush />
     </SceneCanvas>
   )
@@ -159,9 +158,9 @@ export default function TerminalScene() {
 function CameraPush() {
   useFrame((state) => {
     const t = state.clock.elapsedTime
-    state.camera.position.z = 22 - Math.sin(t * 0.06) * 4
-    state.camera.position.y = 7 + Math.sin(t * 0.1) * 0.6
-    state.camera.lookAt(0, 4, -2)
+    state.camera.position.z = 24 - Math.sin(t * 0.05) * 2
+    state.camera.position.y = 6 + Math.sin(t * 0.08) * 0.4
+    state.camera.lookAt(0, 3, 0)
   })
   return null
 }
