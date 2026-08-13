@@ -2,8 +2,8 @@ import { useMemo, useRef, useState, Suspense, useCallback, useEffect } from 'rea
 import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, Stars } from '@react-three/drei'
 import * as THREE from 'three'
-import type { Hub } from '../data'
-import { HUBS } from '../data'
+import type { Country } from '../data'
+import { COUNTRIES } from '../data'
 
 const clampLat = (lat: number) => THREE.MathUtils.clamp(lat, -85, 85)
 
@@ -64,26 +64,26 @@ function Atmosphere({ radius }: { radius: number }) {
   )
 }
 
-function HubMarker({
-  hub,
+function CountryMarker({
+  country,
   radius,
   onHover,
   isActive,
 }: {
-  hub: Hub
+  country: Country
   radius: number
-  onHover: (hub: Hub | null) => void
+  onHover: (country: Country | null) => void
   isActive: boolean
 }) {
   const pulseRef = useRef<THREE.Mesh>(null!)
   const dotRef = useRef<THREE.Mesh>(null!)
-  const pos = useMemo(() => latLngToVector3(clampLat(hub.lat), hub.lng, radius), [hub, radius])
+  const pos = useMemo(() => latLngToVector3(clampLat(country.lat), country.lng, radius), [country, radius])
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime()
     if (dotRef.current) dotRef.current.scale.setScalar(1 + Math.sin(t * 2.4 + pos.x * 5) * 0.2)
     if (pulseRef.current) {
-      const s = ((t * 0.35 + hub.lng) % 1) * 5
+      const s = ((t * 0.35 + country.lng) % 1) * 5
       pulseRef.current.scale.setScalar(s)
       const mat = pulseRef.current.material as THREE.MeshBasicMaterial
       mat.opacity = Math.max(0, 0.8 * (1 - s / 5))
@@ -100,7 +100,7 @@ function HubMarker({
         ref={dotRef}
         onPointerOver={(e) => {
           e.stopPropagation()
-          onHover(hub)
+          onHover(country)
           document.body.style.cursor = 'pointer'
         }}
         onPointerOut={() => {
@@ -166,7 +166,7 @@ function FlyingDot({ points, offset }: { points: THREE.Vector3[]; offset: number
   )
 }
 
-function Globe({ activeHubId, onHover }: { activeHubId: string | null; onHover: (hub: Hub | null) => void }) {
+function Globe({ activeCountryId, onHover }: { activeCountryId: string | null; onHover: (country: Country | null) => void }) {
   const groupRef = useRef<THREE.Group>(null!)
   const radius = 2
   const [earthTexture, setEarthTexture] = useState<THREE.Texture | null>(null)
@@ -202,7 +202,7 @@ function Globe({ activeHubId, onHover }: { activeHubId: string | null; onHover: 
   }, [])
 
   const markers = useMemo(
-    () => HUBS.map((h) => latLngToVector3(clampLat(h.lat), h.lng, radius)),
+    () => COUNTRIES.map((c) => latLngToVector3(clampLat(c.lat), c.lng, radius)),
     [radius],
   )
 
@@ -272,12 +272,12 @@ function Globe({ activeHubId, onHover }: { activeHubId: string | null; onHover: 
         <FlyingDot key={`dot-${i}`} points={points} offset={offset} />
       ))}
       {markers.map((_, i) => (
-        <HubMarker
-          key={HUBS[i].id}
-          hub={HUBS[i]}
+        <CountryMarker
+          key={COUNTRIES[i].id}
+          country={COUNTRIES[i]}
           radius={radius}
           onHover={onHover}
-          isActive={HUBS[i].id === activeHubId}
+          isActive={COUNTRIES[i].id === activeCountryId}
         />
       ))}
       <ambientLight intensity={0.6} color="#334" />
@@ -296,11 +296,11 @@ function SceneFallback() {
 }
 
 export default function GlobeScene({
-  activeHubId,
+  activeCountryId,
   onHover,
 }: {
-  activeHubId: string | null
-  onHover: (hub: Hub | null) => void
+  activeCountryId: string | null
+  onHover: (country: Country | null) => void
 }) {
   const [ready, setReady] = useState(false)
   const onCreated = useCallback(() => setReady(true), [])
@@ -315,7 +315,7 @@ export default function GlobeScene({
       >
         <Suspense fallback={null}>
           <Stars radius={60} depth={50} count={4500} factor={3} saturation={0} fade speed={0.6} />
-          <Globe activeHubId={activeHubId} onHover={onHover} />
+          <Globe activeCountryId={activeCountryId} onHover={onHover} />
           <OrbitControls enablePan={false} enableZoom={false} rotateSpeed={0.5} autoRotate={false} />
         </Suspense>
       </Canvas>

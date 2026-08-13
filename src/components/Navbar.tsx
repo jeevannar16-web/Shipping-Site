@@ -1,13 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Menu, X, ArrowUpRight } from 'lucide-react'
-import { TICKER_ITEMS } from '../data'
-
-const NAV_LINKS = [
-  { label: 'Global Network', href: '#network', num: '01' },
-  { label: 'Services', href: '#services', num: '02' },
-  { label: 'Insights', href: '#insights', num: '03' },
-  { label: 'Contact', href: '#contact', num: '04' },
-]
+import { NAV_LINKS } from '../data'
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
@@ -49,7 +42,7 @@ export default function Navbar() {
             </div>
           </a>
 
-          <nav className="hidden items-center gap-10 md:flex">
+          <nav className="hidden items-center gap-8 lg:flex">
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
@@ -68,7 +61,7 @@ export default function Navbar() {
               href="#contact"
               className="hidden items-center gap-2 rounded-full border border-white/15 px-5 py-2 text-sm font-medium text-white transition-all hover:border-neon-orange hover:bg-neon-orange hover:text-void sm:flex"
             >
-              Talk With Us
+              Work With Us
             </a>
             <button
               onClick={() => setOpen(true)}
@@ -77,19 +70,6 @@ export default function Navbar() {
             >
               <Menu size={18} />
             </button>
-          </div>
-        </div>
-
-        <div className="border-t border-white/5 bg-carbon/60">
-          <div className="overflow-hidden whitespace-nowrap py-1.5">
-            <div className="marquee-track inline-flex items-center gap-12">
-              {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
-                <span key={i} className="inline-flex items-center gap-3 text-[10px] uppercase tracking-[0.22em] text-white/35">
-                  <span className="h-1 w-1 rounded-full bg-cyber-blue" />
-                  {item}
-                </span>
-              ))}
-            </div>
           </div>
         </div>
       </header>
@@ -136,8 +116,8 @@ export default function Navbar() {
         </nav>
 
         <div className="flex flex-col gap-2 border-t border-white/5 px-6 py-6 text-xs uppercase tracking-[0.2em] text-white/35 md:flex-row md:items-center md:justify-between md:px-16">
-          <span>hello@unitedcarriers.com</span>
-          <span>+61 3 9000 0000</span>
+          <span>contact@unitedcarriers.com</span>
+          <span>1300 000 082</span>
           <span>© {new Date().getFullYear()} United Carriers</span>
         </div>
       </div>

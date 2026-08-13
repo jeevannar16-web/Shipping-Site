@@ -23,23 +23,25 @@ export default function Services() {
       </div>
 
       <div className="mx-auto max-w-7xl px-6">
-        <div className="mb-14 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+        <div className="mb-14 flex flex-col justify-between gap-6 md:flex-row md:items-end" data-reveal>
           <div>
             <p className="mb-4 flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-neon-orange">
               <span className="h-px w-10 bg-neon-orange" />
               Services
             </p>
-            <h2 className="max-w-xl font-display text-4xl font-bold leading-tight tracking-tight md:text-6xl">
-              End-to-end freight capability.
+            <h2 className="max-w-2xl font-display text-4xl font-bold leading-tight tracking-tight md:text-6xl">
+              Everything your freight needs.
+              <br />
+              <span className="text-white/40">Under one group.</span>
             </h2>
           </div>
           <p className="max-w-sm text-sm leading-relaxed text-white/50">
-            From a single pallet to project-scale heavy lift — one digital thread across every
-            mode, every border.
+            From air to sea, from customs clearance to final delivery, we bring decades of
+            expertise across every freight discipline.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" data-reveal-stagger>
           {SERVICES.map((service) => (
             <article
               key={service.title}
@@ -62,27 +64,27 @@ export default function Services() {
               <p className="mt-3 text-sm leading-relaxed text-white/50">{service.desc}</p>
 
               <div className="mt-8 flex items-center justify-between border-t border-white/10 pt-5">
-                <span className="text-[10px] uppercase tracking-wider text-white/35">Network size</span>
-                <span className="font-display text-sm font-semibold text-neon-orange">{service.stat}</span>
+                <span className="text-[10px] uppercase tracking-wider text-white/35">Integrated under one team</span>
+                <ArrowUpRight size={16} className="text-neon-orange" />
               </div>
             </article>
           ))}
 
-          <article className="relative overflow-hidden rounded-2xl bg-void p-8">
+          <article className="relative overflow-hidden rounded-2xl bg-void p-8" data-reveal>
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-neon-orange/15 via-transparent to-cyber-blue/15" />
             <p className="relative text-[10px] uppercase tracking-wider text-neon-orange">Custom program</p>
             <h3 className="relative mt-6 font-display text-2xl font-semibold leading-snug text-white">
-              Need a tailored <span className="text-cyber-blue">logistics solution?</span>
+              One partner, one point of contact, <span className="text-cyber-blue">total visibility</span>.
             </h3>
             <p className="relative mt-3 text-sm leading-relaxed text-white/55">
-              Our specialists design bespoke freight programs for manufacturers, retailers and
-              project teams worldwide.
+              Our integrated service network means your freight moves predictably, transparently,
+              and without excuses — from origin to destination.
             </p>
             <a
               href="#contact"
               className="relative mt-8 inline-flex items-center gap-2 rounded-full bg-neon-orange px-6 py-3 text-sm font-semibold text-void transition-all hover:shadow-[0_0_35px_rgba(255,85,0,0.35)]"
             >
-              Build My Program <ArrowUpRight size={15} />
+              Work With Us <ArrowUpRight size={15} />
             </a>
           </article>
         </div>

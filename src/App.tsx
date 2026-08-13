@@ -4,10 +4,16 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
-import GlobalNetwork from './components/GlobalNetwork'
+import About from './components/About'
 import Services from './components/Services'
+import Features from './components/Features'
+import WhyUs from './components/WhyUs'
+import Testimonials from './components/Testimonials'
+import Partners from './components/Partners'
 import Insights from './components/Insights'
-import Contact from './components/Contact'
+import FAQ from './components/FAQ'
+import CTA from './components/CTA'
+import Contact, { Footer } from './components/Contact'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -40,6 +46,37 @@ function useRevealAnimations() {
             stagger: 0.1,
             ease: 'power3.out',
             scrollTrigger: { trigger: el, start: 'top 88%' },
+          },
+        )
+      })
+
+      const hero = document.querySelector('[data-anim="lines"]') as HTMLElement | null
+      if (hero) {
+        const lines = Array.from(hero.children) as HTMLElement[]
+        gsap.fromTo(
+          lines,
+          { yPercent: 110, opacity: 0 },
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1.1,
+            stagger: 0.15,
+            ease: 'power4.out',
+            delay: 0.15,
+          },
+        )
+      }
+
+      gsap.utils.toArray<HTMLElement>('[data-anim="fade-up"]').forEach((el, i) => {
+        gsap.fromTo(
+          el,
+          { opacity: 0, y: 30 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.9,
+            delay: 0.4 + i * 0.12,
+            ease: 'power3.out',
           },
         )
       })
@@ -91,12 +128,17 @@ export default function App() {
       <div className="noise-overlay" />
       <Navbar />
       <Hero hubRef={(el) => (hubRef.current = el)} />
-      <GlobalNetwork />
-      <div data-reveal>
-        <Services />
-      </div>
+      <About />
+      <Services />
+      <Features />
+      <WhyUs />
+      <Testimonials />
+      <Partners />
       <Insights />
+      <FAQ />
+      <CTA />
       <Contact />
+      <Footer />
     </main>
   )
 }

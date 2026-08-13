@@ -1,22 +1,8 @@
 import { useState } from 'react'
-import { Send, MapPin, Mail, Clock } from 'lucide-react'
+import { Send, MapPin, Mail, Clock, Phone, ArrowUpRight } from 'lucide-react'
+import { CONTACT, SERVICES } from '../data'
 
-const REASONS = [
-  'Air Freight',
-  'Sea Freight',
-  'Customs Brokerage',
-  'Warehousing & 3PL',
-  'Project Cargo',
-  'Road Freight',
-  'General Inquiry',
-]
-
-const OFFICES = [
-  { city: 'Melbourne', country: 'Australia', address: 'Level 12, 480 Collins St', phone: '+61 3 9000 1000' },
-  { city: 'Hong Kong', country: 'Hong Kong SAR', address: 'Unit 1808, One Harbourfront', phone: '+852 3900 1000' },
-  { city: 'London', country: 'United Kingdom', address: '6th Floor, 30 Fenchurch St', phone: '+44 20 3900 1000' },
-  { city: 'Los Angeles', country: 'United States', address: '8800 Aviation Blvd, CA', phone: '+1 310 900 1000' },
-]
+const REASONS = SERVICES.map((s) => s.title)
 
 export default function Contact() {
   const [reason, setReason] = useState(REASONS[0])
@@ -28,22 +14,22 @@ export default function Contact() {
   }
 
   return (
-    <section id="contact" className="relative overflow-hidden py-28 md:py-36">
+    <section id="contact" className="relative overflow-hidden border-t border-white/5 py-28 md:py-36">
       <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-[60rem] -translate-x-1/2 bg-neon-orange/6 blur-[140px]" />
       <div className="pointer-events-none absolute bottom-0 right-0 h-72 w-[40rem] bg-cyber-blue/6 blur-[140px]" />
 
       <div className="mx-auto max-w-7xl px-6">
-        <div className="mb-16">
+        <div className="mb-16" data-reveal>
           <p className="mb-4 flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-neon-orange">
             <span className="h-px w-10 bg-neon-orange" />
             Contact
           </p>
-          <h2 className="max-w-3xl font-display text-4xl font-bold leading-tight tracking-tight text-glow-orange md:text-7xl">
-            Let's move together.
+          <h2 className="max-w-3xl font-display text-4xl font-bold leading-tight tracking-tight text-white md:text-7xl">
+            Talk <span className="text-glow-orange text-neon-orange">with us.</span>
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 lg:grid-cols-2" data-reveal>
           <div className="bg-carbon p-8 md:p-12">
             {sent ? (
               <div className="flex h-full flex-col items-center justify-center py-24 text-center">
@@ -139,40 +125,75 @@ export default function Contact() {
           </div>
 
           <div className="bg-void p-8 md:p-12">
-            <h3 className="font-display text-xl font-semibold text-white">Regional headquarters</h3>
+            <h3 className="font-display text-xl font-semibold text-white">Talk to a specialist</h3>
             <p className="mt-3 text-sm leading-relaxed text-white/45">
-              Our control towers run 24/7 across four time zones — reach a specialist directly.
+              One point of contact, end to end. Our team owns the outcome from origin to
+              destination.
             </p>
 
-            <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2">
-              {OFFICES.map((office) => (
-                <div key={office.city} className="rounded-xl border border-white/10 bg-carbon p-5 transition-colors hover:border-cyber-blue/40">
-                  <p className="flex items-center gap-2 font-display text-sm font-semibold text-white">
-                    <MapPin size={14} className="text-cyber-blue" />
-                    {office.city}
-                  </p>
-                  <p className="mt-1 text-xs text-white/40">{office.country}</p>
-                  <p className="mt-3 text-xs text-white/55">{office.address}</p>
-                  <p className="mt-1 text-xs text-cyber-blue">{office.phone}</p>
+            <div className="mt-10 space-y-4">
+              <a href={`mailto:${CONTACT.email}`} className="group flex items-center gap-4 rounded-xl border border-white/10 bg-carbon p-5 transition-all hover:border-cyber-blue/40">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-cyber-blue/10 text-cyber-blue">
+                  <Mail size={18} />
                 </div>
-              ))}
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-wider text-white/40">Email</p>
+                  <p className="truncate text-sm font-medium text-white group-hover:text-cyber-blue">{CONTACT.email}</p>
+                </div>
+              </a>
+              <a href={CONTACT.phoneHref} className="group flex items-center gap-4 rounded-xl border border-white/10 bg-carbon p-5 transition-all hover:border-neon-orange/40">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-neon-orange/10 text-neon-orange">
+                  <Phone size={18} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-wider text-white/40">Hotline</p>
+                  <p className="text-sm font-medium text-white group-hover:text-neon-orange">{CONTACT.phone}</p>
+                </div>
+              </a>
+              <div className="flex items-start gap-4 rounded-xl border border-white/10 bg-carbon p-5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/5 text-white/70">
+                  <MapPin size={18} />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-white/40">Head Office</p>
+                  <p className="text-sm font-medium text-white">{CONTACT.address}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 rounded-xl border border-white/10 bg-carbon p-5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/5 text-white/70">
+                  <Clock size={18} />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-white/40">Office Hours</p>
+                  <p className="text-sm font-medium text-white">{CONTACT.hours}</p>
+                </div>
+              </div>
             </div>
 
-            <div className="mt-10 space-y-3 border-t border-white/10 pt-8 text-sm">
-              <p className="flex items-center gap-3 text-white/60">
-                <Mail size={15} className="text-neon-orange" /> hello@unitedcarriers.com
-              </p>
-              <p className="flex items-center gap-3 text-white/60">
-                <Clock size={15} className="text-neon-orange" /> Global support 24/7
-              </p>
+            <div className="mt-10 border-t border-white/10 pt-6">
+              <p className="text-[10px] uppercase tracking-wider text-white/40">Operating across</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {CONTACT.countries.map((c) => (
+                  <span key={c} className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/60">
+                    {c}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
+    </section>
+  )
+}
 
-      <footer className="mt-28 border-t border-white/5">
-        <div className="mx-auto max-w-7xl px-6 py-12">
-          <div className="flex flex-col justify-between gap-8 md:flex-row md:items-center">
+export function Footer() {
+  const year = new Date().getFullYear()
+  return (
+    <footer className="border-t border-white/5 bg-carbon/40">
+      <div className="mx-auto max-w-7xl px-6 py-16">
+        <div className="grid grid-cols-1 gap-12 md:grid-cols-4">
+          <div className="md:col-span-2">
             <div className="flex items-center gap-3">
               <div className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-neon-orange">
                 <span className="font-display text-lg font-bold text-void">U</span>
@@ -187,26 +208,59 @@ export default function Contact() {
                 </span>
               </div>
             </div>
-
-            <nav className="flex flex-wrap gap-8">
-              {['Global Network', 'Services', 'Insights', 'Contact'].map((l) => (
-                <a key={l} href={`#${l.toLowerCase().replace(' ', '')}`} className="text-sm text-white/50 transition-colors hover:text-white">
-                  {l}
-                </a>
-              ))}
-            </nav>
+            <p className="mt-6 max-w-sm text-sm leading-relaxed text-white/50">
+              Freight forwarding, land transport, and customs brokerage, unified across APAC
+              under one accountable team.
+            </p>
+            <p className="mt-4 text-sm font-medium text-white/70">
+              One operator. <span className="text-neon-orange">Every leg of the journey.</span>
+            </p>
           </div>
 
-          <div className="mt-10 flex flex-col justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/30 md:flex-row">
-            <p>© {new Date().getFullYear()} United Carriers Pty Ltd. All rights reserved.</p>
-            <div className="flex flex-wrap gap-6">
-              <a href="#" className="transition-colors hover:text-white/60">Privacy</a>
-              <a href="#" className="transition-colors hover:text-white/60">Terms</a>
-              <a href="#" className="transition-colors hover:text-white/60">Cookie Policy</a>
-            </div>
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-white/40">Company</p>
+            <ul className="mt-5 space-y-3">
+              {[
+                { label: 'About', href: '#about' },
+                { label: 'Services', href: '#services' },
+                { label: 'Why Us', href: '#why-us' },
+                { label: 'Insights', href: '#insights' },
+                { label: 'FAQ', href: '#faq' },
+                { label: 'Contact', href: '#contact' },
+              ].map((link) => (
+                <li key={link.label}>
+                  <a href={link.href} className="group flex items-center gap-1 text-sm text-white/50 transition-colors hover:text-white">
+                    {link.label}
+                    <ArrowUpRight size={13} className="opacity-0 transition-opacity group-hover:opacity-100" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-white/40">Services</p>
+            <ul className="mt-5 space-y-3">
+              {SERVICES.map((s) => (
+                <li key={s.title}>
+                  <a href="#services" className="text-sm text-white/50 transition-colors hover:text-white">
+                    {s.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
-      </footer>
-    </section>
+
+        <div className="mt-14 flex flex-col justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/30 md:flex-row">
+          <p>© {year} United Carriers APAC Pty Ltd. All rights reserved.</p>
+          <div className="flex flex-wrap gap-6">
+            <a href="#" className="transition-colors hover:text-white/60">Privacy Policy</a>
+            <a href="#" className="transition-colors hover:text-white/60">Terms & Conditions</a>
+            <a href="#" className="transition-colors hover:text-white/60">QHSE</a>
+          </div>
+        </div>
+      </div>
+    </footer>
   )
 }

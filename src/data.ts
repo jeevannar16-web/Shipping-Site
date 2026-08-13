@@ -1,184 +1,239 @@
-export type Hub = {
+export type Country = {
   id: string
   name: string
-  region: string
   lat: number
   lng: number
-  throughput: string
-  transit: string
-  offices: number
-  integration: string
 }
 
-export const HUBS: Hub[] = [
-  {
-    id: 'melbourne',
-    name: 'Melbourne',
-    region: 'Australia',
-    lat: -37.8136,
-    lng: 144.9631,
-    throughput: '2.4M TEU / yr',
-    transit: '38 hrs',
-    offices: 12,
-    integration: 'CargoWise, MachShip',
-  },
-  {
-    id: 'auckland',
-    name: 'Auckland',
-    region: 'New Zealand',
-    lat: -36.8485,
-    lng: 174.7633,
-    throughput: '1.1M TEU / yr',
-    transit: '44 hrs',
-    offices: 6,
-    integration: 'CargoWise',
-  },
-  {
-    id: 'hongkong',
-    name: 'Hong Kong',
-    region: 'Hong Kong SAR',
-    lat: 22.3193,
-    lng: 114.1694,
-    throughput: '18M TEU / yr',
-    transit: '22 hrs',
-    offices: 21,
-    integration: 'CargoWise, MachShip',
-  },
-  {
-    id: 'singapore',
-    name: 'Singapore',
-    region: 'Singapore',
-    lat: 1.3521,
-    lng: 103.8198,
-    throughput: '37M TEU / yr',
-    transit: '18 hrs',
-    offices: 15,
-    integration: 'CargoWise',
-  },
-  {
-    id: 'losangeles',
-    name: 'Los Angeles',
-    region: 'Americas',
-    lat: 34.0522,
-    lng: -118.2437,
-    throughput: '9.8M TEU / yr',
-    transit: '31 hrs',
-    offices: 34,
-    integration: 'CargoWise, MachShip',
-  },
-  {
-    id: 'london',
-    name: 'London',
-    region: 'Europe',
-    lat: 51.5074,
-    lng: -0.1278,
-    throughput: '5.3M TEU / yr',
-    transit: '27 hrs',
-    offices: 28,
-    integration: 'CargoWise',
-  },
-  {
-    id: 'hamburg',
-    name: 'Hamburg',
-    region: 'Europe',
-    lat: 53.5511,
-    lng: 9.9937,
-    throughput: '8.5M TEU / yr',
-    transit: '25 hrs',
-    offices: 19,
-    integration: 'MachShip',
-  },
+export const COUNTRIES: Country[] = [
+  { id: 'au', name: 'Australia', lat: -33.8688, lng: 151.2093 },
+  { id: 'nz', name: 'New Zealand', lat: -36.8485, lng: 174.7633 },
+  { id: 'hk', name: 'Hong Kong', lat: 22.3193, lng: 114.1694 },
+  { id: 'cn', name: 'China', lat: 31.2304, lng: 121.4737 },
+  { id: 'vn', name: 'Vietnam', lat: 10.8231, lng: 106.6297 },
+  { id: 'us', name: 'United States', lat: 34.0522, lng: -118.2437 },
+  { id: 'th', name: 'Thailand', lat: 13.7563, lng: 100.5018 },
+  { id: 'de', name: 'Germany', lat: 53.5511, lng: 9.9937 },
+  { id: 'gb', name: 'United Kingdom', lat: 51.5074, lng: -0.1278 },
+]
+
+export const STATS = [
+  { value: 2500, suffix: '+', label: 'Shipments per month' },
+  { value: 98.2, suffix: '%', label: 'On-time delivery rate', decimals: 1 },
+  { value: 8, suffix: '+', label: 'Years in operation' },
 ]
 
 export const SERVICES = [
   {
     title: 'Air Freight',
-    tag: 'Priority uplift',
-    desc: 'Time-critical air cargo solutions with dedicated charter capability across 120+ gateways.',
-    stat: '120+ gateways',
+    desc: 'Express, priority, and deferred options across global trade lanes — managed end to end for speed and schedule integrity.',
+    tag: 'Speed',
   },
   {
     title: 'Ocean Freight',
-    tag: 'LCL & FCL',
-    desc: 'Full and less-than-container load solutions with guaranteed space programs on major lanes.',
-    stat: '37M TEU capacity',
+    desc: 'FCL, LCL, and specialised cargo movements, with structured carrier selection and routing for cost and reliability.',
+    tag: 'Reliability',
   },
   {
     title: 'Customs Brokerage',
+    desc: 'In-house licensed brokerage covering classification, compliance, and quarantine — full control, no outsourcing.',
     tag: 'Compliance',
-    desc: 'End-to-end customs clearance, tariff engineering and duty optimisation in 40 markets.',
-    stat: '40 markets',
   },
   {
     title: 'Warehousing & 3PL',
-    tag: 'Distribution',
-    desc: 'Smart warehousing with real-time inventory visibility, kitting and final-mile fulfilment.',
-    stat: '1.2M m² space',
+    desc: 'Scalable storage, pick and pack, and distribution — fully integrated with freight and transport operations.',
+    tag: 'Scale',
   },
   {
     title: 'Project Cargo',
-    tag: 'Heavy lift',
-    desc: 'Oversized and project logistics — route surveys, OOG handling and turnkey delivery.',
-    stat: 'Global OOG fleet',
+    desc: 'Specialist handling for oversized and complex shipments — from permits to engineered load configurations.',
+    tag: 'Specialist',
   },
   {
-    title: 'Road Freight',
-    tag: 'Last mile',
-    desc: 'Cross-border road network connecting ports, hubs and distribution centres across continents.',
-    stat: '90+ countries',
+    title: 'Domestic & Linehaul Transport',
+    desc: 'Local, metro, and interstate transport managed for consistent service levels and full delivery visibility.',
+    tag: 'Coverage',
   },
+]
+
+export const FEATURES = [
+  {
+    title: 'Real-Time Freight Tracking',
+    desc: 'Know exactly where your cargo is at every milestone. Live visibility means faster decisions and zero guesswork.',
+  },
+  {
+    title: 'Global Network Coverage',
+    desc: 'From APAC lanes to international corridors, our partner network spans every major trade route your business relies on.',
+  },
+  {
+    title: '24/7 Customer Support',
+    desc: 'Real people, always available. Whether it is a routine update or an urgent issue, we pick up the phone and we own the outcome.',
+  },
+]
+
+export const WHY_US = [
+  {
+    title: 'One Point of Contact',
+    desc: 'No more chasing multiple vendors. One team manages your entire shipment from origin to destination.',
+  },
+  {
+    title: 'Full Supply Chain Visibility',
+    desc: 'Track your freight in real time and get proactive updates before issues become delays.',
+  },
+  {
+    title: 'Compliance You Can Trust',
+    desc: 'Our licensed customs brokers keep your shipments moving within every regulatory requirement across APAC.',
+  },
+  {
+    title: 'Competitive, Transparent Pricing',
+    desc: 'No hidden fees. Clear, competitive pricing backed by responsive sales support throughout the shipment.',
+  },
+  {
+    title: 'Fast Issue Resolution',
+    desc: 'When something unexpected happens, we do not point fingers — we solve it. Our team acts immediately to protect your timeline.',
+  },
+]
+
+export const TESTIMONIALS = [
+  {
+    quote:
+      'My business would not function without this team. Extremely talented with immense experience tailoring each consignment based on its merits. We have our dedicated account managers that know our business, are responsive and provide personalised service which we never had with bigger companies. UC for the win.',
+    name: 'Thomas Munro',
+    role: 'Director',
+    org: 'Picha Group',
+  },
+  {
+    quote:
+      'As a first-time supplier shipping equipment to support one of the major Australian infrastructure projects I came up against uncharted territories. It was a three-month discovery and mobilisation period until the first shipment left its origin airborne for Melbourne. Our first-time-right delivery to my customer\u2019s 3PL was no coincidence.',
+    name: 'Francis Fung',
+    role: 'APAC Supply Chain Operations Director, US Fortune 500 Telecom and Communications Supplier',
+    org: 'CommScope',
+  },
+  {
+    quote:
+      'I worked closely with Chris over several years to build a seamless, cost-effective supply chain for one of Australia\u2019s largest fashion retail companies. Chris was not only able to help us streamline our operations throughout Asia and shorten our time to market, but through his willingness to negotiate great rates, also provide significant cost savings.',
+    name: 'Alex Hughes',
+    role: 'Senior Management',
+    org: 'Factory X',
+  },
+]
+
+export const AIRLINES = [
+  'Air China',
+  'Vietnam Airlines',
+  'British Airways',
+  'Fiji Airways',
+  'Malaysia Airlines',
+  'China Southern',
+  'Qatar Airways',
+  'China Eastern',
+  'Qantas',
+  'Air New Zealand',
+  'Etihad',
+  'Cathay Pacific',
+  'Singapore Airlines',
+  'Emirates',
+  'Air India',
+  'Thai Airways',
+]
+
+export const SHIPPING_LINES = [
+  'CMA CGM',
+  'Wallenius Wilhelmsen',
+  'Sinotrans',
+  'NYK Line',
+  'K-Line',
+  'COSCO',
+  'Evergreen Line',
+  'Yang Ming',
+  'PIL',
+  'MSC',
+  'HMM',
+  'Maersk',
+  'APL',
+  'Hapag-Lloyd',
 ]
 
 export const INSIGHTS = [
   {
-    title: 'Global supply chain resilience: 2026 outlook',
-    category: 'Industry Insights',
-    date: 'Aug 2026',
-    read: '8 min read',
+    title: 'Reduced Import Delays & Storage Costs Across 700+ Containers',
+    category: 'Case Studies',
+    date: 'Jul 8, 2026',
     accent: 'orange',
   },
   {
-    title: 'Customs reform in Asia-Pacific — what importers need to know',
+    title: 'Cost-Optimised and Speed to Market Import Program for New Truck Launch in Australia',
+    category: 'Case Studies',
+    date: 'Jul 10, 2026',
+    accent: 'blue',
+  },
+  {
+    title: 'Grid-Scale Battery Project Logistics Delivery for Renewable Energy Infrastructure',
+    category: 'Case Studies',
+    date: 'Jul 10, 2026',
+    accent: 'orange',
+  },
+  {
+    title: 'Time-Critical Oversized Sewer Tank Delivery to Residential Estate Development',
+    category: 'Case Studies',
+    date: 'Jul 10, 2026',
+    accent: 'blue',
+  },
+  {
+    title: 'Global shipping rates soar as retailers race to beat looming tariffs',
+    category: 'Global',
+    date: 'Jul 13, 2026',
+    accent: 'orange',
+  },
+  {
+    title: 'US Tariffs: Refunds, Section 301 Duties and Importer Advice',
     category: 'Customs Advice',
-    date: 'Jul 2026',
-    read: '6 min read',
-    accent: 'blue',
-  },
-  {
-    title: 'United Carriers named Global Freight Forwarder of the Year',
-    category: 'Awards',
-    date: 'Jun 2026',
-    read: '3 min read',
-    accent: 'orange',
-  },
-  {
-    title: 'Ocean rate volatility and smart hedging strategies',
-    category: 'Market Intelligence',
-    date: 'Jun 2026',
-    read: '10 min read',
-    accent: 'blue',
-  },
-  {
-    title: 'Our net-zero logistics roadmap is now live',
-    category: 'Sustainability',
-    date: 'May 2026',
-    read: '5 min read',
-    accent: 'orange',
-  },
-  {
-    title: 'Automating document processing with AI at the border',
-    category: 'Technology',
-    date: 'Apr 2026',
-    read: '7 min read',
+    date: 'Aug 2026',
     accent: 'blue',
   },
 ]
 
-export const TICKER_ITEMS = [
-  'Global Network Operating at 99.4% Efficiency',
-  '7 Strategic Hubs',
-  '120+ Countries Served',
-  'CargoWise Certified',
-  'ISO 9001:2025',
-  'Real-Time Visibility on MachShip',
+export const FAQS = [
+  {
+    q: 'What does United Carriers do?',
+    a: 'United Carriers is a global freight forwarding and logistics provider delivering end-to-end supply chain solutions, including airfreight, seafreight, customs brokerage, warehousing, and transport.',
+  },
+  {
+    q: 'What industries do you specialise in?',
+    a: 'We support a broad range of industries including retail, fashion, food & beverage, industrial, project cargo, and technology.',
+  },
+  {
+    q: 'What shipping methods do you offer?',
+    a: 'We offer airfreight, seafreight (FCL & LCL), breakbulk, RO/RO, and multimodal transport solutions.',
+  },
+  {
+    q: 'Do you provide customs clearance services?',
+    a: 'Yes, we offer in-house customs brokerage to manage import and export clearances efficiently.',
+  },
+  {
+    q: 'Can you handle oversized or heavy cargo?',
+    a: 'Yes, we specialise in project cargo including out-of-gauge (OOG) and heavy lift shipments.',
+  },
+  {
+    q: 'How do I request a quote?',
+    a: 'You can contact us via our website, email, or phone with your shipment details.',
+  },
 ]
+
+export const NAV_LINKS = [
+  { label: 'About', href: '#about', num: '01' },
+  { label: 'Services', href: '#services', num: '02' },
+  { label: 'Why Us', href: '#why-us', num: '03' },
+  { label: 'Insights', href: '#insights', num: '04' },
+  { label: 'FAQ', href: '#faq', num: '05' },
+  { label: 'Contact', href: '#contact', num: '06' },
+]
+
+export const CONTACT = {
+  email: 'contact@unitedcarriers.com',
+  phone: '1300 000 082',
+  phoneHref: 'tel:1300000082',
+  address: '2A International Square, Tullamarine VIC 3043, Australia',
+  hours: 'Monday - Friday / 8:30AM - 5PM',
+  countries: ['Australia', 'New Zealand', 'Hong Kong', 'China'],
+}

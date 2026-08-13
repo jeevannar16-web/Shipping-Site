@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ArrowUpRight, CalendarDays } from 'lucide-react'
 import { INSIGHTS } from '../data'
 
-const FILTERS = ['All', 'Industry Insights', 'Customs Advice', 'Awards', 'Market Intelligence', 'Sustainability', 'Technology']
+const FILTERS = ['All', 'Case Studies', 'Global', 'Customs Advice']
 
 export default function Insights() {
   const [filter, setFilter] = useState('All')
@@ -12,14 +12,15 @@ export default function Insights() {
   return (
     <section id="insights" className="relative border-t border-white/5 bg-carbon/40 py-28 md:py-36">
       <div className="mx-auto max-w-7xl px-6">
-        <div className="mb-14 flex flex-col justify-between gap-8 md:flex-row md:items-end">
+        <div className="mb-14 flex flex-col justify-between gap-8 md:flex-row md:items-end" data-reveal>
           <div>
             <p className="mb-4 flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-cyber-blue">
               <span className="h-px w-10 bg-cyber-blue" />
-              Insights & Case Studies
+              Insights
             </p>
-            <h2 className="max-w-xl font-display text-4xl font-bold leading-tight tracking-tight md:text-6xl">
-              Intelligence from the front line.
+            <h2 className="max-w-2xl font-display text-4xl font-bold leading-tight tracking-tight md:text-6xl">
+              What's moving
+              <span className="text-white/40"> in your industry.</span>
             </h2>
           </div>
           <div className="flex max-w-3xl flex-wrap gap-2">
@@ -39,7 +40,7 @@ export default function Insights() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" data-reveal-stagger>
           {filtered.map((post) => (
             <article
               key={post.title}
@@ -67,8 +68,6 @@ export default function Insights() {
                   <CalendarDays size={13} className="text-neon-orange" />
                   {post.date}
                 </span>
-                <span className="h-1 w-1 rounded-full bg-white/20" />
-                <span>{post.read}</span>
               </div>
             </article>
           ))}
