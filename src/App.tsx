@@ -16,8 +16,9 @@ import FAQ from './components/FAQ'
 import CTA from './components/CTA'
 import Contact, { Footer } from './components/Contact'
 import Cursor from './components/Cursor'
-import LogisticsScene from './components/LogisticsScene'
+import IrisWipe, { fireIris } from './components/IrisWipe'
 import { TrackingSimulator, QuoteSimulator } from './components/Estimators'
+import { TruckSection, ShipSection, PlaneSection, ForkliftSection, VaultSection } from './components/Scenes'
 import { useReducedMotion } from './hooks/useReducedMotion'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -133,7 +134,13 @@ export default function App() {
       const el = document.querySelector(href)
       if (el) {
         e.preventDefault()
-        lenis.scrollTo(el as HTMLElement, { offset: -60 })
+        if (reduced) {
+          lenis.scrollTo(el as HTMLElement, { offset: -60 })
+        } else {
+          fireIris(() => {
+            lenis.scrollTo(el as HTMLElement, { offset: -60, duration: 1.4 })
+          })
+        }
       }
     }
     document.addEventListener('click', onAnchor)
@@ -150,26 +157,29 @@ export default function App() {
   return (
     <main className="relative min-h-screen bg-void text-white">
       <div className="noise-overlay" />
+      <IrisWipe />
       <Cursor />
       <Navbar />
       <Hero hubRef={(el) => (hubRef.current = el)} />
 
       <div className="relative">
-        <div className="pointer-events-none absolute right-0 top-16 z-20 hidden h-72 w-72 xl:block" data-parallax="0.4">
-          <LogisticsScene type="plane" className="h-full w-full opacity-90" />
-        </div>
         <About />
       </div>
 
+      <TruckSection />
+
       <Services />
 
+      <ShipSection />
+
       <div className="relative">
-        <LogisticsScene type="ship" className="pointer-events-none mx-auto -mb-24 h-64 w-full max-w-2xl opacity-80" />
         <Features />
       </div>
 
       <WhyUs />
+      <PlaneSection />
       <GlobalNetwork />
+      <ForkliftSection />
       <Testimonials />
       <Partners />
 
@@ -189,6 +199,7 @@ export default function App() {
       <Insights />
       <FAQ />
       <CTA />
+      <VaultSection />
       <Contact />
       <Footer />
     </main>
