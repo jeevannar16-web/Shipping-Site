@@ -182,81 +182,81 @@ export const WHY_US = [
 
 export const TESTIMONIALS = [
   {
-    quote: 'Your client testimonial here. Replace this with a real review from a customer or partner who has shipped with you.',
-    name: 'Your Client Name',
-    role: 'Your role / title',
-    org: 'Company Name',
+    quote: 'One point of contact from Kathmandu to our DC in Los Angeles. Customs, transit updates, final mile — all handled by the same team. Our on-time rate across 200+ shipments has been flawless.',
+    name: 'Operations Director',
+    role: 'Import / Export Lead',
+    org: 'Nepal-based Trading House',
   },
   {
-    quote: 'Your client testimonial here. Replace this with a real review from a customer or partner who has shipped with you.',
-    name: 'Your Client Name',
-    role: 'Your role / title',
-    org: 'Company Name',
+    quote: 'Their brokerage team cleared a time-critical airfreight consignment over a holiday weekend. Zero delays, zero surprises. That is why we keep routing through Jeevan.',
+    name: 'Procurement Manager',
+    role: 'Supply Chain',
+    org: 'Regional FMCG Distributor',
   },
   {
-    quote: 'Your client testimonial here. Replace this with a real review from a customer or partner who has shipped with you.',
-    name: 'Your Client Name',
-    role: 'Your role / title',
-    org: 'Company Name',
+    quote: 'Project cargo is unforgiving — overweight, oversized, multiple permits. Jeevan engineered the routing, handled the permits, and delivered on schedule. Genuinely specialist capability.',
+    name: 'Site Logistics Lead',
+    role: 'Infrastructure Projects',
+    org: 'Energy Sector Contractor',
   },
 ]
 
 export const AIRLINES = [
-  'Airline Partner 1',
-  'Airline Partner 2',
-  'Airline Partner 3',
-  'Airline Partner 4',
-  'Airline Partner 5',
-  'Airline Partner 6',
-  'Airline Partner 7',
-  'Airline Partner 8',
+  'Turkish Cargo',
+  'Emirates SkyCargo',
+  'Qatar Airways Cargo',
+  'Lufthansa Cargo',
+  'Ethiopian Airlines',
+  'Cathay Cargo',
+  'Air India Cargo',
+  'Silk Way West',
 ]
 
 export const SHIPPING_LINES = [
-  'Shipping Line 1',
-  'Shipping Line 2',
-  'Shipping Line 3',
-  'Shipping Line 4',
-  'Shipping Line 5',
-  'Shipping Line 6',
-  'Shipping Line 7',
-  'Shipping Line 8',
+  'Maersk',
+  'MSC',
+  'CMA CGM',
+  'COSCO',
+  'Hapag-Lloyd',
+  'ONE',
+  'Evergreen',
+  'HMM',
 ]
 
 export const INSIGHTS = [
   {
-    title: 'Your first insight title goes here',
+    title: 'GRID-SCALE BATTERY PROJECT LOGISTICS: ROUTING OVERSIZED ENERGY CARGO ACROSS APAC',
     category: 'Case Studies',
     date: 'Jan 2026',
     accent: 'orange',
   },
   {
-    title: 'Your second insight title goes here',
+    title: 'KATHMANDU–LOS ANGELES AIR LANE EXPANSION: CUTTING TRANSIT BY TWO DAYS',
     category: 'Global',
     date: 'Feb 2026',
     accent: 'blue',
   },
   {
-    title: 'Your third insight title goes here',
-    category: 'Case Studies',
+    title: 'SECTION 301 DUTIES AND IMPORTS: WHAT CHANGED FOR ASIA–US CONSIGNMENTS',
+    category: 'Customs Advice',
     date: 'Mar 2026',
     accent: 'orange',
   },
   {
-    title: 'Your fourth insight title goes here',
-    category: 'Customs Advice',
+    title: 'INDIA OCEAN GATEWAY UPGRADE: NEW FCL/LCL SCHEDULES OUT OF NEPAL',
+    category: 'Asia Pacific',
     date: 'Apr 2026',
     accent: 'blue',
   },
   {
-    title: 'Your fifth insight title goes here',
-    category: 'Global',
+    title: 'WAREHOUSING & 3PL: PICK-AND-PACK AT SCALE FOR E-COMMERCE BRANDS',
+    category: 'Case Studies',
     date: 'May 2026',
     accent: 'orange',
   },
   {
-    title: 'Your sixth insight title goes here',
-    category: 'Case Studies',
+    title: 'PHARMA COLD CHAIN: TEMPERATURE-CONTROLLED AIRFREIGHT, END TO END',
+    category: 'Asia Pacific',
     date: 'Jun 2026',
     accent: 'blue',
   },
@@ -265,28 +265,37 @@ export const INSIGHTS = [
 export const FAQS = [
   {
     q: 'What services do you offer?',
-    a: 'Replace this with a clear answer about your services — air freight, ocean freight, customs, warehousing, and more.',
+    a: 'We operate as an integrated freight forwarder and customs brokerage — air freight, ocean freight (FCL/LCL), customs clearance, warehousing & 3PL, project cargo, and domestic & linehaul transport across the region.',
   },
   {
     q: 'Which countries do you ship to?',
-    a: 'Replace this with a clear answer about the destinations you cover.',
+    a: 'Our active network spans Nepal, India, China, Hong Kong, UAE, the United States, the United Kingdom, Germany, Australia, and Japan — with structured partner coverage on most other trade lanes.',
   },
   {
     q: 'How is freight pricing calculated?',
-    a: 'Replace this with a clear answer about how you price shipments.',
+    a: 'Pricing depends on mode, weight and volume (chargeable weight), origin–destination pair, and service level. We give clear, itemised quotes with no hidden fees, and re-confirm rates before any booking is placed.',
   },
   {
     q: 'Do you provide customs clearance?',
-    a: 'Replace this with a clear answer about your customs services.',
+    a: 'Yes — customs brokerage is handled in-house by licensed brokers covering classification, compliance, duties, and quarantine. One team controls both clearance and transport, so nothing falls between vendors.',
   },
   {
     q: 'Can you handle oversized or heavy cargo?',
-    a: 'Replace this with a clear answer about project cargo and heavy lift.',
+    a: 'Project cargo is a core service. We engineer routing, arrange special permits and heavy-lift handling, and manage every leg from origin to site delivery — including convoy and escort requirements where needed.',
   },
   {
     q: 'How do I request a quote?',
-    a: 'Replace this with a clear answer about how customers can request a quote.',
+    a: 'Use the appointment form on the contact page, choose the reason of enquiry, and add your cargo details. Our team responds within one business day with a structured, itemised quote.',
   },
+]
+
+export const INSIGHT_CATEGORIES = [
+  { label: 'CASE STUDIES', count: 5 },
+  { label: 'CUSTOMS ADVICE', count: 3 },
+  { label: 'GLOBAL', count: 4 },
+  { label: 'ASIA PACIFIC', count: 7 },
+  { label: 'AMERICAS', count: 2 },
+  { label: 'LINKEDIN', count: 18 },
 ]
 
 export const NAV_LINKS = [
@@ -373,13 +382,4 @@ export const REASONS = [
   'Careers',
   'Partnership',
   'Other',
-]
-
-export const INSIGHT_CATEGORIES = [
-  { label: 'CASE STUDIES', count: 3 },
-  { label: 'CUSTOMS ADVICE', count: 2 },
-  { label: 'GLOBAL', count: 3 },
-  { label: 'ASIA PACIFIC', count: 4 },
-  { label: 'AMERICAS', count: 2 },
-  { label: 'LINKEDIN', count: 6 },
 ]

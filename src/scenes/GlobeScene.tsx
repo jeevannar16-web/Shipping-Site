@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import * as THREE from 'three'
 import SceneCanvas from '../components/SceneCanvas'
+import { Starfield } from './builders'
 
 const RADIUS = 1.65
 
@@ -22,6 +23,8 @@ const MARKERS = [
   { id: 'cn', label: 'CHINA', lat: 39.9042, lng: 116.4074 },
   { id: 'hk', label: 'HONG KONG', lat: 22.3193, lng: 114.1694 },
   { id: 'au', label: 'AUSTRALIA', lat: -33.8688, lng: 151.2093 },
+  { id: 'jp', label: 'JAPAN', lat: 35.6762, lng: 139.6503 },
+  { id: 'de', label: 'GERMANY', lat: 52.52, lng: 13.405 },
   { id: 'gb', label: 'UK', lat: 51.5074, lng: -0.1278 },
   { id: 'us', label: 'USA', lat: 34.0522, lng: -118.2437 },
 ]
@@ -188,8 +191,8 @@ function Markers() {
               <sphereGeometry args={[0.05, 10, 10]} />
               <meshBasicMaterial color="#c77cff" />
             </mesh>
-            <Html position={[0, 0.14, 0]} center distanceFactor={9} zIndexRange={[20, 0]} occlude style={{ pointerEvents: 'none' }}>
-              <div className="whitespace-nowrap rounded border border-white/20 bg-black/80 px-2 py-0.5 font-mono text-[9px] tracking-[0.14em] text-white/90">
+            <Html position={[0, 0.14, 0]} center distanceFactor={9} zIndexRange={[20, 0]} style={{ pointerEvents: 'none' }}>
+              <div className="whitespace-nowrap rounded border border-[#333] bg-[#0a0a0a] px-2.5 py-0.5 font-mono text-[9px] tracking-[0.14em] text-white shadow-[0_2px_12px_rgba(0,0,0,0.5)]">
                 {m.label}
               </div>
             </Html>
@@ -223,6 +226,7 @@ export default function GlobeScene() {
   return (
     <SceneCanvas fallbackLabel="Global" tone="violet" camera={{ position: [0, 0.4, 5.4], fov: 45 }}>
       <ambientLight intensity={0.4} />
+      <Starfield count={300} />
       <Rig />
     </SceneCanvas>
   )

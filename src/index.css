@@ -90,6 +90,10 @@ body {
   -webkit-text-stroke: 1px rgba(255, 74, 0, 0.75);
   color: transparent;
 }
+.text-stroke-paper {
+  -webkit-text-stroke: 1px rgba(216, 210, 200, 0.9);
+  color: transparent;
+}
 
 /* Line-mask reveal helper (y:110% -> 0 inside overflow-hidden) */
 .line-mask {
@@ -168,6 +172,19 @@ body {
 }
 .bob {
   animation: bob 1.8s ease-in-out infinite;
+}
+
+/* Slow horizontal scroll for giant background headlines */
+.slow-scroll {
+  animation: slow-scroll 24s linear infinite;
+}
+@keyframes slow-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-12%);
+  }
 }
 
 /* Vertical marquee (preloader lists) */

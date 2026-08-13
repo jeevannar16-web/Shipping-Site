@@ -2,217 +2,194 @@ import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import SceneCanvas from '../components/SceneCanvas'
+import { CurvedRoad, InstancedTrees, Truck } from './builders'
 
-/** S-curved centerline along which cars and roads are drawn. */
 function viaductCurve(offset = 0) {
   return new THREE.CatmullRomCurve3([
-    new THREE.Vector3(-16, 5.4, 6 + offset),
-    new THREE.Vector3(-8, 5.4, -2 + offset),
-    new THREE.Vector3(0, 5.4, -6 + offset),
-    new THREE.Vector3(8, 5.4, -2 + offset),
-    new THREE.Vector3(16, 5.4, 6 + offset),
+    new THREE.Vector3(-14, 10, -40 + offset),
+    new THREE.Vector3(-10, 10, -20 + offset),
+    new THREE.Vector3(-16, 10, 0 + offset),
+    new THREE.Vector3(-8, 10, 20 + offset),
+    new THREE.Vector3(-14, 10, 40 + offset),
   ])
 }
 
-function RoadDeck({ offset = 0 }: { offset?: number }) {
-  const curve = useMemo(() => viaductCurve(offset), [offset])
-  const geo = useMemo(() => {
-    const pts = curve.getSpacedPoints(120)
-    const roadGeo = new THREE.BufferGeometry()
-    const positions: number[] = []
-    const uvs: number[] = []
-    for (let i = 0; i < pts.length; i++) {
-      const p = pts[i]
-      const tangent = curve.getTangent(i / (pts.length - 1))
-      const right = new THREE.Vector3(-tangent.z, 0, tangent.x).normalize()
-      positions.push(p.x - right.x * 3.4, 5.4, p.z - right.z * 3.4)
-      positions.push(p.x + right.x * 3.4, 5.4, p.z + right.z * 3.4)
-      uvs.push(0, i * 0.1)
-      uvs.push(1, i * 0.1)
-    }
-    roadGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
-    roadGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
-    const indices: number[] = []
-    for (let i = 0; i < pts.length - 1; i++) {
-      const a = i * 2
-      indices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2)
-    }
-    roadGeo.setIndex(indices)
-    roadGeo.computeVertexNormals()
-    return roadGeo
-  }, [curve])
-
-  // dashed center line via instanced small boxes along the curve
-  const dashes = useMemo(() => {
-    const out: { pos: THREE.Vector3; dir: number }[] = []
-    const pts = curve.getSpacedPoints(160)
-    for (let i = 0; i < pts.length; i += 6) {
-      const p = pts[i]
-      const t = curve.getTangent(i / 159)
-      out.push({ pos: p, dir: Math.atan2(t.x, t.z) })
-    }
-    return out
-  }, [curve])
-
-  return (
-    <group>
-      <mesh geometry={geo} position={[0, 0, 0]}>
-        <meshStandardMaterial color="#18181b" roughness={0.9} />
-      </mesh>
-      {dashes.map((d, i) => (
-        <mesh key={i} position={[d.pos.x, 5.48, d.pos.z]} rotation={[0, d.dir, 0]}>
-          <planeGeometry args={[0.14, 0.9]} />
-          <meshBasicMaterial color="#f2f2f2" transparent opacity={0.7} />
-        </mesh>
-      ))}
-    </group>
-  )
+function viaductCurveMirror(offset = 0) {
+  return new THREE.CatmullRomCurve3([
+    new THREE.Vector3(14, 10, 40 - offset),
+    new THREE.Vector3(10, 10, 20 - offset),
+    new THREE.Vector3(16, 10, 0 - offset),
+    new THREE.Vector3(8, 10, -20 - offset),
+    new THREE.Vector3(14, 10, -40 - offset),
+  ])
 }
 
-function Pillars() {
-  const geo = useMemo(() => {
-    const curve = viaductCurve()
-    const pts = curve.getSpacedPoints(60)
-    const g = new THREE.CylinderGeometry(0.14, 0.2, 5.4, 8)
-    g.translate(0, 2.7, 0)
+function Pillars({ curve }: { curve: THREE.CatmullRomCurve3 }) {
+  const pillars = useMemo(() => {
+    const pts = curve.getSpacedPoints(80)
+    const g = new THREE.CylinderGeometry(0.5, 0.6, 10, 10)
+    g.translate(0, 5, 0)
     const mat = new THREE.MeshStandardMaterial({ color: '#8a8a8a', roughness: 0.7 })
-    const inst = new THREE.InstancedMesh(g, mat, pts.length)
+    const inst = new THREE.InstancedMesh(g, mat, pts.length * 2)
     const m = new THREE.Matrix4()
+    let idx = 0
     pts.forEach((p, i) => {
-      const t = curve.getTangent(i / 59)
+      if (i % 2 !== 0) return
+      const t = curve.getTangent(i / 79)
       const right = new THREE.Vector3(-t.z, 0, t.x).normalize()
-      const offsetX = i % 2 === 0 ? 2.4 : -2.4
-      m.makeTranslation(p.x + right.x * offsetX, 0, p.z + right.z * offsetX)
-      inst.setMatrixAt(i, m)
+      for (const side of [1, -1]) {
+        m.makeTranslation(p.x + right.x * 2.5 * side, 0, p.z + right.z * 2.5 * side)
+        inst.setMatrixAt(idx++, m)
+      }
     })
+    inst.count = idx
     inst.instanceMatrix.needsUpdate = true
     return inst
-  }, [])
+  }, [curve])
 
-  return <primitive object={geo} />
+  return <primitive object={pillars} />
 }
 
-type VehicleType = 'car' | 'truck'
+const CAR_COLORS = ['#e8e8e8', '#d9a441', '#a4362b', '#2b4b7a', '#1a1a1a', '#c46a2b']
 
-function Vehicle({ type }: { type: VehicleType }) {
-  const group = useRef<THREE.Group>(null)
-  const curve = useMemo(() => viaductCurve(), [])
-  const speed = type === 'car' ? 0.06 : 0.04
-  const laneOffset = type === 'car' ? 1.3 : -1.3
+/** Instanced cars traveling along a viaduct curve. */
+function Traffic({ curve, laneSign = 1, count = 12 }: { curve: THREE.CatmullRomCurve3; laneSign?: 1 | -1; count?: number }) {
+  const bodyRef = useRef<THREE.InstancedMesh>(null)
+  const cabinRef = useRef<THREE.InstancedMesh>(null)
+  const speeds = useMemo(() => Array.from({ length: count }, () => 4 + Math.random() * 3), [count])
+  const offsets = useMemo(() => Array.from({ length: count }, () => Math.random()), [count])
+  const colors = useMemo(
+    () =>
+      Array.from({ length: count }, () => {
+        const c = new THREE.Color(CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)])
+        return [c.r, c.g, c.b]
+      }).flat(),
+    [count],
+  )
+
+  // assign per-instance colors once mounted
+  const colorAttr = useMemo(() => {
+    const attr = new THREE.InstancedBufferAttribute(new Float32Array(colors), 3)
+    return attr
+  }, [colors])
 
   useFrame((state) => {
-    const t = state.clock.elapsedTime
-    const base = (t * speed + (type === 'car' ? 0.2 : 0.7)) % 1
-    const p = curve.getPointAt(base)
-    const tangent = curve.getTangentAt(base)
-    const right = new THREE.Vector3(-tangent.z, 0, tangent.x).normalize()
-    if (group.current) {
-      group.current.position.set(
-        p.x + right.x * laneOffset,
-        5.58,
-        p.z + right.z * laneOffset,
-      )
-      group.current.lookAt(
-        p.x + tangent.x + right.x * laneOffset,
-        5.58,
-        p.z + tangent.z + right.z * laneOffset,
-      )
+    const now = state.clock.elapsedTime
+    const body = bodyRef.current
+    const cabin = cabinRef.current
+    if (!body || !cabin) return
+    if (body.instanceColor === null) {
+      body.instanceColor = colorAttr
     }
+    const m = new THREE.Matrix4()
+    const m2 = new THREE.Matrix4()
+    const q = new THREE.Quaternion()
+    const e = new THREE.Euler()
+    const s = new THREE.Vector3(1, 1, 1)
+    for (let i = 0; i < count; i++) {
+      const progress = (now * speeds[i] * 0.01 + offsets[i]) % 1
+      const p = curve.getPointAt(progress)
+      const t = curve.getTangentAt(progress)
+      const right = new THREE.Vector3(-t.z, 0, t.x).normalize()
+      const pos = new THREE.Vector3(p.x + right.x * 1.2 * laneSign, 10.6, p.z + right.z * 1.2 * laneSign)
+      const fwd = new THREE.Vector3(t.x, 0, t.z).normalize()
+      e.set(0, Math.atan2(fwd.x, fwd.z), 0)
+      q.setFromEuler(e)
+      m.compose(pos, q, s)
+      body.setMatrixAt(i, m)
+      pos.y += 0.45
+      m2.compose(pos, q, s)
+      cabin.setMatrixAt(i, m2)
+    }
+    body.instanceMatrix.needsUpdate = true
+    cabin.instanceMatrix.needsUpdate = true
   })
 
   return (
-    <group ref={group}>
-      {type === 'car' ? (
-        <>
-          <mesh position={[0, 0.28, 0]}>
-            <boxGeometry args={[0.7, 0.26, 1.4]} />
-            <meshStandardMaterial color="#ff4a00" roughness={0.6} />
-          </mesh>
-          <mesh position={[0, 0.55, -0.08]}>
-            <boxGeometry args={[0.62, 0.26, 0.8]} />
-            <meshStandardMaterial color="#141416" roughness={0.3} metalness={0.6} />
-          </mesh>
-        </>
-      ) : (
-        <>
-          <mesh position={[0, 0.55, 0.2]}>
-            <boxGeometry args={[1.0, 0.9, 2.4]} />
-            <meshStandardMaterial color="#c77cff" roughness={0.8} />
-          </mesh>
-          <mesh position={[0, 0.4, 1.6]}>
-            <boxGeometry args={[0.9, 0.6, 1.0]} />
-            <meshStandardMaterial color="#f2f2f2" roughness={0.7} />
-          </mesh>
-        </>
-      )}
+    <group>
+      <instancedMesh ref={bodyRef} args={[undefined, undefined, count]}>
+        <boxGeometry args={[1.8, 0.6, 3.6]} />
+        <meshStandardMaterial vertexColors roughness={0.7} metalness={0.2} />
+      </instancedMesh>
+      <instancedMesh ref={cabinRef} args={[undefined, undefined, count]}>
+        <boxGeometry args={[1.6, 0.5, 2.0]} />
+        <meshStandardMaterial color="#0a0a0a" roughness={0.3} metalness={0.6} />
+      </instancedMesh>
     </group>
   )
 }
 
-function Trees() {
-  const instances = useMemo(() => {
-    const canopy = new THREE.IcosahedronGeometry(0.55, 0)
-    const trunk = new THREE.CylinderGeometry(0.06, 0.09, 0.5, 6)
-    const darkMat = new THREE.MeshStandardMaterial({ color: '#0f2b16', flatShading: true })
-    const lightMat = new THREE.MeshStandardMaterial({ color: '#1c4526', flatShading: true })
-    const trunkMat = new THREE.MeshStandardMaterial({ color: '#4a2f1a' })
-    const count = 140
-    const canopyMesh = new THREE.InstancedMesh(canopy, darkMat, count)
-    const lightMesh = new THREE.InstancedMesh(canopy, lightMat, count)
-    const trunkMesh = new THREE.InstancedMesh(trunk, trunkMat, count)
-    const m = new THREE.Matrix4()
-    const s = new THREE.Matrix4()
-    let i = 0
-    while (i < count) {
-      const x = (Math.random() - 0.5) * 60
-      const z = (Math.random() - 0.5) * 60
-      // keep trees away from the deck
-      if (Math.abs(x) < 4 && z > -8 && z < 8) continue
-      const y = 0.5
-      const scale = 0.7 + Math.random() * 0.9
-      m.makeTranslation(x, y, z)
-      s.makeScale(scale, scale, scale)
-      const combined = new THREE.Matrix4().multiplyMatrices(m, s)
-      canopyMesh.setMatrixAt(i, combined)
-      lightMesh.setMatrixAt(i, combined)
-      trunkMesh.setMatrixAt(i, combined)
-      i++
+/** Semi trucks (shared builder) trailing along the curves. */
+function SemiTraffic({ curve, laneSign = -1, cab = '#f2f2f2', container = '#ff4a00', offset = 0.4 }: {
+  curve: THREE.CatmullRomCurve3
+  laneSign?: 1 | -1
+  cab?: string
+  container?: string
+  offset?: number
+}) {
+  const ref = useRef<THREE.Group>(null)
+  useFrame((state) => {
+    const progress = (state.clock.elapsedTime * 0.04 + offset) % 1
+    const p = curve.getPointAt(progress)
+    const t = curve.getTangentAt(progress)
+    const right = new THREE.Vector3(-t.z, 0, t.x).normalize()
+    const fwd = new THREE.Vector3(t.x, 0, t.z).normalize()
+    if (ref.current) {
+      ref.current.position.set(p.x + right.x * 2.0 * laneSign, 10.02, p.z + right.z * 2.0 * laneSign)
+      ref.current.rotation.set(0, Math.atan2(fwd.x, fwd.z), 0)
     }
-    canopyMesh.instanceMatrix.needsUpdate = true
-    lightMesh.instanceMatrix.needsUpdate = true
-    trunkMesh.instanceMatrix.needsUpdate = true
-    return { canopyMesh, lightMesh, trunkMesh }
-  }, [])
-
+  })
   return (
-    <group>
-      <primitive object={instances.canopyMesh} />
-      <primitive object={instances.lightMesh} />
-      <primitive object={instances.trunkMesh} />
+    <group ref={ref}>
+      <Truck cabColor={cab} containerColor={container} ribCount={10} bob={false} />
     </group>
   )
 }
 
 export default function ViaductScene() {
+  const curveMain = useMemo(() => viaductCurve(), [])
+  const curveMirror = useMemo(() => viaductCurveMirror(), [])
+
   return (
-    <SceneCanvas fallbackLabel="About" tone="blue" camera={{ position: [0, 10, 22], fov: 48 }}>
+    <SceneCanvas fallbackLabel="About" tone="blue" camera={{ position: [0, 26, 34], fov: 35 }}>
       <color attach="background" args={['#0b0b0c']} />
-      <fog attach="fog" args={['#0b0b0c', 12, 46]} />
-      <ambientLight intensity={0.35} />
-      <directionalLight position={[10, 18, 4]} intensity={1.6} color="#ffb27d" />
-      <directionalLight position={[-10, 4, -6]} intensity={0.4} color="#2b4bff" />
+      <fog attach="fog" args={['#3a2417', 20, 70]} />
+      <ambientLight intensity={0.4} />
+      <directionalLight position={[-30, 40, -20]} intensity={2} color="#ffd9a0" />
+      <directionalLight position={[10, 4, 10]} intensity={0.3} color="#2b4bff" />
+
+      {/* water */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
-        <planeGeometry args={[70, 70]} />
-        <meshStandardMaterial color="#0c1115" roughness={0.2} metalness={0.3} />
+        <planeGeometry args={[90, 90]} />
+        <meshStandardMaterial color="#4a5a5a" roughness={0.4} metalness={0.3} />
       </mesh>
-      <RoadDeck />
-      <RoadDeck offset={9} />
-      <Pillars />
-      <Trees />
-      <Vehicle type="car" />
-      <Vehicle type="truck" />
-      <Vehicle type="car" />
-      <Vehicle type="truck" />
+
+      {/* green banks */}
+      <InstancedTrees count={200} min={1} max={2.2} area={42} center={[0, 0]} height={0} />
+
+      {/* viaduct 1 */}
+      <CurvedRoad curve={curveMain} width={6} color="#6f6f6f" y={10.05} />
+      <Pillars curve={curveMain} />
+      <Traffic curve={curveMain} laneSign={1} count={12} />
+      <SemiTraffic curve={curveMain} laneSign={-1} cab="#f2f2f2" container="#ff4a00" offset={0.2} />
+      <SemiTraffic curve={curveMain} laneSign={-1} cab="#f2f2f2" container="#f0f0f0" offset={0.7} />
+
+      {/* viaduct 2 (mirror) */}
+      <CurvedRoad curve={curveMirror} width={6} color="#6f6f6f" y={10.05} />
+      <Pillars curve={curveMirror} />
+      <Traffic curve={curveMirror} laneSign={-1} count={12} />
+      <SemiTraffic curve={curveMirror} laneSign={1} cab="#ff4a00" container="#f0f0f0" offset={0.5} />
+
+      <CameraDolly />
     </SceneCanvas>
   )
+}
+
+function CameraDolly() {
+  useFrame((state) => {
+    const t = state.clock.elapsedTime
+    state.camera.position.z = 34 - Math.sin(t * 0.1) * 3
+    state.camera.lookAt(0, 8, 0)
+  })
+  return null
 }
