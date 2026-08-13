@@ -151,7 +151,7 @@ export default function ViaductScene() {
   const curveMirror = useMemo(() => viaductCurveMirror(), [])
 
   return (
-    <SceneCanvas fallbackLabel="About" tone="blue" camera={{ position: [0, 26, 28], fov: 35 }}>
+    <SceneCanvas fallbackLabel="About" tone="blue" camera={{ position: [0, 26, 34], fov: 35 }}>
       <color attach="background" args={['#0b0b0c']} />
       <fog attach="fog" args={['#1a1410', 60, 140]} />
       <ambientLight intensity={0.6} />
@@ -188,7 +188,7 @@ export default function ViaductScene() {
 function CameraDolly() {
   useFrame((state) => {
     const t = state.clock.elapsedTime
-    state.camera.position.z = 28 - Math.sin(t * 0.1) * 3
+    state.camera.position.set(0, 26 - Math.sin(t * 0.1) * 3, 34 - Math.sin(t * 0.1) * 5)
     state.camera.lookAt(0, 8, 0)
   })
   return null

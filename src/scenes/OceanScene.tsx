@@ -6,7 +6,6 @@ import { AutoFitCamera } from './fitCamera'
 import { clamp01, type ScrubRef } from '../lib/scrub'
 
 const CONTAINER_COLORS = ['#b4362b', '#24457a', '#2e5b40', '#c46a2b', '#d0d0d0', '#6b2b8a']
-const CONTAINER: [number, number, number] = [2.2, 1.2, 2.2]
 
 /** Canvas speckle texture — scrolling "white noise" on the sea. */
 function useNoiseTexture() {
@@ -27,20 +26,20 @@ function useNoiseTexture() {
   }, [])
 }
 
-/** Hull silhouette: 7 wide, 27 long (22 + pointed bow +5). */
+/** S4 — Hull silhouette: rect x±3.5, z -11..11 + bow point (0,16). */
 function hullShape() {
   const s = new THREE.Shape()
   s.moveTo(-3.5, -11)
-  s.lineTo(-3.5, 9)
+  s.lineTo(-3.5, 11)
   s.lineTo(0, 16)
-  s.lineTo(3.5, 9)
+  s.lineTo(3.5, 11)
   s.closePath()
   return s
 }
 
 function Hull() {
   const geo = useMemo(() => {
-    const g = new THREE.ExtrudeGeometry(hullShape(), { depth: 3.5, bevelEnabled: false })
+    const g = new THREE.ExtrudeGeometry(hullShape(), { depth: 3.8, bevelEnabled: false })
     g.rotateX(-Math.PI / 2)
     return g
   }, [])
@@ -53,12 +52,12 @@ function Hull() {
 
   return (
     <group>
-      {/* hull — top at y 2.6, waterline y 0 → 2.6 units of dark side above water */}
-      <mesh geometry={geo} position={[0, -0.9, 0]}>
+      {/* S4 — hull depth 3.8 along Y (y -1.2..2.6) #14213D, bow is part of hull */}
+      <mesh geometry={geo} position={[0, -1.2, 0]}>
         <meshStandardMaterial color="#14213d" roughness={0.55} metalness={0.25} flatShading />
       </mesh>
-      {/* white waterline stripe above water */}
-      <mesh geometry={stripeGeo} position={[0, 1.2, 0]}>
+      {/* S4 — white waterline stripe at y .15 */}
+      <mesh geometry={stripeGeo} position={[0, 0.15, 0]}>
         <meshStandardMaterial color="#f2f2f2" roughness={0.6} />
       </mesh>
       {/* deck, y 2.6 */}
@@ -71,25 +70,24 @@ function Hull() {
 }
 
 /**
- * G5 — STRICT 6x12 grid, no jitter, deterministic heights/colors.
- * Cell height h = 1 + ((col*7+row*3) % 3); stacked at y = 2.5 + k*1.22.
+ * S4 — STRICT 6×10 grid on the deck: box (1.15,1.2,2.2), x -3..3 step 1.2,
+ * z -10..10 step 2.2, heights h = 1 + ((c*7+r*3) % 3), y starts 2.62.
  */
 function Containers() {
   const meshes = useMemo(() => {
-    const geo = new THREE.BoxGeometry(...CONTAINER)
+    const geo = new THREE.BoxGeometry(1.15, 1.2, 2.2)
     const mats = CONTAINER_COLORS.map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.8, flatShading: true }))
     const inst = mats.map(() => new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial(), 216))
     const m = new THREE.Matrix4()
-    const gap = 2.2 + 0.06
     let idx = 0
     for (let col = 0; col < 6; col++) {
-      const x = (col - 2.5) * gap
-      for (let row = 0; row < 12; row++) {
-        const z = (row - 5.5) * gap
+      const x = -3 + col * 1.2
+      for (let row = 0; row < 10; row++) {
+        const z = -10 + row * 2.2
         const h = 1 + ((col * 7 + row * 3) % 3)
         const colorIdx = (col * 7 + row * 3) % 6
         for (let k = 0; k < h; k++) {
-          m.makeTranslation(x, 2.6 + k * 1.22 + 0.6, z)
+          m.makeTranslation(x, 2.62 + 0.6 + k * 1.26, z)
           inst[colorIdx].setMatrixAt(idx++, m)
         }
       }
@@ -202,7 +200,7 @@ function Ship({ scrub }: { scrub?: ScrubRef }) {
       const p = clamp01(scrub.current)
       ref.current.position.z = -8 + 16 * p
       ref.current.position.x = 0
-      ref.current.rotation.z = Math.sin(t * 0.3) * 0.003
+      ref.current.rotation.z = Math.sin(t * 0.3) * 0.007 // S4 — roll ±0.4°
     } else {
       ref.current.position.x = Math.sin(t * 0.07) * 0.5
       ref.current.rotation.z = Math.sin(t * 0.3) * 0.007 // ±0.4°
@@ -212,14 +210,14 @@ function Ship({ scrub }: { scrub?: ScrubRef }) {
     <group ref={ref}>
       <Hull />
       <Containers />
-      {/* V5 — bridge white h 5.5 at stern, taller than container top */}
-      <group position={[0, 2.6, 10.5]}>
+      {/* S4 — bridge white (6,4.5,2.2) stern z -10.5, taller than stacks */}
+      <group position={[0, 4.85, -10.5]}>
         <mesh>
-          <boxGeometry args={[6, 5.5, 2.4]} />
+          <boxGeometry args={[6, 4.5, 2.2]} />
           <meshStandardMaterial color="#f2f2f2" roughness={0.6} />
         </mesh>
-        <mesh position={[0, 1.6, 1.22]}>
-          <boxGeometry args={[5.4, 1.1, 0.06]} />
+        <mesh position={[0, 1.1, 1.12]}>
+          <boxGeometry args={[5.4, 1, 0.06]} />
           <meshStandardMaterial color="#0a2a4a" roughness={0.3} metalness={0.5} />
         </mesh>
       </group>
@@ -259,7 +257,7 @@ export default function OceanScene({ scrub }: { scrub?: ScrubRef }) {
   const modelRef = useRef<THREE.Group>(null)
 
   return (
-    <SceneCanvas fallbackLabel="Ocean" tone="blue" camera={{ position: [0, 38, 14], fov: 35 }}>
+    <SceneCanvas fallbackLabel="Ocean" tone="blue" camera={{ position: [0, 26, 34], fov: 35 }}>
       <color attach="background" args={['#1e56a0']} />
       <fog attach="fog" args={['#1e56a0', 60, 140]} />
       <ambientLight intensity={0.6} />
@@ -270,7 +268,7 @@ export default function OceanScene({ scrub }: { scrub?: ScrubRef }) {
         <Ship scrub={scrub} />
       </group>
       <Wake scrub={scrub} />
-      <AutoFitCamera target={modelRef} coverage={0.92} axis={[0, 0.72, 0.45]} fov={35} label="ocean" />
+      <AutoFitCamera target={modelRef} coverage={0.9} axis={[0, 0.72, 0.45]} fov={35} label="ocean" />
     </SceneCanvas>
   )
 }

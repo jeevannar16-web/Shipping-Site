@@ -138,8 +138,8 @@ function StickyScene({
 function HeroSection() {
   const go = useTransitionNavigate()
   return (
-    <section className="relative h-[220vh] overflow-hidden">
-      <div className="sticky top-0 flex h-screen items-center overflow-hidden" data-cursor="drag">
+    <section className="scene bg-[#0a0a0a]">
+      <div className="pin flex items-center" data-cursor="drag">
         <div className="absolute inset-0">
           <SuspenseBox label="Global">
             <GlobeScene />
@@ -273,6 +273,21 @@ export default function Home() {
             <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-orange" />
             Ocean Freight — FCL / LCL / Specialised
           </p>
+        </div>
+        <div className="absolute right-6 top-8 z-10 hidden w-44 md:right-10 md:block">
+          <div className="rounded-md border border-white/15 bg-black/55 p-4 font-mono text-[10px] uppercase tracking-[0.14em] text-white backdrop-blur">
+            <p className="mb-2 text-white/50">Rates — FCL</p>
+            {[
+              ['20FT', '1,150'],
+              ['40FT', '1,950'],
+              ['REEFER', '2,850'],
+            ].map(([k, v]) => (
+              <div key={k} className="flex items-center justify-between border-t border-white/10 py-1.5">
+                <span className="text-white/70">{k}</span>
+                <span className="text-orange">${v}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </StickyScene>
 

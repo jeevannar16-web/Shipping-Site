@@ -264,10 +264,10 @@ function StackerScene() {
             <boxGeometry args={[2.8, 0.3, 0.45]} />
             <meshStandardMaterial color="#9a9a9a" roughness={0.6} metalness={0.4} />
           </mesh>
-          {/* spreader tip with hazard stripe painted on the tip face */}
+          {/* S2 — spreader tip with hazard stripe painted on the tip face (1.8,.3,.6) */}
           <group ref={spreaderRef} position={[BOOM_LEN + 2.8, 0, 0]}>
             <mesh>
-              <boxGeometry args={[1.6, 0.3, 0.5]} />
+              <boxGeometry args={[1.8, 0.3, 0.6]} />
               <meshStandardMaterial attach="material-0" map={hazard} roughness={0.6} />
               <meshStandardMaterial attach="material-1" color="#1a1a1a" roughness={0.7} />
               <meshStandardMaterial attach="material-2" color="#1a1a1a" roughness={0.7} />
@@ -287,18 +287,11 @@ function StackerScene() {
         </mesh>
       ))}
 
-      {/* held container — OPAQUE (R1), EXACT material per V3 */}
+      {/* held container — OPAQUE (R1), solid #E8E8E8 rib texture, no transparent/opacity props */}
       <group ref={containerRef} position={[-4.6, 1.4, 0]}>
         <mesh>
           <boxGeometry args={CONTAINER} />
-          <meshStandardMaterial
-            color="#E8E8E8"
-            roughness={0.9}
-            metalness={0}
-            transparent={false}
-            opacity={1}
-            map={ribs}
-          />
+          <meshStandardMaterial color="#E8E8E8" roughness={0.9} metalness={0} map={ribs} />
         </mesh>
       </group>
 

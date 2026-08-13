@@ -124,8 +124,8 @@ function TruckRig({ scrub }: { scrub?: ScrubRef }) {
 
   return (
     <group ref={groupRef}>
-        {/* trailer (9.5 long along x, -6.5..+3.0) */}
-        <mesh position={[-1.75, 1.3, 0]}>
+        {/* trailer (9.5 long along x, -6.5..+3.0) — bottom at y .7 */}
+        <mesh position={[-1.75, 2.0, 0]}>
           <boxGeometry args={[9.5, 2.6, 2.4]} />
           <meshStandardMaterial attach="material-0" map={trailerTex} roughness={0.7} metalness={0.2} />
           <meshStandardMaterial attach="material-1" color="#f0f0f0" roughness={0.7} metalness={0.2} />

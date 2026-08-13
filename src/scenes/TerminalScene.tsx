@@ -3,8 +3,6 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import SceneCanvas from '../components/SceneCanvas'
 
-const COLORS = ['#d6451e', '#e06f27', '#3a7d44', '#2b4bff', '#8a8a8a', '#c7a03c', '#b03a2e', '#3f6f8f']
-
 /** Bright sky gradient #B8C4CC → #D8DDE0 inside a dome. */
 function SkyDome() {
   const mat = useMemo(
@@ -41,22 +39,24 @@ function SkyDome() {
   )
 }
 
-/** V6 — 8×14 stack yard (heights 3–4, top ≈5), central aisle along x, deterministic colors. */
+/** S5 — LONG container yard: (2.4,2.6,6), 6 cols × step 2.5 × 4 rows z step 6.2, stacks 1–3. */
+const YARD_COLORS = ['#7a3222', '#b45a1e', '#2e5b40', '#24457a', '#6a6a6a', '#8b3a2a']
+
 function ContainerYard() {
   const meshes = useMemo(() => {
-    const geo = new THREE.BoxGeometry(1.05, 1.2, 0.9)
-    const mats = COLORS.map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.7, metalness: 0.15, flatShading: true }))
-    const inst = mats.map(() => new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial(), 448))
+    const geo = new THREE.BoxGeometry(2.4, 2.6, 6)
+    const mats = YARD_COLORS.map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.7, metalness: 0.15, flatShading: true }))
+    const inst = mats.map(() => new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial(), 216))
     const m = new THREE.Matrix4()
     let idx = 0
-    for (let xi = 0; xi < 14; xi++) {
-      const x = (xi - 6.5) * 1.15
-      for (let zi = 0; zi < 8; zi++) {
-        const z = zi < 4 ? -0.55 - (3 - zi) * 1.1 : 0.55 + (zi - 4) * 1.1
-        const stack = 3 + ((xi * 7 + zi * 3) % 2)
+    for (let c = 0; c < 6; c++) {
+      const x = -6.25 + c * 2.5
+      for (let r = 0; r < 4; r++) {
+        const z = -9.3 + r * 6.2
+        const stack = 1 + ((c * 7 + r * 3) % 3)
         for (let s = 0; s < stack; s++) {
-          const y = 0.6 + s * 1.22
-          const mi = (xi * 7 + zi * 3 + s) % COLORS.length
+          const y = 1.3 + s * 2.6
+          const mi = (c * 7 + r * 3 + s) % YARD_COLORS.length
           m.makeTranslation(x, y, z)
           inst[mi].setMatrixAt(idx++, m)
         }
@@ -94,7 +94,7 @@ function Lanes() {
   )
 }
 
-/** V6 — gantry crane: white legs (1,16,1) at (±11,8,±7), beam (24,1.4,1.8) y16, trolley #222 y15.2 x -6→6. */
+/** S5 — gantry crane: white legs (1,12,1) at (±10,6,±8), beam (24,1.4,1.8) y 11.5, trolley #222 y 10.7 x -6→6. */
 function GantryCrane() {
   const trolleyRef = useRef<THREE.Group>(null)
   const spreaderRef = useRef<THREE.Group>(null)
@@ -102,7 +102,7 @@ function GantryCrane() {
   const cableRefs = useRef<Array<THREE.Mesh | null>>([])
 
   useFrame((state) => {
-    const t = (state.clock.elapsedTime % 16) / 16
+    const t = (state.clock.elapsedTime % 20) / 20
     const trolley = trolleyRef.current
     const spreader = spreaderRef.current
     const container = containerRef.current
@@ -112,63 +112,64 @@ function GantryCrane() {
     let sy: number
     if (t < 0.3) {
       const p = t / 0.3
-      tx = -6 + p * 5
-      sy = 11
-    } else if (t < 0.5) {
-      const p = (t - 0.3) / 0.2
-      tx = -1
-      sy = 11 - p * 6
-    } else if (t < 0.72) {
-      const p = (t - 0.5) / 0.22
-      tx = -1 + p * 7
-      sy = 5 + p * 6
-    } else if (t < 0.95) {
+      tx = -6 + p * 12
+      sy = 9
+    } else if (t < 0.45) {
+      const p = (t - 0.3) / 0.15
       tx = 6
-      sy = 11
+      sy = 9 - p * 6
+    } else if (t < 0.7) {
+      const p = (t - 0.45) / 0.25
+      tx = 6 - p * 12
+      sy = 3
+    } else if (t < 0.85) {
+      const p = (t - 0.7) / 0.15
+      tx = -6
+      sy = 3 + p * 6
     } else {
-      const p = (t - 0.95) / 0.05
-      tx = 6 - p * 2
-      sy = 11
+      const p = (t - 0.85) / 0.15
+      tx = -6 + p * 12
+      sy = 9
     }
 
     trolley.position.x = tx
-    spreader.position.y = sy - 15.2
-    container.position.set(0, sy - 0.9 - 15.2, 0)
+    spreader.position.y = sy - 10.7
+    container.position.y = sy - 1.3 - 10.7
 
-    const topY = 14.7
-    const botY = sy + 0.25
+    const topY = 10.15
+    const botY = sy + 0.5
     const len = Math.max(topY - botY, 0.3)
     cableRefs.current.forEach((c) => {
       if (!c) return
-      c.position.y = (topY + botY) / 2 - 15.2
+      c.position.y = (topY + botY) / 2 - 10.7
       c.scale.set(1, len, 1)
     })
   })
 
   return (
     <group position={[0, 0, 0]}>
-      {/* V6 — 4 white legs (1,16,1) at (±11,9,±8.5) */}
-      {[-11, 11].map((x) =>
-        [-7, 7].map((z) => (
-          <mesh key={`${x}-${z}`} position={[x, 8, z]}>
-            <boxGeometry args={[1, 16, 1]} />
+      {/* S5 — 4 white legs (1,12,1) at (±10,6,±8) */}
+      {[-10, 10].map((x) =>
+        [-8, 8].map((z) => (
+          <mesh key={`${x}-${z}`} position={[x, 6, z]}>
+            <boxGeometry args={[1, 12, 1]} />
             <meshStandardMaterial color="#f2f2f2" roughness={0.5} metalness={0.2} />
           </mesh>
         )),
       )}
-      {/* V6 — main beam (24,1.4,1.8) y 16 */}
-      <mesh position={[0, 16, 0]}>
+      {/* S5 — main beam (24,1.4,1.8) y 11.5 */}
+      <mesh position={[0, 11.5, 0]}>
         <boxGeometry args={[24, 1.4, 1.8]} />
         <meshStandardMaterial color="#3a3f45" roughness={0.4} metalness={0.4} />
       </mesh>
-      {/* V6 — trolley (2.5,1,2.5) #222 y 15.2 */}
-      <group ref={trolleyRef} position={[-6, 15.2, 0]}>
+      {/* S5 — trolley (2.5,1,2.5) #222 y 10.7 */}
+      <group ref={trolleyRef} position={[-6, 10.7, 0]}>
         <mesh>
           <boxGeometry args={[2.5, 1, 2.5]} />
           <meshStandardMaterial color="#222222" roughness={0.4} />
         </mesh>
-        {/* V6 — cables trolley → spreader, r .06 */}
-        {[0.7, -0.7].map((off, i) => (
+        {/* S5 — cables trolley → spreader, r .06 */}
+        {[1, -1].map((off, i) => (
           <mesh
             key={i}
             position={[0, 0, off]}
@@ -180,15 +181,15 @@ function GantryCrane() {
             <meshStandardMaterial color="#2a2a2a" metalness={0.8} />
           </mesh>
         ))}
-        {/* V6 — spreader + hung red container, world y 5..11 */}
-        <group ref={spreaderRef} position={[0, 11 - 15.2, 0]}>
+        {/* S5 — spreader + hung LONG container same size (2.4,2.6,6), orange, y 3..9 */}
+        <group ref={spreaderRef} position={[0, 9 - 10.7, 0]}>
           <mesh>
-            <boxGeometry args={[2.6, 0.5, 2.6]} />
-            <meshStandardMaterial color="#2b4bff" roughness={0.5} />
+            <boxGeometry args={[2.5, 0.4, 6.2]} />
+            <meshStandardMaterial color="#c46a2b" roughness={0.5} />
           </mesh>
-          <mesh ref={containerRef} position={[0, -0.9, 0]}>
-            <boxGeometry args={[1.05, 1.2, 0.9]} />
-            <meshStandardMaterial color="#d43a2b" roughness={0.7} metalness={0.15} flatShading />
+          <mesh ref={containerRef} position={[0, -1.5, 0]}>
+            <boxGeometry args={[2.4, 2.6, 6]} />
+            <meshStandardMaterial color="#c46a2b" roughness={0.7} metalness={0.15} flatShading />
           </mesh>
         </group>
       </group>
@@ -196,18 +197,18 @@ function GantryCrane() {
   )
 }
 
-/** V6 — fixed framing: camera (0,18,30), lookAt (0,8,0). */
+/** S5 — camera (0,16,30), lookAt (0,6,0), slow push. */
 function CameraPush() {
   useFrame((state) => {
-    state.camera.position.set(0, 18, 30)
-    state.camera.lookAt(0, 8, 0)
+    state.camera.position.set(0, 16, 30)
+    state.camera.lookAt(0, 6, 0)
   })
   return null
 }
 
 export default function TerminalScene() {
   return (
-    <SceneCanvas fallbackLabel="Terminal" tone="orange" camera={{ position: [0, 18, 30], fov: 45 }}>
+    <SceneCanvas fallbackLabel="Terminal" tone="orange" camera={{ position: [0, 16, 30], fov: 45 }}>
       <color attach="background" args={['#B8C4CC']} />
       <fog attach="fog" args={['#B8C4CC', 45, 110]} />
       <ambientLight intensity={1.1} />

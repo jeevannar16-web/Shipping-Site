@@ -198,7 +198,7 @@ function Arcs() {
   )
 }
 
-/** V1 — orange marker dots + tags; hide a tag when it faces away or sits left of 52vw. */
+/** 0.3 — ONE tag per country. Shown only if facing camera AND x ∈ [55vw,96vw]; max 4 nearest. Black bg default, orange only while hovered. */
 function Markers() {
   const groupRef = useRef<THREE.Group>(null)
   const labelRefs = useRef<Array<HTMLDivElement | null>>([])
@@ -211,6 +211,7 @@ function Markers() {
   const screen = useMemo(() => new THREE.Vector3(), [])
   const raycaster = useMemo(() => new THREE.Raycaster(), [])
   const pointerNdc = useMemo(() => new THREE.Vector2(), [])
+  const info = useRef<{ dist: number; on: boolean; hover: boolean }[]>(MARKERS.map(() => ({ dist: 0, on: false, hover: false })))
 
   useFrame((state) => {
     const g = groupRef.current
@@ -218,6 +219,8 @@ function Markers() {
     g.updateMatrixWorld()
     g.getWorldPosition(center)
     const vw = state.size.width
+
+    // hovered marker (raycast) — forced visible
     let hovered = -1
     pointerNdc.set(state.pointer.x, state.pointer.y)
     raycaster.setFromCamera(pointerNdc, state.camera)
@@ -228,17 +231,38 @@ function Markers() {
         if (hit.length > 0) hovered = i
       }
     }
+
+    const now = info.current
     for (let i = 0; i < base.length; i++) {
       worldPos.copy(base[i]).applyMatrix4(g.matrixWorld)
       normal.copy(worldPos).sub(center).normalize()
       camDir.copy(state.camera.position).sub(worldPos).normalize()
-      const el = labelRefs.current[i]
-      if (!el) continue
       screen.copy(worldPos).project(state.camera)
       const screenX = (screen.x * 0.5 + 0.5) * vw
-      const hidden = camDir.dot(normal) < 0.1 || screenX < vw * 0.52
-      el.style.opacity = hidden ? '0' : '1'
-      el.classList.toggle('globe-tag-active', i === hovered)
+      const facing = camDir.dot(normal)
+      const inBand = screenX >= vw * 0.55 && screenX <= vw * 0.96
+      now[i].on = facing > 0.15 && inBand && screen.z < 1
+      now[i].dist = worldPos.distanceTo(state.camera.position)
+      now[i].hover = i === hovered
+    }
+
+    // nearest depth wins — cap at 4 visible (hover always visible)
+    const candidates = now
+      .map((n, i) => ({ i, n }))
+      .filter(({ n }) => n.on)
+      .sort((a, b) => a.n.dist - b.n.dist)
+    for (let k = 0; k < candidates.length; k++) {
+      if (k >= 4) candidates[k].n.on = false
+    }
+
+    for (let i = 0; i < base.length; i++) {
+      const el = labelRefs.current[i]
+      if (!el) continue
+      const visible = now[i].on || now[i].hover
+      el.style.opacity = visible ? '1' : '0'
+      el.style.backgroundColor = now[i].hover ? '#ff4a00' : '#0a0a0a'
+      el.style.color = now[i].hover ? '#ffffff' : '#ffffff'
+      el.classList.toggle('globe-tag-active', now[i].hover)
     }
   })
 
@@ -266,7 +290,7 @@ function Markers() {
               center
               distanceFactor={30}
               zIndexRange={[30, 0]}
-              style={{ pointerEvents: 'auto' }}
+              style={{ pointerEvents: 'none' }}
             >
               <div
                 ref={(el) => {
@@ -274,12 +298,12 @@ function Markers() {
                 }}
                 data-hover
                 className="globe-tag flex items-center gap-1.5 whitespace-nowrap px-2 py-0.5 font-mono text-[10px] leading-none tracking-[0.14em] text-white transition-opacity duration-300"
-                style={{ backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 30 }}
+                style={{ backgroundColor: '#0a0a0a', zIndex: 30 }}
               >
                 <span className="inline-block h-[3px] w-[3px] rounded-full bg-[#ff4a00]" />
                 <span className="flex flex-col">
                   <span>{m.label}</span>
-                  <span className="globe-tag-sub font-mono text-[8px] tracking-[0.18em] text-white/55">{m.sub}</span>
+                  <span className="globe-tag-sub font-mono text-[8px] tracking-[0.18em] text-white/80">{m.sub}</span>
                 </span>
               </div>
             </Html>
