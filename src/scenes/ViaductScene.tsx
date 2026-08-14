@@ -51,9 +51,8 @@ function Pillars({ curve }: { curve: THREE.CatmullRomCurve3 }) {
   return <primitive object={pillars} />
 }
 
-const CAR_COLORS = ['#e8e8e8', '#d9a441', '#a4362b', '#2b4b7a', '#1a1a1a', '#c46a2b']
+const CAR_COLORS = ['#1a1a1a', '#2b2b2b', '#0f0f0f', '#1f1f1f', '#141414', '#1a1a1a']
 
-/** Instanced cars traveling along a viaduct curve. */
 function Traffic({ curve, laneSign = 1, count = 12 }: { curve: THREE.CatmullRomCurve3; laneSign?: 1 | -1; count?: number }) {
   const bodyRef = useRef<THREE.InstancedMesh>(null)
   const cabinRef = useRef<THREE.InstancedMesh>(null)
@@ -68,7 +67,6 @@ function Traffic({ curve, laneSign = 1, count = 12 }: { curve: THREE.CatmullRomC
     [count],
   )
 
-  // assign per-instance colors once mounted
   const colorAttr = useMemo(() => {
     const attr = new THREE.InstancedBufferAttribute(new Float32Array(colors), 3)
     return attr
@@ -120,7 +118,6 @@ function Traffic({ curve, laneSign = 1, count = 12 }: { curve: THREE.CatmullRomC
   )
 }
 
-/** Semi trucks (shared builder) trailing along the curves. */
 function SemiTraffic({ curve, laneSign = -1, cab = '#f2f2f2', container = '#ff4a00', offset = 0.4 }: {
   curve: THREE.CatmullRomCurve3
   laneSign?: 1 | -1
@@ -159,40 +156,34 @@ export default function ViaductScene({ scrub }: { scrub?: ScrubRef }) {
       <directionalLight position={[-30, 40, -20]} intensity={2.2} color="#ffc98a" />
       <directionalLight position={[10, 4, 10]} intensity={0.3} color="#2b4bff" />
 
-      {/* viaduct cove sphere — background dome */}
       <mesh scale={200}>
         <sphereGeometry args={[1, 32, 32]} />
         <meshBasicMaterial color="#101410" side={THREE.BackSide} />
       </mesh>
 
-      {/* water */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
         <planeGeometry args={[90, 90]} />
         <meshStandardMaterial color="#3e5e6e" roughness={0.4} metalness={0.3} />
       </mesh>
 
-      {/* green banks */}
       <InstancedTrees count={300} min={1} max={2.2} area={42} center={[0, 0]} height={0} />
 
-      {/* viaduct 1 */}
       <CurvedRoad curve={curveMain} width={6} color="#6f6f6f" y={10.05} dashSize={[0.3, 3]} barriers />
       <Pillars curve={curveMain} />
       <Traffic curve={curveMain} laneSign={1} count={12} />
-      <SemiTraffic curve={curveMain} laneSign={-1} cab="#f2f2f2" container="#ff4a00" offset={0.2} />
-      <SemiTraffic curve={curveMain} laneSign={-1} cab="#f2f2f2" container="#f0f0f0" offset={0.7} />
+      <SemiTraffic curve={curveMain} laneSign={-1} cab="#f2f2f2" container="#D64545" offset={0.2} />
+      <SemiTraffic curve={curveMain} laneSign={-1} cab="#D64545" container="#f0f0f0" offset={0.7} />
 
-      {/* viaduct 2 (mirror) */}
       <CurvedRoad curve={curveMirror} width={6} color="#6f6f6f" y={10.05} dashSize={[0.3, 3]} barriers />
       <Pillars curve={curveMirror} />
       <Traffic curve={curveMirror} laneSign={-1} count={12} />
-      <SemiTraffic curve={curveMirror} laneSign={1} cab="#ff4a00" container="#f0f0f0" offset={0.5} />
+      <SemiTraffic curve={curveMirror} laneSign={1} cab="#f2f2f2" container="#D64545" offset={0.5} />
 
       <CameraDolly scrub={scrub} />
     </SceneCanvas>
   )
 }
 
-/** v19 SHOT 5 — scrub camera (0,26,34) → (0,20,24), lookAt (0,8,0). */
 function CameraDolly({ scrub }: { scrub?: ScrubRef }) {
   const camera = useThree((s) => s.camera)
   useFrame(() => {

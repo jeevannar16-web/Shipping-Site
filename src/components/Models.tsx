@@ -4,9 +4,6 @@ import * as THREE from 'three'
 
 export type WheelRefs = MutableRefObject<Array<THREE.Object3D | null>>
 
-/** Normalize a loaded GLB so its bottom sits at y0 with its horizontal centre at the origin.
- *  Truck spec: largest horizontal (max of x/z) scaled to 13 units; if size.z > size.x the
- *  model is rotated Y by 90° so its length runs along X. */
 function normalizeTruck(g: THREE.Object3D) {
   const b = new THREE.Box3().setFromObject(g)
   const size = b.getSize(new THREE.Vector3())
@@ -23,7 +20,6 @@ function normalizeTruck(g: THREE.Object3D) {
   g.position.z = -b3.min.z - (b3.max.z - b3.min.z) / 2
 }
 
-/** Container spec: per-axis scale the bbox to (4.4, 1.6, 1.8), then centre the origin. */
 function normalizeContainer(g: THREE.Object3D) {
   const b = new THREE.Box3().setFromObject(g)
   const size = b.getSize(new THREE.Vector3())
@@ -36,8 +32,6 @@ function normalizeContainer(g: THREE.Object3D) {
   g.position.z = -c.z
 }
 
-/** Re-parent every /wheel/i node into an identity pivot at its own centroid so the scene can
- *  spin `pivot.rotation.z` (the axle runs along the truck width) without orbiting the wheel. */
 function spinify(g: THREE.Object3D, out: Array<THREE.Object3D | null>) {
   g.updateMatrixWorld(true)
   const found: THREE.Object3D[] = []
@@ -73,23 +67,76 @@ function spinify(g: THREE.Object3D, out: Array<THREE.Object3D | null>) {
   out.push(...found)
 }
 
-export const TruckGLB = forwardRef<THREE.Group, { wheels?: WheelRefs }>(function TruckGLB({ wheels }, ref) {
-  const { scene } = useGLTF('/models/truck.glb')
-  const glb = useMemo(() => scene.clone(true), [scene])
-  useLayoutEffect(() => {
-    normalizeTruck(glb)
-    if (wheels) spinify(glb, wheels.current)
-  }, [glb, wheels])
-  return <group ref={ref}><primitive object={glb} /></group>
-})
+function setShadow(o: THREE.Object3D) {
+  o.traverse((c) => {
+    if (c instanceof THREE.Mesh) c.castShadow = true
+  })
+}
 
-export const ContainerGLB = forwardRef<THREE.Object3D, { position?: [number, number, number] }>(
-  function ContainerGLB({ position }, ref) {
+function skinTruckGLB(g: THREE.Object3D, cabColor = '#3A3D42', boxColor = '#E8E8E8') {
+  const std = { roughness: 0.7, metalness: 0.1 }
+  const cabStd = { roughness: 0.35, metalness: 0.5 }
+  const chassisStd = { roughness: 0.9, metalness: 0.05 }
+  const wheelStd = { roughness: 0.6, metalness: 0.4 }
+  const glassStd = { roughness: 0.1, metalness: 0.9 }
+  g.traverse((o) => {
+    if (!(o instanceof THREE.Mesh)) return
+    if (/wheel/i.test(o.name)) {
+      o.material = new THREE.MeshStandardMaterial({ ...wheelStd, color: '#8A8A8A' })
+      return
+    }
+    if (/glass|window|windshield/i.test(o.name)) {
+      o.material = new THREE.MeshStandardMaterial({ ...glassStd, color: '#101418' })
+      return
+    }
+    const b = new THREE.Box3().setFromObject(o)
+    const size = b.getSize(new THREE.Vector3())
+    const center = b.getCenter(new THREE.Vector3())
+    const isThin = size.y < 0.6 || (size.x < 1.5 && center.y < 1.2)
+    const isAtBottom = center.y < 1.3
+    const isAtFront = center.x > 4
+    const isLargeBox = size.x > 3 && size.y > 1.2
+    if (isThin && isAtBottom) {
+      o.material = new THREE.MeshStandardMaterial({ ...chassisStd, color: '#1a1a1a' })
+    } else if (isAtFront && !isLargeBox) {
+      o.material = new THREE.MeshStandardMaterial({ ...cabStd, color: cabColor })
+    } else if (isLargeBox) {
+      o.material = new THREE.MeshStandardMaterial({ ...std, color: boxColor })
+    } else {
+      o.material = new THREE.MeshStandardMaterial({ ...std, color: '#333333' })
+    }
+  })
+}
+
+export const TruckGLB = forwardRef<THREE.Group, { wheels?: WheelRefs; tint?: string; isPassing?: boolean }>(
+  function TruckGLB({ wheels, tint, isPassing }, ref) {
+    const { scene } = useGLTF('/models/truck.glb')
+    const glb = useMemo(() => scene.clone(true), [scene])
+    useLayoutEffect(() => {
+      normalizeTruck(glb)
+      skinTruckGLB(glb, tint || '#3A3D42', '#E8E8E8')
+      setShadow(glb)
+      if (wheels) spinify(glb, wheels.current)
+    }, [glb, wheels, tint])
+    return <group ref={ref} scale={isPassing ? 0.9 : 1}><primitive object={glb} /></group>
+  },
+)
+
+export const ContainerGLB = forwardRef<THREE.Object3D, { position?: [number, number, number]; tint?: string }>(
+  function ContainerGLB({ position, tint }, ref) {
     const { scene } = useGLTF('/models/container.glb')
     const glb = useMemo(() => scene.clone(true), [scene])
     useLayoutEffect(() => {
       normalizeContainer(glb)
-    }, [glb])
+      setShadow(glb)
+      if (tint) {
+        glb.traverse((o) => {
+          if (o instanceof THREE.Mesh) {
+            o.material = new THREE.MeshStandardMaterial({ color: tint, roughness: 0.7, metalness: 0.15 })
+          }
+        })
+      }
+    }, [glb, tint])
     return <group ref={ref} position={position}><primitive object={glb} /></group>
   },
 )

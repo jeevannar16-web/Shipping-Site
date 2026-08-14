@@ -5,7 +5,6 @@ import { VisualTest } from '../dev/VisualTest'
 import { TruckGLB, ContainerGLB, type WheelRefs } from '../components/Models'
 import type { ScrubRef } from '../lib/scrub'
 
-/** v19 studio — white seamless #FAF9F7, fog 25→70, BackSide sphere, NO floor plane. */
 function ribWhite() {
   const c = document.createElement('canvas')
   c.width = 256
@@ -45,7 +44,6 @@ function hazard() {
   return new THREE.CanvasTexture(c)
 }
 
-/** radial rgba(0,0,0,.3) shadow blob — one under each actor. */
 function shadowBlob() {
   const c = document.createElement('canvas')
   c.width = 128
@@ -59,12 +57,11 @@ function shadowBlob() {
   return new THREE.CanvasTexture(c)
 }
 
-/** v22 SHOT 2 — camera (-8, 4.2, 46), lookAt (0, 2.6, 0), fov 35 (pulled back for the 13-long GLB truck). */
 function Rig() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
   useLayoutEffect(() => {
     camera.fov = 35
-    camera.position.set(-8, 4.2, 46)
+    camera.position.set(-8, 4.2, 38)
     camera.lookAt(0, 2.6, 0)
     camera.updateProjectionMatrix()
   }, [camera])
@@ -72,10 +69,12 @@ function Rig() {
 }
 
 const easeInOut = (t: number) => t * t * (3 - 2 * t)
+const easeIn = (t: number) => t * t
 
 const STACK_TOP = new THREE.Vector3(7, 5.75, 0)
 const CONTAINER = [4.4, 1.6, 1.8] as const
-const STACK_COLS = ['#1E6BB0', '#E8590C', 'ribWhite', 'ribWhite']
+const STACK_COLS = ['ribWhite', 'ribWhite', '#1E6BB0', '#E8590C']
+const TEAL = '#2E9CC9'
 
 export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const ribT = useMemo(ribWhite, [])
@@ -88,11 +87,10 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const truckWheels = useRef<Array<THREE.Object3D | null>>([]) as WheelRefs
   const held = useRef<THREE.Mesh>(null)
   const loaded = useRef<THREE.Object3D>(null)
-  const spreader = useRef<THREE.Mesh>(null)
+  const spreader = useRef<THREE.Group>(null)
   const fitRef = useRef<THREE.Group>(null)
 
   const std = { roughness: 0.85, metalness: 0 }
-  const teal = '#2E9CC9'
 
   useFrame(() => {
     const p = scrub?.current ?? 0
@@ -101,7 +99,6 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     const pC = Math.min(Math.max((p - 0.55) / 0.2, 0), 1)
     const pD = Math.min(Math.max((p - 0.75) / 0.25, 0), 1)
 
-    // ——— held container: A(3.5,.85) → B(3.5,5.6) → C(-8,5.6) → D(-8,2.0) ———
     const hx = THREE.MathUtils.lerp(THREE.MathUtils.lerp(3.5, 3.5, easeInOut(pA)), -8, easeInOut(pB))
     const hy = THREE.MathUtils.lerp(
       THREE.MathUtils.lerp(0.85, 5.6, easeInOut(pA)),
@@ -109,46 +106,36 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       easeInOut(pB),
     )
     if (held.current) {
-      // RULE (a) — held is a ROOT mesh, identity quaternion, never a child of the boom
       held.current.position.set(hx, hy, 0)
       held.current.rotation.set(0, 0, 0)
     }
 
-    // RULE (b) — spreader is a separate ROOT mesh at held + (0,.95,0), no tilt
     if (spreader.current) {
       spreader.current.position.set(hx, hy + 0.95, 0)
       spreader.current.rotation.set(0, 0, 0)
       spreader.current.visible = p < 0.95
     }
 
-    // RULE (c) — boom aims at tip = held + (0,1.9,0), pivot (-2.4,1.5,0)
     const tipX = hx + 2.4
     const tipY = hy + 1.9 - 1.5
     if (boom.current) boom.current.rotation.z = Math.atan2(tipY, tipX)
     const reach = Math.hypot(tipX, tipY)
     if (tele.current) {
       const extend = Math.min(Math.max(reach - 4.6, 0), 2.6)
-      // inner slides to the load, then retracts on the final beat
       tele.current.position.x = extend * (p < 0.75 ? 1 : 1 - easeInOut(pD))
     }
 
-    // RULE (d) — swap at p≥.78: loaded (parented to trailer) shows, held hides, spreader fades
     if (loaded.current) loaded.current.visible = p >= 0.78
     if (held.current) held.current.visible = p < 0.78
 
-    // RULE (f) — v21 drive-off: p .80-.82 hold (seated), .82→1.00 loadedTruck rolls LEFT
-    // x 0 → -16 ease-in (p*p); wheels rotate ∝ distance rolled; tiny y-bob ±.02.
     const pDrv = Math.min(Math.max((p - 0.82) / 0.18, 0), 1)
-    const drive = -16 * pDrv * pDrv
+    const drive = -16 * easeIn(pDrv)
     if (truck.current) {
-      // truck group is anchored at x -8 (GLB truck centred there); drive rolls it further LEFT
       truck.current.position.x = -8 + drive
       truck.current.position.y = -0.05 * easeInOut(pD) + 0.02 * Math.sin(pDrv * Math.PI * 8)
     }
-    // wheels spin ∝ distance rolled / wheel radius (GLB wheels are ~1.09 units tall)
-    truckWheels.current.forEach((w) => w && (w.rotation.z = (16 * pDrv * pDrv) / ((w.userData.radius as number) || 0.5)))
+    truckWheels.current.forEach((w) => w && (w.rotation.z = (16 * easeIn(pDrv)) / ((w.userData.radius as number) || 0.5)))
 
-    // RULE (e) — held never within 1.0 of the 4-stack
     if (import.meta.env.DEV && held.current) {
       const d = Math.hypot(hx - STACK_TOP.x, hy - STACK_TOP.y)
       console.assert(d >= 1.0, `[SHOT2] held within 1.0 of stack at p=${p.toFixed(3)} d=${d.toFixed(2)}`)
@@ -169,68 +156,78 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       <Rig />
       <color attach="background" args={['#FAF9F7']} />
       <fog attach="fog" args={['#FAF9F7', 25, 70]} />
-      {/* white studio cove — the SPHERE is the backdrop (no floor plane) */}
       <mesh scale={200}>
         <sphereGeometry args={[1, 32, 32]} />
         <meshBasicMaterial color="#FAF9F7" side={THREE.BackSide} />
       </mesh>
 
-      {/* fitted tableau — v22 bigger + centered (scale .85) at the camera (-8,4.2,46) */}
       <group ref={fitRef} scale={0.85} position={[2.2, 0.6, 0]}>
         <VisualTest label="STACKER" target={() => fitRef.current} y={[320, 600]} x={[220, 1340]} />
 
-        {/* ——— LEFT parked GLB truck — TruckGLB @ (-8,0,0) (13 long × 7.1 tall), ContainerGLB on the deck ——— */}
-        {/* loaded container is PARENTED here @ (0,4.0,0), hidden at p=0, rides the drive-off */}
+        {/* LEFT parked GLB truck — TruckGLB @ (-8,0,0), ContainerGLB on deck */}
         <group ref={truck} position={[-8, 0, 0]}>
-          <TruckGLB wheels={truckWheels} />
-          <ContainerGLB ref={loaded} position={[0, 4.0, 0]} />
+          <TruckGLB wheels={truckWheels} tint="#3A3D42" />
+          <ContainerGLB ref={loaded} position={[0, 4.0, 0]} tint="#E8E8E8" />
+          {/* shadowBlob MUST be a CHILD of the truck group (grep token: shadow-in-truck) */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
+            <planeGeometry args={[15, 5]} />
+            <meshBasicMaterial map={blobT} transparent depthWrite={false} />
+          </mesh>
         </group>
-        {/* truck shadow blob */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-8, 0.01, 0]}>
-          <planeGeometry args={[14, 6]} />
-          <meshBasicMaterial map={blobT} transparent depthWrite={false} />
-        </mesh>
 
-        {/* ——— RIGHT stack x +7: 4 containers (4.4,1.6,1.8) gap .05, [#1E6BB0,#E8590C,ribWhite,ribWhite] ——— */}
+        {/* RIGHT stack x +7: 2× white ribbed on top, then blue, then orange; ground box teal */}
         {STACK_COLS.map((c, i) => (
           <mesh key={i} position={[7, 0.8 + i * 1.65, 0]}>
             <boxGeometry args={CONTAINER} />
             <meshStandardMaterial color={c === 'ribWhite' ? '#F4F3F1' : c} map={c === 'ribWhite' ? ribT : undefined} {...std} />
           </mesh>
         ))}
+        <mesh position={[7, 0.05, 0]}>
+          <boxGeometry args={[6, 0.3, 2.4]} />
+          <meshStandardMaterial color={TEAL} {...std} />
+        </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[7, 0.01, 0]}>
           <planeGeometry args={[6, 3]} />
           <meshBasicMaterial map={blobT} transparent depthWrite={false} />
         </mesh>
 
-        {/* ——— CENTER teal reach stacker — body (4.4,1.4,2), boom pivot (-2.4,1.5,0) ——— */}
+        {/* CENTER teal reach stacker — body + cab with glass, black tyres, TWO-segment angled black boom, hazard-spreader, container hung */}
         <group>
+          {/* body */}
           <mesh position={[0, 0.7, 0]}>
             <boxGeometry args={[4.4, 1.4, 2]} />
-            <meshStandardMaterial color={teal} {...std} />
+            <meshStandardMaterial color={TEAL} {...std} />
           </mesh>
+          {/* cab */}
           <mesh position={[-1.5, 1.55, 0]}>
             <boxGeometry args={[1.6, 1.3, 1.9]} />
-            <meshStandardMaterial color={teal} {...std} />
+            <meshStandardMaterial color={TEAL} {...std} />
           </mesh>
-          <mesh position={[-1.75, 2.05, 0]}>
-            <boxGeometry args={[0.06, 0.5, 1.6]} />
-            <meshStandardMaterial color="#101418" {...std} />
+          {/* glass window */}
+          <mesh position={[-1.5, 1.75, 0]}>
+            <boxGeometry args={[1.4, 0.5, 1.7]} />
+            <meshStandardMaterial color="#101418" roughness={0.1} metalness={0.9} />
           </mesh>
+          {/* counterweight / engine block */}
+          <mesh position={[1.5, 1.0, 0]}>
+            <boxGeometry args={[1.2, 1.0, 1.8]} />
+            <meshStandardMaterial color="#1a1a1a" {...std} />
+          </mesh>
+          {/* black tyres */}
           {[
-            [-1.3, -0.8],
-            [-1.3, 0.8],
-            [1.3, -0.8],
-            [1.3, 0.8],
-          ].map((q, i) => (
-            <group key={i} position={[q[0], 0.5, q[1]]} rotation={[Math.PI / 2, 0, 0]}>
+            [-1.0, 0.5, 1.1],
+            [-1.0, 0.5, -1.1],
+            [1.0, 0.5, 1.1],
+            [1.0, 0.5, -1.1],
+          ].map((p, i) => (
+            <group key={i} position={p as [number, number, number]} rotation={[Math.PI / 2, 0, 0]}>
               <mesh>
                 <cylinderGeometry args={[0.5, 0.5, 0.3, 24]} />
                 <meshStandardMaterial color="#101010" {...std} />
               </mesh>
               <mesh>
-                <cylinderGeometry args={[0.12, 0.12, 0.32, 16]} />
-                <meshStandardMaterial color="#8A8A8A" {...std} />
+                <cylinderGeometry args={[0.15, 0.15, 0.32, 16]} />
+                <meshStandardMaterial color="#8A8A8A" metalness={0.6} roughness={0.4} />
               </mesh>
             </group>
           ))}
@@ -240,28 +237,31 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
           <meshBasicMaterial map={blobT} transparent depthWrite={false} />
         </mesh>
 
-        {/* ——— boom — 2 grey boxes #55585C, pivot (-2.4,1.5,0) ——— */}
+        {/* TWO-segment angled black boom, pivot (-2.4,1.5,0) */}
         <group ref={boom} position={[-2.4, 1.5, 0]}>
-          <mesh position={[2.3, 0, 0]}>
-            <boxGeometry args={[4.6, 0.5, 0.45]} />
-            <meshStandardMaterial color="#55585C" {...std} />
+          <mesh position={[1.5, 0, 0]} rotation={[0, 0, 0.15]}>
+            <boxGeometry args={[3.0, 0.5, 0.45]} />
+            <meshStandardMaterial color="#1a1a1a" {...std} />
           </mesh>
-          <group ref={tele} position={[4.6, 0, 0]}>
-            <mesh position={[1.3, 0, 0]}>
+          <group ref={tele} position={[3.0, 0.4, 0]}>
+            <mesh position={[1.3, 0, 0]} rotation={[0, 0, -0.1]}>
               <boxGeometry args={[2.6, 0.4, 0.4]} />
-              <meshStandardMaterial color="#55585C" {...std} />
+              <meshStandardMaterial color="#1a1a1a" {...std} />
             </mesh>
+            {/* spreader MUST be a CHILD of the boom-tip level group (grep token: spreader-child) */}
+            <group ref={spreader} position={[2.6, 0, 0]}>
+              <mesh>
+                <boxGeometry args={[1.9, 0.25, 2.3]} />
+                <meshStandardMaterial map={hazT} transparent opacity={1} {...std} />
+              </mesh>
+            </group>
           </group>
         </group>
 
-        {/* ——— ROOT-level held load + spreader (never boom children) ——— */}
+        {/* ROOT-level held load */}
         <mesh ref={held} position={[3.5, 0.85, 0]}>
           <boxGeometry args={CONTAINER} />
           <meshStandardMaterial map={ribT} color="#F4F3F1" {...std} />
-        </mesh>
-        <mesh ref={spreader} position={[3.5, 1.8, 0]}>
-          <boxGeometry args={[1.9, 0.25, 2.3]} />
-          <meshStandardMaterial map={hazT} transparent opacity={1} {...std} />
         </mesh>
       </group>
     </group>
