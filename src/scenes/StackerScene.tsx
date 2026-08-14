@@ -2,6 +2,7 @@ import { useMemo, useRef, useLayoutEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { VisualTest } from '../dev/VisualTest'
+import { TruckGLB, ContainerGLB, type WheelRefs } from '../components/Models'
 import type { ScrubRef } from '../lib/scrub'
 
 /** v19 studio — white seamless #FAF9F7, fog 25→70, BackSide sphere, NO floor plane. */
@@ -58,12 +59,12 @@ function shadowBlob() {
   return new THREE.CanvasTexture(c)
 }
 
-/** v21 SHOT 2 — camera (-8, 4.2, 21.5), lookAt (0, 2.6, 0), fov 35 (distance adjusted for the .85 tableau). */
+/** v22 SHOT 2 — camera (-8, 4.2, 46), lookAt (0, 2.6, 0), fov 35 (pulled back for the 13-long GLB truck). */
 function Rig() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
   useLayoutEffect(() => {
     camera.fov = 35
-    camera.position.set(-8, 4.2, 21.5)
+    camera.position.set(-8, 4.2, 46)
     camera.lookAt(0, 2.6, 0)
     camera.updateProjectionMatrix()
   }, [camera])
@@ -84,9 +85,9 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const boom = useRef<THREE.Group>(null)
   const tele = useRef<THREE.Group>(null)
   const truck = useRef<THREE.Group>(null)
-  const truckWheels = useRef<Array<THREE.Group | null>>([])
+  const truckWheels = useRef<Array<THREE.Object3D | null>>([]) as WheelRefs
   const held = useRef<THREE.Mesh>(null)
-  const loaded = useRef<THREE.Mesh>(null)
+  const loaded = useRef<THREE.Object3D>(null)
   const spreader = useRef<THREE.Mesh>(null)
   const fitRef = useRef<THREE.Group>(null)
 
@@ -140,11 +141,12 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     const pDrv = Math.min(Math.max((p - 0.82) / 0.18, 0), 1)
     const drive = -16 * pDrv * pDrv
     if (truck.current) {
-      truck.current.position.x = drive
+      // truck group is anchored at x -8 (GLB truck centred there); drive rolls it further LEFT
+      truck.current.position.x = -8 + drive
       truck.current.position.y = -0.05 * easeInOut(pD) + 0.02 * Math.sin(pDrv * Math.PI * 8)
     }
-    const spin = (16 * pDrv * pDrv) / 0.5
-    truckWheels.current.forEach((w) => w && (w.rotation.y = spin))
+    // wheels spin ∝ distance rolled / wheel radius (GLB wheels are ~1.09 units tall)
+    truckWheels.current.forEach((w) => w && (w.rotation.z = (16 * pDrv * pDrv) / ((w.userData.radius as number) || 0.5)))
 
     // RULE (e) — held never within 1.0 of the 4-stack
     if (import.meta.env.DEV && held.current) {
@@ -173,58 +175,19 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
         <meshBasicMaterial color="#FAF9F7" side={THREE.BackSide} />
       </mesh>
 
-      {/* fitted tableau — v21 bigger + centered (scale .85) at the camera (-8,4.2,21.5) */}
+      {/* fitted tableau — v22 bigger + centered (scale .85) at the camera (-8,4.2,46) */}
       <group ref={fitRef} scale={0.85} position={[2.2, 0.6, 0]}>
-        <VisualTest label="STACKER" target={() => fitRef.current} y={[120, 560]} x={[180, 1100]} />
+        <VisualTest label="STACKER" target={() => fitRef.current} y={[320, 600]} x={[220, 1340]} />
 
-        {/* ——— LEFT parked truck — bed @ (-8,1.05,0), cab @ (-11.4,1.5,0) ——— */}
-        {/* loaded container (identical ribbed) is PARENTED here @ (-8,2.0,0), hidden at p=0 */}
-        <group ref={truck}>
-          <mesh position={[-8, 1.05, 0]}>
-            <boxGeometry args={[6.2, 0.3, 2.5]} />
-            <meshStandardMaterial color="#101010" {...std} />
-          </mesh>
-          {/* 5 dual wheels r.5 hub .12 — spinning group per wheel (axle spins ∝ roll) */}
-          {[-10.2, -9.1, -8, -6.9, -5.8].map((x, i) =>
-            [-0.9, 0.9].map((z, j) => (
-              <group key={`${i}-${j}`} position={[x, 0.5, z]} rotation={[Math.PI / 2, 0, 0]}>
-                <group ref={(el) => (truckWheels.current[i * 2 + j] = el)}>
-                  <mesh>
-                    <cylinderGeometry args={[0.5, 0.5, 0.3, 24]} />
-                    <meshStandardMaterial color="#101010" {...std} />
-                  </mesh>
-                  <mesh>
-                    <cylinderGeometry args={[0.12, 0.12, 0.32, 16]} />
-                    <meshStandardMaterial color="#8A8A8A" {...std} />
-                  </mesh>
-                </group>
-              </group>
-            )),
-          )}
-          <mesh position={[-11.4, 1.5, 0]}>
-            <boxGeometry args={[1.6, 1.5, 2.2]} />
-            <meshStandardMaterial color="#DFDFDF" {...std} />
-          </mesh>
-          <mesh position={[-11.75, 1.95, 0]} rotation={[0, 0, -0.18]}>
-            <boxGeometry args={[0.08, 0.55, 1.9]} />
-            <meshStandardMaterial color="#101418" {...std} />
-          </mesh>
-          <mesh position={[-11.4, 1.9, -1.11]}>
-            <planeGeometry args={[1.0, 0.4]} />
-            <meshStandardMaterial color="#101418" {...std} />
-          </mesh>
-          <mesh position={[-11.4, 1.9, 1.11]}>
-            <planeGeometry args={[1.0, 0.4]} />
-            <meshStandardMaterial color="#101418" {...std} />
-          </mesh>
-          <mesh ref={loaded} position={[-8, 2.0, 0]} visible={false}>
-            <boxGeometry args={CONTAINER} />
-            <meshStandardMaterial map={ribT} color="#F4F3F1" {...std} />
-          </mesh>
+        {/* ——— LEFT parked GLB truck — TruckGLB @ (-8,0,0) (13 long × 7.1 tall), ContainerGLB on the deck ——— */}
+        {/* loaded container is PARENTED here @ (0,4.0,0), hidden at p=0, rides the drive-off */}
+        <group ref={truck} position={[-8, 0, 0]}>
+          <TruckGLB wheels={truckWheels} />
+          <ContainerGLB ref={loaded} position={[0, 4.0, 0]} />
         </group>
         {/* truck shadow blob */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-8, 0.01, 0]}>
-          <planeGeometry args={[9, 3.2]} />
+          <planeGeometry args={[14, 6]} />
           <meshBasicMaterial map={blobT} transparent depthWrite={false} />
         </mesh>
 

@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# loose model downloads (tracked copies live in public/models/)
+/*.glb

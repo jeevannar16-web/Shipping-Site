@@ -1,7 +1,8 @@
-import { useMemo, useRef, useLayoutEffect, type RefObject } from 'react'
+import { useMemo, useRef, useLayoutEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { VisualTest } from '../dev/VisualTest'
+import { TruckGLB, ContainerGLB, type WheelRefs } from '../components/Models'
 import type { ScrubRef } from '../lib/scrub'
 
 /** v19 studio — white seamless #FAF9F7, fog 25→70, BackSide sphere, NO floor plane. */
@@ -57,10 +58,10 @@ function Rig() {
   return null
 }
 
-type TruckModelProps = { cabColor: string; ribT: THREE.Texture; wheels?: RefObject<THREE.Group | null> }
+type TruckModelProps = { cabColor: string; ribT: THREE.Texture }
 
 /** v19 SHOT 3 — TruckModel(cabColor): cab + windows, chassis, 5 dual wheels, tanks, exhaust, ribbed trailer. */
-function TruckModel({ cabColor, ribT, wheels }: TruckModelProps) {
+function TruckModel({ cabColor, ribT }: TruckModelProps) {
   const std = { roughness: 0.9, metalness: 0 }
   return (
     <group>
@@ -96,22 +97,20 @@ function TruckModel({ cabColor, ribT, wheels }: TruckModelProps) {
         <meshStandardMaterial color="#111" {...std} />
       </mesh>
       {/* 5 dual wheels r.6 hub .15 — 24+ seg, opaque */}
-      <group ref={wheels}>
-        {[-5.0, -3.8, -2.6, 3.2, 4.4].map((x, i) =>
-          [-0.8, 0.8].map((z, j) => (
-            <group key={`${i}-${j}`} position={[x, 0.6, z]} rotation={[0, 0, Math.PI / 2]}>
-              <mesh>
-                <cylinderGeometry args={[0.6, 0.6, 0.3, 32]} />
-                <meshStandardMaterial color="#101010" {...std} />
-              </mesh>
-              <mesh>
-                <cylinderGeometry args={[0.15, 0.15, 0.32, 16]} />
-                <meshStandardMaterial color="#8A8A8A" {...std} />
-              </mesh>
-            </group>
-          )),
-        )}
-      </group>
+      {[-5.0, -3.8, -2.6, 3.2, 4.4].map((x, i) =>
+        [-0.8, 0.8].map((z, j) => (
+          <group key={`${i}-${j}`} position={[x, 0.6, z]} rotation={[0, 0, Math.PI / 2]}>
+            <mesh>
+              <cylinderGeometry args={[0.6, 0.6, 0.3, 32]} />
+              <meshStandardMaterial color="#101010" {...std} />
+            </mesh>
+            <mesh>
+              <cylinderGeometry args={[0.15, 0.15, 0.32, 16]} />
+              <meshStandardMaterial color="#8A8A8A" {...std} />
+            </mesh>
+          </group>
+        )),
+      )}
       {/* fuel tanks — 2 cyl r.3 len1.2 #9A9A9A at (2.2,1.0,±.95), attached */}
       {[-0.95, 0.95].map((z, i) => (
         <mesh key={i} name="TANK" position={[2.2, 1.0, z]} rotation={[0, 0, Math.PI / 2]}>
@@ -132,7 +131,7 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
   const ribT = useMemo(rib, [])
   const blobT = useMemo(shadowBlob, [])
   const wordT = useMemo(bgWords, [])
-  const wheels = useRef<THREE.Group>(null)
+  const mainWheels = useRef<Array<THREE.Object3D | null>>([]) as WheelRefs
   const grp = useRef<THREE.Group>(null)
   const truckDrive = useRef<THREE.Group>(null)
   const truckPass = useRef<THREE.Group>(null)
@@ -141,8 +140,8 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
 
   useFrame(() => {
     const p = scrub?.current ?? 0
-    // wheels spin with the scrub
-    wheels.current?.children.forEach((w) => w && (w.rotation.x = p * -18))
+    // GLB truck wheels spin with the scrub
+    mainWheels.current.forEach((w) => w && (w.rotation.z = p * -18))
     // dashes + bg move as the trucks roll
     if (dashGroup.current) dashGroup.current.position.x = -p * 36
     if (bgText.current) bgText.current.position.x = (p - 0.5) * 10
@@ -204,11 +203,12 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
         <meshBasicMaterial map={blobT} transparent depthWrite={false} />
       </mesh>
 
-      {/* MAIN — #F1F0EE carrying the ribbed container; drives in, idles, exits on the outer wrapper */}
+      {/* MAIN — GLB truck (13 long) carrying the GLB container on its deck; drives in, idles, exits on the outer wrapper */}
       <group ref={grp} position={[0, 0.05, 0]}>
-        <VisualTest label="TRUCK" target={() => grp.current} y={[285, 505]} x={[270, 1030]} />
+        <VisualTest label="TRUCK" target={() => grp.current} y={[175, 590]} x={[380, 1140]} />
         <group ref={truckDrive}>
-          <TruckModel ribT={ribT} wheels={wheels} cabColor="#F1F0EE" />
+          <TruckGLB wheels={mainWheels} />
+          <ContainerGLB position={[0, 4.0, 0]} />
         </group>
       </group>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
