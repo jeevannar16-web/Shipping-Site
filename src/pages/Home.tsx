@@ -256,6 +256,7 @@ function TruckSection({ scrub }: { scrub: ScrubRef }) {
 
 export default function Home() {
   usePageReveals()
+  const stackerScrub = useRef(0)
   const truckScrub = useRef(0)
   const oceanScrub = useRef(0)
 
@@ -265,10 +266,10 @@ export default function Home() {
       <SceneRail />
       <HeroSection />
 
-      <StickyScene index="2" mode="TERMINAL" bg="bg-[#E6E1D8]" text="text-[#0a0a0a]" line="One team, every mode.">
+      <StickyScene index="2" mode="TERMINAL" bg="bg-[#E6E1D8]" text="text-[#0a0a0a]" line="One team, every mode." scrub={stackerScrub}>
         <SuspenseBox label="Freight">
           <SceneStage label="Freight" tone="orange">
-            <StackerScene />
+            <StackerScene scrub={stackerScrub} />
           </SceneStage>
         </SuspenseBox>
       </StickyScene>
