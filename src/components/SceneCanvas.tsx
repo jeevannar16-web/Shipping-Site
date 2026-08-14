@@ -35,11 +35,13 @@ export default function SceneCanvas({
   fallbackLabel,
   tone = 'orange',
   camera = { position: [0, 0, 9], fov: 42 },
+  always = false,
 }: {
   children: ReactNode
   fallbackLabel: string
   tone?: 'orange' | 'blue' | 'violet'
   camera?: { position: [number, number, number]; fov: number }
+  always?: boolean
 }) {
   const [failed, setFailed] = useState(false)
   const isMobile = useMedia('(max-width: 767px)')
@@ -71,7 +73,7 @@ export default function SceneCanvas({
         <ErrorBoundary fallback={<ScenePoster label={fallbackLabel} tone={tone} />}>
           <div ref={wrapRef} className="absolute inset-0 touch-none">
             <Canvas
-              frameloop={inView ? 'always' : 'never'}
+              frameloop={always ? 'always' : inView ? 'always' : 'never'}
               dpr={[1, 1.5]}
               camera={camera}
               gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}

@@ -45,12 +45,13 @@ function bgWords() {
   return t
 }
 
+/** v20 SHOT 3 — camera (0, 2.6, 36), fov 30, lookAt (0, 1.8, 0). */
 function Rig() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
   useLayoutEffect(() => {
     camera.fov = 30
-    camera.position.set(0, 2.3, 24)
-    camera.lookAt(0, 1.7, 0)
+    camera.position.set(0, 2.6, 36)
+    camera.lookAt(0, 1.8, 0)
     camera.updateProjectionMatrix()
   }, [camera])
   return null
@@ -200,7 +201,7 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
 
       {/* MAIN — #F1F0EE carrying the ribbed container */}
       <group ref={grp} position={[0, 0.05, 0]}>
-        <VisualTest label="TRUCK" target={() => grp.current} y={[244, 546]} x={[237, 1100]} />
+        <VisualTest label="TRUCK" target={() => grp.current} y={[285, 505]} x={[270, 1030]} />
         <group ref={truckMain}>
           <TruckModel ribT={ribT} wheels={wheels} cabColor="#F1F0EE" />
         </group>

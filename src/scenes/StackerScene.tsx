@@ -58,13 +58,13 @@ function shadowBlob() {
   return new THREE.CanvasTexture(c)
 }
 
-/** v19 SHOT 2 — camera (-9,4.6,18), lookAt (0,2.4,0), fov 35. */
+/** v20 SHOT 2 — camera (-8, 4.0, 16.5), lookAt (0, 3.0, 0), fov 35. */
 function Rig() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
   useLayoutEffect(() => {
     camera.fov = 35
-    camera.position.set(-9, 4.6, 18)
-    camera.lookAt(0, 2.4, 0)
+    camera.position.set(-8, 4.0, 16.5)
+    camera.lookAt(0, 3.0, 0)
     camera.updateProjectionMatrix()
   }, [camera])
   return null
@@ -158,8 +158,8 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
         <meshBasicMaterial color="#FAF9F7" side={THREE.BackSide} />
       </mesh>
 
-      {/* fitted tableau — keeps the spec-local actor numbers, brings the wide cast into frame */}
-      <group ref={fitRef} scale={0.51} position={[0.85, 1, 0]}>
+      {/* fitted tableau — brings the wide cast into frame at the v20 camera (-8,4,16.5) */}
+      <group ref={fitRef} scale={0.732} position={[2.2, 1.24, 0]}>
         <VisualTest label="STACKER" target={() => fitRef.current} y={[120, 560]} x={[180, 1100]} />
 
         {/* ——— LEFT parked truck — bed @ (-8,1.05,0), cab @ (-11.4,1.5,0) ——— */}

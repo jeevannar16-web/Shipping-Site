@@ -274,14 +274,11 @@ function ReliabilitySection({ scrub }: { scrub: ScrubRef }) {
         <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 md:px-10">
           <div className="flex flex-1 items-end justify-between gap-10 pb-10 pt-28 md:pt-36">
             <div ref={headRef} className="max-w-2xl">
-              <p className="mb-4 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.3em] text-[#6a6a6a]">
-                <span className="h-px w-8 bg-[#6a6a6a]" />
+              <h2 className="font-display text-[clamp(2.5rem,6vw,6rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-[#6a6a6a]">
                 Reliability
-              </p>
-              <h2 className="font-display text-[clamp(2.5rem,6vw,5.5rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-[#f2f2f2]">
-                At Every
-                <br />
-                Milestone
+              </h2>
+              <h2 className="font-display text-[clamp(2.5rem,6vw,6rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-[#f2f2f2]">
+                At Every Milestone
               </h2>
               <p className="mt-5 max-w-md font-mono text-[11px] uppercase leading-relaxed tracking-[0.18em] text-[#8a8a8a]">
                 One shipment, one team. No hand-off between vendors — freight, customs and transport run under a single escalation path.

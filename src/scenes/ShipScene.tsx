@@ -1,25 +1,30 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { VisualTest } from '../dev/VisualTest'
 import type { ScrubRef } from '../lib/scrub'
 
-/** v19 SHOT 7 — vivid 7-tone container palette. */
+/** v20 SHOT 7 — vivid 7-tone container palette. */
 const PAL = ['#D64545', '#2456B0', '#2E8B57', '#F2C230', '#7048E8', '#F1F0EE', '#E8590C']
 
-/** v19 SHOT 7 — ship camera FIXED (0,36,16), lookAt (0,0,0), fov 35. */
+/** v20 SHOT 7 — camera FIXED on the −z side (0,36,-16), lookAt origin, fov 35 → +z bow renders at TOP. */
 function Rig() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
   useLayoutEffect(() => {
     camera.fov = 35
-    camera.position.set(0, 36, 16)
+    camera.position.set(0, 36, -16)
     camera.lookAt(0, 0, 0)
     camera.updateProjectionMatrix()
   }, [camera])
   return null
 }
 
-function makeNoise(rng: () => number) {
+function makeNoise(seed = 11) {
+  let s = seed
+  const rng = () => {
+    s = (s * 16807) % 2147483647
+    return (s - 1) / 2147483646
+  }
   const geo = new THREE.PlaneGeometry(26, 40, 24, 32)
   const pos = geo.attributes.position
   const v = new THREE.Vector3()
@@ -31,14 +36,14 @@ function makeNoise(rng: () => number) {
   return geo
 }
 
-/** v19 — pointed bow, length 30, width 9.4, #101820. Bow at local z +17 (near), stern -13 (far). */
+/** v20 — pointed bow, length 30, width 9.4, #101820, y −1.2..2.6. Bow at local z +17, stern −13. */
 const hull = (() => {
   const s = new THREE.Shape()
   s.moveTo(-4.7, 13)
   s.lineTo(4.7, 13)
   s.lineTo(0, -17)
   s.closePath()
-  const g = new THREE.ExtrudeGeometry(s, { depth: 1.8, bevelEnabled: false })
+  const g = new THREE.ExtrudeGeometry(s, { depth: 3.8, bevelEnabled: false })
   g.rotateX(-Math.PI / 2)
   return g
 })()
@@ -47,34 +52,6 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
   const groupRef = useRef<THREE.Group>(null)
   const coreRef = useRef<THREE.Group>(null)
   const deckRef = useRef<THREE.InstancedMesh>(null)
-  const [rotY, setRotY] = useState(0)
-
-  // BOW-UP AUTO-FLIP — project bow tip (0,0,17) and bridge (0,5,-11.5) for rotY ∈ {0, π}
-  useLayoutEffect(() => {
-    const camera = new THREE.PerspectiveCamera(35, 16 / 9, 0.1, 1000)
-    camera.position.set(0, 36, 16)
-    camera.lookAt(0, 0, 0)
-    camera.updateProjectionMatrix()
-    camera.updateMatrixWorld()
-    const screenY = (ry: number, q: [number, number, number]) => {
-      const x = Math.cos(ry) * q[0] + Math.sin(ry) * q[2]
-      const z = -Math.sin(ry) * q[0] + Math.cos(ry) * q[2]
-      const w = new THREE.Vector3(x, q[1], z + 10).project(camera)
-      return (1 - w.y) * 400
-    }
-    const bow0 = screenY(0, [0, 0, 17])
-    const bridge0 = screenY(0, [0, 5, -11.5])
-    const bowP = screenY(Math.PI, [0, 0, 17])
-    const bridgeP = screenY(Math.PI, [0, 5, -11.5])
-    const chosen = bowP < bridgeP ? Math.PI : 0
-    setRotY(chosen)
-    const b = chosen === Math.PI ? bowP : bow0
-    const g = chosen === Math.PI ? bridgeP : bridge0
-    if (import.meta.env.DEV) {
-      console.assert(b < g, `[SHOT7] auto-flip chosen rotY=${chosen} but bow is NOT up-frame`)
-      console.assert(chosen === Math.PI, '[SHOT7] bow-up means rotY=PI')
-    }
-  }, [])
 
   useLayoutEffect(() => {
     const m = new THREE.Matrix4()
@@ -84,7 +61,7 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
       for (let z = 0; z < 8; z++) {
         const h = 1 + ((x * 7 + z * 3) % 2)
         for (let k = 0; k < h; k++) {
-          m.setPosition(-3.25 + x * 1.3, 1.6 + k * 1.22, -9 + z * 2.4)
+          m.setPosition(-3.25 + x * 1.3, 3.2 + k * 1.22, -9 + z * 2.4)
           deckRef.current!.setMatrixAt(i, m)
           deckRef.current!.setColorAt(i, c.set(PAL[(x * 5 + z * 3 + k) % 7]))
           i++
@@ -97,8 +74,8 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
 
   useFrame(() => {
     if (groupRef.current) {
-      groupRef.current.rotation.y = rotY
-      // scrub shipGroup.position.z lerp(10,1,p)
+      // v20 — deterministic: no rotation (bow +z), scrub shipGroup.position.z lerp(10,1,p)
+      groupRef.current.rotation.y = 0
       groupRef.current.position.z = THREE.MathUtils.lerp(10, 1, scrub?.current ?? 0)
     }
   })
@@ -120,43 +97,39 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
         <planeGeometry args={[400, 400]} />
         <meshStandardMaterial color="#1565C0" {...std} />
       </mesh>
-      <mesh geometry={makeNoise(Math.random)} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
+      <mesh geometry={makeNoise(11)} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
         <meshBasicMaterial color="#ffffff" transparent opacity={0.1} />
       </mesh>
-      <mesh geometry={makeNoise(Math.random)} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, 0]}>
+      <mesh geometry={makeNoise(29)} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, 0]}>
         <meshBasicMaterial color="#cfe4ff" transparent opacity={0.06} />
       </mesh>
 
-      {/* traveling ship — rotY auto-flipped bow-up, z lerp(10,1) */}
+      {/* traveling ship — deterministic bow-up, z lerp(10,1) */}
       <group ref={groupRef}>
         <group ref={coreRef}>
-          <mesh geometry={hull} position={[0, -1.8, 0]}>
+          <mesh geometry={hull} position={[0, -1.2, 0]}>
             <meshStandardMaterial color="#101820" {...std} />
           </mesh>
-          {/* white waterline band around the upper hull */}
-          <mesh position={[0, -0.1, 2]}>
+          {/* white waterline stripe around the hull */}
+          <mesh position={[0, 0.8, 2]}>
             <boxGeometry args={[9.55, 0.22, 29]} />
             <meshStandardMaterial color="#F1F0EE" {...std} />
           </mesh>
-          <mesh position={[0, 1.0, -1.5]}>
-            <boxGeometry args={[9.6, 0.15, 17]} />
-            <meshStandardMaterial color="#E8E6E2" {...std} />
-          </mesh>
-          {/* deck — 6×8 containers, heights 1–2, 7-tone palette */}
+          {/* deck — 6×8 containers, heights 1–2, 7-tone palette, sitting on hull top y 2.6 */}
           <instancedMesh ref={deckRef} args={[undefined as any, undefined as any, 200]}>
             <boxGeometry args={[1.25, 1.2, 2.3]} />
             <meshStandardMaterial {...std} />
           </instancedMesh>
-          {/* tall white bridge + black band at the stern */}
-          <mesh position={[0, 3.5, -11.5]}>
-            <boxGeometry args={[7, 7, 2.4]} />
+          {/* tall white bridge (7,4.5,2.4) + black band at the stern z -11.5 */}
+          <mesh position={[0, 4.85, -11.5]}>
+            <boxGeometry args={[7, 4.5, 2.4]} />
             <meshStandardMaterial color="#F1F0EE" {...std} />
           </mesh>
-          <mesh position={[0, 6.9, -11.5]}>
+          <mesh position={[0, 7.5, -11.5]}>
             <boxGeometry args={[7.2, 0.8, 2.6]} />
             <meshStandardMaterial color="#101418" {...std} />
           </mesh>
-          <mesh position={[0, 8.2, -11.5]}>
+          <mesh position={[0, 8.7, -11.5]}>
             <boxGeometry args={[1.2, 1.6, 1.2]} />
             <meshStandardMaterial color="#F1F0EE" {...std} />
           </mesh>
@@ -186,8 +159,8 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
         ship={{
           travel: [10, 1],
           points: [
-            { at: 0, local: [0, 1, -17], tag: 'BOW@0' },
-            { at: 1, local: [0, 3, -1], tag: 'BRIDGE@1' },
+            { at: 0, local: [0, 3.4, 0], tag: 'DECK@0' },
+            { at: 1, local: [0, 3.4, -9], tag: 'BRIDGE@1' },
           ],
         }}
       />
@@ -199,15 +172,16 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
 function FoamQuads() {
   const refs = useRef<Array<THREE.InstancedMesh | null>>([])
   useLayoutEffect(() => {
+    let seed = 7
+    const rnd = () => {
+      seed = (seed * 16807) % 2147483647
+      return (seed - 1) / 2147483646
+    }
     const m = new THREE.Matrix4()
-    const q = new THREE.Quaternion()
-    const e = new THREE.Euler()
     for (let k = 0; k < 400; k++) {
-      const side = Math.random() < 0.5 ? -1 : 1
-      const s = 0.4 + Math.random() * 0.8
-      e.set(0, Math.random() * Math.PI, 0)
-      q.setFromEuler(e)
-      m.compose(new THREE.Vector3(side * (4.9 + Math.random() * 0.8), 0.05, -12 + Math.random() * 28), q, new THREE.Vector3(s, s, 1))
+      const side = rnd() < 0.5 ? -1 : 1
+      const s = 0.4 + rnd() * 0.8
+      m.compose(new THREE.Vector3(side * (4.9 + rnd() * 0.8), 0.05, -12 + rnd() * 28), new THREE.Quaternion(), new THREE.Vector3(s, s, 1))
       const idx = k % 4
       refs.current[idx]!.setMatrixAt(Math.floor(k / 4), m)
     }
@@ -219,7 +193,7 @@ function FoamQuads() {
   return (
     <group>
       {[0.2, 0.3, 0.4, 0.5].map((op, i) => (
-        <instancedMesh key={i} ref={(el) => (refs.current[i] = el)} args={[undefined as any, undefined as any, 100]}>
+        <instancedMesh key={i} ref={(el) => (refs.current[i] = el)} args={[undefined as any, undefined as any, 100]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[1, 1]} />
           <meshBasicMaterial color="#ffffff" transparent opacity={op} side={THREE.DoubleSide} />
         </instancedMesh>

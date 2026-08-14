@@ -251,7 +251,7 @@ export default function TerminalScene() {
       <Lanes />
 
       <group ref={fitRef}>
-        <VisualTest label="YARD" target={() => fitRef.current} y={[140, 640]} x={[250, 1360]} />
+        <VisualTest label="YARD" target={() => fitRef.current} y={[160, 470]} x={[270, 1360]} />
         <ContainerYard />
         <GantryCrane />
       </group>

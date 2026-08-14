@@ -376,7 +376,7 @@ function Rig() {
 
 export default function GlobeScene() {
   return (
-    <SceneCanvas fallbackLabel="Global" tone="violet" camera={{ position: [0, 0, 10], fov: 45 }}>
+    <SceneCanvas fallbackLabel="Global" tone="violet" camera={{ position: [0, 0, 10], fov: 45 }} always>
       <color attach="background" args={['#050505']} />
       <ambientLight intensity={0.5} />
       <Stars count={400} />
