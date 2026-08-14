@@ -1,8 +1,9 @@
-import { useMemo, useRef, useLayoutEffect } from 'react'
+import { useMemo, useRef, useLayoutEffect, type RefObject } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
 import { VisualTest } from '../dev/VisualTest'
+import type { ScrubRef } from '../lib/scrub'
 
 function rib() {
   const c = document.createElement('canvas')
@@ -23,17 +24,99 @@ function Rig() {
     camera.position.set(0, 2.3, 24)
     camera.lookAt(0, 1.7, 0)
     camera.updateProjectionMatrix()
-  }, [])
+  }, [camera])
   return null
 }
 
-export default function TruckScene() {
+type TruckProps = { ribT: THREE.Texture; wheels?: RefObject<THREE.Group | null>; cabColor: string }
+
+/** v18 SHOT 3 — chassis truck: white ribbed container (loaded) + cab. */
+function Truck({ ribT, wheels, cabColor }: TruckProps) {
+  const std = { roughness: 0.9, metalness: 0 }
+  return (
+    <group>
+      <mesh position={[-0.2, 0.6, 0]}>
+        <boxGeometry args={[11.6, 0.4, 1.4]} />
+        <meshStandardMaterial color="#101010" {...std} />
+      </mesh>
+      {/* loaded white ribbed container over the rear axles */}
+      <mesh position={[-3.05, 1.95, 0]}>
+        <boxGeometry args={[5.6, 2.3, 2.3]} />
+        <meshStandardMaterial map={ribT} color="#FAFAFA" {...std} />
+      </mesh>
+      <mesh position={[-5.8, 1.0, 0]}>
+        <boxGeometry args={[0.12, 0.3, 2.2]} />
+        <meshStandardMaterial color="#111" {...std} />
+      </mesh>
+      <group ref={wheels}>
+        {/* 5 full round dual wheels — r.6 + silver hub r.15, opaque */}
+        {[-4.6, -3.4, -2.2, 3.6, 4.8].map((x, i) => (
+          <group key={i} position={[x, 0.62, 0]} rotation={[0, 0, Math.PI / 2]}>
+            <mesh>
+              <cylinderGeometry args={[0.6, 0.6, 0.3, 32]} />
+              <meshStandardMaterial color="#101010" {...std} />
+            </mesh>
+            <mesh>
+              <cylinderGeometry args={[0.15, 0.15, 0.32, 16]} />
+              <meshStandardMaterial color="#8A8A8A" {...std} />
+            </mesh>
+          </group>
+        ))}
+      </group>
+      <mesh position={[4.4, 1.55, 0]}>
+        <boxGeometry args={[2.4, 1.5, 2.2]} />
+        <meshStandardMaterial color={cabColor} {...std} />
+      </mesh>
+      <mesh position={[5.55, 2.1, 0]} rotation={[0, 0, -0.28]}>
+        <boxGeometry args={[0.12, 0.8, 2.0]} />
+        <meshStandardMaterial color="#101418" {...std} />
+      </mesh>
+      <mesh position={[4.4, 2.0, -1.11]}>
+        <planeGeometry args={[1.4, 0.55]} />
+        <meshStandardMaterial color="#101418" {...std} />
+      </mesh>
+      <mesh position={[4.4, 2.0, 1.11]}>
+        <planeGeometry args={[1.4, 0.55]} />
+        <meshStandardMaterial color="#101418" {...std} />
+      </mesh>
+      <mesh position={[5.62, 1.3, 0]}>
+        <boxGeometry args={[0.1, 0.6, 1.8]} />
+        <meshStandardMaterial color="#111" {...std} />
+      </mesh>
+      <mesh position={[5.55, 1.7, -0.75]}>
+        <boxGeometry args={[0.06, 0.15, 0.3]} />
+        <meshStandardMaterial color="#f2f2f2" {...std} />
+      </mesh>
+      <mesh position={[5.55, 1.7, 0.75]}>
+        <boxGeometry args={[0.06, 0.15, 0.3]} />
+        <meshStandardMaterial color="#f2f2f2" {...std} />
+      </mesh>
+      <mesh position={[3.2, 2.6, 0]}>
+        <cylinderGeometry args={[0.08, 0.08, 0.9, 12]} />
+        <meshStandardMaterial color="#111" {...std} />
+      </mesh>
+      <mesh position={[2.6, 1.1, 0]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.25, 0.25, 1, 16]} />
+        <meshStandardMaterial color="#9A9A9A" {...std} />
+      </mesh>
+    </group>
+  )
+}
+
+export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
   const ribT = useMemo(rib, [])
   const wheels = useRef<THREE.Group>(null)
   const grp = useRef<THREE.Group>(null)
+  const truckMain = useRef<THREE.Group>(null)
+  const truckPass = useRef<THREE.Group>(null)
 
   useFrame(({ clock }) => {
-    wheels.current!.children.forEach((w) => (w.rotation.x = clock.elapsedTime * 3))
+    wheels.current?.children.forEach((w) => w && (w.rotation.x = clock.elapsedTime * 3))
+    const p = scrub?.current ?? 0
+    const pE = Math.min(Math.max((p - 0.85) / 0.15, 0), 1)
+    const easeE = pE * pE * (3 - 2 * pE)
+    if (truckMain.current) truckMain.current.position.x = 5.5 * easeE
+    if (truckPass.current) truckPass.current.position.x = -10 + easeE * 16
   })
 
   const std = { roughness: 0.9, metalness: 0 }
@@ -55,70 +138,16 @@ export default function TruckScene() {
       </mesh>
       <ContactShadows opacity={0.3} blur={3} scale={45} />
 
-      <group ref={grp}>
-        <VisualTest label="TRUCK" target={() => grp.current} y={[270, 505]} x={[250, 1025]} />
-        <mesh position={[-0.2, 0.6, 0]}>
-          <boxGeometry args={[11.6, 0.4, 1.4]} />
-          <meshStandardMaterial color="#101010" {...std} />
-        </mesh>
-        <group ref={wheels}>
-          {[-4.6, -3.4, -2.2, 3.6, 4.8].map((x, i) => (
-            <group key={i} position={[x, 0.6, 0]} rotation={[0, 0, Math.PI / 2]}>
-              <mesh>
-                <cylinderGeometry args={[0.6, 0.6, 0.35, 32]} />
-                <meshStandardMaterial color="#101010" {...std} />
-              </mesh>
-              <mesh>
-                <cylinderGeometry args={[0.15, 0.15, 0.37, 16]} />
-                <meshStandardMaterial color="#8A8A8A" {...std} />
-              </mesh>
-            </group>
-          ))}
+      {/* ——— passing truck (deep, unmeasured) — orange cab, drives past from behind-left ——— */}
+      <group ref={truckPass} position={[-10, 0, -5.5]} scale={0.9}>
+        <Truck ribT={ribT} cabColor="#E8590C" />
+      </group>
+
+      <group ref={grp} position={[0, 0.05, 0]}>
+        <VisualTest label="TRUCK" target={() => grp.current} y={[285, 505]} x={[270, 1030]} />
+        <group ref={truckMain}>
+          <Truck ribT={ribT} wheels={wheels} cabColor="#DFDFDF" />
         </group>
-        <mesh position={[-1.75, 2.35, 0]}>
-          <boxGeometry args={[9.5, 2.6, 2.4]} />
-          <meshStandardMaterial color="#FAFAFA" map={ribT} {...std} />
-        </mesh>
-        <mesh position={[-1.75, 1.0, 0]}>
-          <boxGeometry args={[9.5, 0.3, 2.2]} />
-          <meshStandardMaterial color="#111" {...std} />
-        </mesh>
-        <mesh position={[4.4, 1.55, 0]}>
-          <boxGeometry args={[2.4, 1.5, 2.2]} />
-          <meshStandardMaterial color="#DFDFDF" {...std} />
-        </mesh>
-        <mesh position={[5.55, 2.1, 0]} rotation={[0, 0, -0.28]}>
-          <boxGeometry args={[0.12, 0.8, 2.0]} />
-          <meshStandardMaterial color="#101418" {...std} />
-        </mesh>
-        <mesh position={[4.4, 2.0, -1.11]}>
-          <planeGeometry args={[1.4, 0.55]} />
-          <meshStandardMaterial color="#101418" {...std} />
-        </mesh>
-        <mesh position={[4.4, 2.0, 1.11]}>
-          <planeGeometry args={[1.4, 0.55]} />
-          <meshStandardMaterial color="#101418" {...std} />
-        </mesh>
-        <mesh position={[5.62, 1.3, 0]}>
-          <boxGeometry args={[0.1, 0.6, 1.8]} />
-          <meshStandardMaterial color="#111" {...std} />
-        </mesh>
-        <mesh position={[5.55, 1.7, -0.75]}>
-          <boxGeometry args={[0.06, 0.15, 0.3]} />
-          <meshStandardMaterial color="#f2f2f2" {...std} />
-        </mesh>
-        <mesh position={[5.55, 1.7, 0.75]}>
-          <boxGeometry args={[0.06, 0.15, 0.3]} />
-          <meshStandardMaterial color="#f2f2f2" {...std} />
-        </mesh>
-        <mesh position={[3.2, 2.8, 0]}>
-          <cylinderGeometry args={[0.08, 0.08, 0.9, 12]} />
-          <meshStandardMaterial color="#111" {...std} />
-        </mesh>
-        <mesh position={[2.6, 1.1, 0]} rotation={[0, 0, Math.PI / 2]}>
-          <cylinderGeometry args={[0.25, 0.25, 1, 16]} />
-          <meshStandardMaterial color="#9A9A9A" {...std} />
-        </mesh>
       </group>
     </group>
   )

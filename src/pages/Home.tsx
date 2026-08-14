@@ -210,6 +210,7 @@ function TruckSection({ scrub }: { scrub: ScrubRef }) {
       scrub: true,
       onUpdate: (self) => {
         word.style.transform = `translateX(${(self.progress - 0.5) * 24}vw)`
+        word.style.opacity = String(Math.min(self.progress / 0.45, 1) * (1 - Math.max((self.progress - 0.82) / 0.18, 0)))
       },
     })
     return () => st.kill()
@@ -226,7 +227,7 @@ function TruckSection({ scrub }: { scrub: ScrubRef }) {
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center overflow-hidden">
           <span
             ref={wordRef}
-            className="text-stroke-paper slow-scroll whitespace-nowrap font-display text-[13vw] font-black uppercase leading-none tracking-tight"
+            className="slow-scroll whitespace-nowrap font-display text-[13vw] font-black uppercase leading-none tracking-tight text-[#d8d2c8]"
           >
             Under One Group
           </span>
@@ -234,7 +235,7 @@ function TruckSection({ scrub }: { scrub: ScrubRef }) {
         <div className="absolute inset-0">
           <SuspenseBox label="Linehaul">
             <SceneStage label="Linehaul" tone="orange">
-              <TruckScene />
+              <TruckScene scrub={scrub} />
             </SceneStage>
           </SuspenseBox>
         </div>
