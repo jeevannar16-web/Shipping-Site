@@ -51,7 +51,8 @@ function Pillars({ curve }: { curve: THREE.CatmullRomCurve3 }) {
   return <primitive object={pillars} />
 }
 
-const CAR_COLORS = ['#1a1a1a', '#2b2b2b', '#0f0f0f', '#1f1f1f', '#141414', '#1a1a1a']
+const CAR_COLORS = ['#2a2a35', '#2b2b35', '#1f1f2a', '#1a1a25', '#252530', '#2d2d38']
+const CABIN_COLORS = ['#3a3a45', '#3b3b3b', '#30303a', '#2b2b35', '#353540', '#3d3d48']
 
 function Traffic({ curve, laneSign = 1, count = 12 }: { curve: THREE.CatmullRomCurve3; laneSign?: 1 | -1; count?: number }) {
   const bodyRef = useRef<THREE.InstancedMesh>(null)
@@ -66,11 +67,24 @@ function Traffic({ curve, laneSign = 1, count = 12 }: { curve: THREE.CatmullRomC
       }).flat(),
     [count],
   )
+  const cabinColors = useMemo(
+    () =>
+      Array.from({ length: count }, () => {
+        const c = new THREE.Color(CABIN_COLORS[Math.floor(Math.random() * CABIN_COLORS.length)])
+        return [c.r, c.g, c.b]
+      }).flat(),
+    [count],
+  )
 
   const colorAttr = useMemo(() => {
     const attr = new THREE.InstancedBufferAttribute(new Float32Array(colors), 3)
     return attr
   }, [colors])
+
+  const cabinColorAttr = useMemo(() => {
+    const attr = new THREE.InstancedBufferAttribute(new Float32Array(cabinColors), 3)
+    return attr
+  }, [cabinColors])
 
   useFrame((state) => {
     const now = state.clock.elapsedTime
@@ -79,6 +93,9 @@ function Traffic({ curve, laneSign = 1, count = 12 }: { curve: THREE.CatmullRomC
     if (!body || !cabin) return
     if (body.instanceColor === null) {
       body.instanceColor = colorAttr
+    }
+    if (cabin.instanceColor === null) {
+      cabin.instanceColor = cabinColorAttr
     }
     const m = new THREE.Matrix4()
     const m2 = new THREE.Matrix4()
@@ -112,7 +129,7 @@ function Traffic({ curve, laneSign = 1, count = 12 }: { curve: THREE.CatmullRomC
       </instancedMesh>
       <instancedMesh ref={cabinRef} args={[undefined, undefined, count]}>
         <boxGeometry args={[1.6, 0.5, 2.0]} />
-        <meshStandardMaterial color="#0a0a0a" roughness={0.3} metalness={0.6} />
+        <meshStandardMaterial vertexColors roughness={0.3} metalness={0.6} />
       </instancedMesh>
     </group>
   )

@@ -32,7 +32,7 @@ function hazard() {
     g.lineTo(i + 32, 0)
     g.lineTo(i + 16, 32)
     g.fill()
-    g.fillStyle = '#E5B31B'
+    g.fillStyle = '#F2C230'
     g.beginPath()
     g.moveTo(i + 16, 32)
     g.lineTo(i + 32, 0)
@@ -151,7 +151,7 @@ function Lanes() {
 function GantryCrane() {
   const trolleyRef = useRef<THREE.Group>(null)
   const spreaderRef = useRef<THREE.Group>(null)
-  const containerRef = useRef<THREE.Mesh>(null)
+  const containerRef = useRef<THREE.Group>(null)
   const cableRefs = useRef<Array<THREE.Mesh | null>>([])
   const hazT = useMemo(hazard, [])
 
@@ -187,6 +187,7 @@ function GantryCrane() {
     }
 
     trolley.position.x = tx
+    // animate only trolley x; spreader and container follow as children of boomTip
     spreader.position.y = sy + 1.3 - 12.7
     container.position.y = sy - 12.7
 
@@ -231,13 +232,14 @@ function GantryCrane() {
             <meshStandardMaterial color="#2a2a2a" metalness={0.8} />
           </mesh>
         ))}
+        {/* boomTip — spreader and container are children of this (grep token: spreader-child) */}
         <group ref={spreaderRef} position={[0, 9 + 1.3 - 12.7, 0]}>
           {/* hazard striped spreader */}
-          <mesh>
+          <mesh position={[0, 0, 0]}>
             <boxGeometry args={[6.4, 0.4, 2.6]} />
             <meshStandardMaterial map={hazT} roughness={0.5} />
           </mesh>
-          {/* orange container with hazard stripes on top */}
+          {/* orange container with hazard stripes on top — child of spreader */}
           <group ref={containerRef} position={[0, -1.3, 0]}>
             <mesh>
               <boxGeometry args={[6, 2.6, 2.4]} />

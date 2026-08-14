@@ -267,17 +267,18 @@ function ReliabilitySection({ scrub }: { scrub: ScrubRef }) {
         <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 md:px-10">
           <div className="flex flex-1 items-start justify-between gap-10 pb-10 pt-28 md:pt-36">
             <div ref={headRef} className="max-w-2xl">
-              <h2 className="font-display text-[clamp(2.5rem,6vw,6rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-[#d9d9d9]">
+              <h2 className="font-display text-[clamp(2.5rem,6vw,6rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-[#B9BDBF]">
                 Reliability
               </h2>
-              <h2 className="font-display text-[clamp(2.5rem,6vw,6rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-[#0a0a0a]">
+              <h2 className="font-display text-[clamp(2.5rem,6vw,6rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-[#101112]">
                 At Every Milestone
               </h2>
-              <p className="mt-5 max-w-md font-mono text-[11px] uppercase leading-relaxed tracking-[0.18em] text-[#5a5a5a]">
+              <p className="mt-5 max-w-md font-mono text-[11px] uppercase leading-relaxed tracking-[0.18em] text-[#3A3D40]">
                 One shipment, one team. No hand-off between vendors — freight, customs and transport run under a single escalation path.
               </p>
             </div>
-            <div className="hidden shrink-0 flex-col items-end gap-2 text-right font-mono text-[10px] uppercase tracking-[0.2em] text-[#3a3a3a] md:flex">
+            <div className="hidden shrink-0 flex-col items-end gap-2 text-right font-mono text-[10px] uppercase tracking-[0.2em] text-[#17181A] md:flex">
+              <span className="font-bold">04 — CUSTOMS SUPPORT ON CALL</span>
               <span>Real-Time Visibility</span>
               <span>Proactive Exceptions</span>
               <span>Owned Outcome</span>
@@ -286,21 +287,21 @@ function ReliabilitySection({ scrub }: { scrub: ScrubRef }) {
 
           <div className="grid flex-1 grid-cols-1 items-stretch gap-10 border-t border-[#e0e0e0] pb-8 pt-10 md:grid-cols-12 md:gap-8">
             <div className="hidden flex-col justify-between md:col-span-4 md:flex">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#3a3a3a]">
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#3A3D40]">
                 Live telemetry on every lane — booking, customs, transit, final mile.
               </p>
-              <p className="max-w-[10rem] font-mono text-[10px] uppercase leading-relaxed tracking-[0.2em] text-[#3a3a3a]">
+              <p className="max-w-[10rem] font-mono text-[10px] uppercase leading-relaxed tracking-[0.2em] text-[#3A3D40]">
                 One accountable team per shipment — every milestone, owned to delivery.
               </p>
             </div>
             <div className="flex items-center justify-center md:col-span-2">
-              <div ref={ribRef} className="rib-bar" />
+              <div ref={ribRef} className="rib-bar-dark" />
             </div>
             <div className="flex flex-col justify-center gap-10 md:col-span-6 md:gap-0">
               <div ref={blk1} className="border-l border-[#e0e0e0] pl-6 opacity-0 md:pb-10">
                 <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-orange">01</p>
                 <h3 className="mt-2 font-display text-xl font-bold uppercase tracking-tight text-[#0a0a0a]">Real-Time Freight Tracking</h3>
-                <p className="mt-2 max-w-md text-xs leading-relaxed text-[#5a5a5a]">
+                <p className="mt-2 max-w-md text-xs leading-relaxed text-[#3A3D40]">
                   Know exactly where your cargo is at every milestone. Live visibility means faster decisions and zero guesswork.
                 </p>
               </div>
@@ -308,12 +309,103 @@ function ReliabilitySection({ scrub }: { scrub: ScrubRef }) {
               <div ref={blk2} className="border-l border-[#e0e0e0] pl-6 pt-10 opacity-0 md:pt-10">
                 <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-orange">02</p>
                 <h3 className="mt-2 font-display text-xl font-bold uppercase tracking-tight text-[#0a0a0a]">24/7 Customer Support</h3>
-                <p className="mt-2 max-w-md text-xs leading-relaxed text-[#5a5a5a]">
+                <p className="mt-2 max-w-md text-xs leading-relaxed text-[#3A3D40]">
                   Real people, always available. We pick up the phone and we own the outcome.
                 </p>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function OceanSection({ scrub }: { scrub: ScrubRef }) {
+  const wrapRef = useRef<HTMLElement>(null)
+  const lineRef = useRef<HTMLHeadingElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
+  useSectionScrub(wrapRef, scrub)
+
+  useEffect(() => {
+    const update = () => {
+      const p = scrub.current ?? 0
+      if (lineRef.current) {
+        lineRef.current.style.opacity = p < 0.45 ? '1' : '0'
+      }
+      if (overlayRef.current) {
+        if (p < 0.45) overlayRef.current.style.opacity = '0'
+        else if (p <= 0.75) overlayRef.current.style.opacity = '1'
+        else overlayRef.current.style.opacity = String(Math.max(0, 1 - (p - 0.75) / 0.25))
+      }
+    }
+    update()
+    const id = setInterval(update, 16)
+    return () => clearInterval(id)
+  }, [scrub])
+
+  return (
+    <section ref={wrapRef} className="scene bg-[#1E56A0]">
+      <div className="pin flex flex-col">
+        <div className="absolute inset-0">
+          <SuspenseBox label="Ocean">
+            <SceneStage label="Ocean" tone="blue" camera={{ position: [0, 36, 16], fov: 35 }}>
+              <ShipScene scrub={scrub} />
+            </SceneStage>
+          </SuspenseBox>
+        </div>
+        <div className="relative z-10 mx-auto flex w-full max-w-7xl min-h-0 flex-1 flex-col justify-end px-6 pb-14 md:px-10">
+          <p ref={lineRef} className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.3em] text-orange transition-opacity duration-300">
+            <span className="h-px w-8 bg-orange" />
+            06 — Ocean
+          </p>
+          <h2 className={`font-display text-[clamp(2.25rem,5.5vw,5rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-white transition-opacity duration-300 ${lineRef.current ? '' : ''}`}>
+            Ocean freight, end to end.
+          </h2>
+          <p className={`mt-3 max-w-md text-xs leading-relaxed text-white/70`}>
+            FCL, LCL and specialised cargo — across every major trade lane.
+          </p>
+        </div>
+        <div className="absolute left-6 top-8 z-10 md:left-10">
+          <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-white backdrop-blur">
+            <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-orange" />
+            Ocean Freight — FCL / LCL / Specialised
+          </p>
+        </div>
+        <div className="absolute right-6 top-8 z-10 hidden w-44 md:right-10 md:block">
+          <div className="rounded-md border border-white/15 bg-black/55 p-4 font-mono text-[10px] uppercase tracking-[0.14em] text-white backdrop-blur">
+            <p className="mb-2 text-white/50">Rates — FCL</p>
+            {[
+              ['20FT', '2,150'],
+              ['40FT', '3,900'],
+              ['REEFER', '5,400'],
+            ].map(([k, v]) => (
+              <div key={k} className="flex items-center justify-between border-t border-white/10 py-1.5">
+                <span className="text-white/70">{k}</span>
+                <span className="text-orange">${v}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Left micro-copy */}
+        <div className="absolute bottom-24 left-6 z-10 hidden max-w-[14rem] md:left-10 md:block">
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white">Compliance you can verify</p>
+          <p className="mt-2 text-[11px] leading-relaxed text-white/70">
+            Licensed in-house brokerage. Classification, duties, and quarantine handled end to end — no outsourcing.
+          </p>
+        </div>
+        {/* Right micro-copy */}
+        <div className="absolute bottom-24 right-6 z-10 hidden max-w-[14rem] text-right md:right-10 md:block">
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white">Competitive, transparent pricing</p>
+          <p className="mt-2 text-[11px] leading-relaxed text-white/70">
+            Clear quotes with no hidden fees. Rate confirmation before booking, every time.
+          </p>
+        </div>
+        {/* Big overlay headline */}
+        <div ref={overlayRef} className="absolute bottom-32 left-1/2 z-10 hidden -translate-x-1/2 md:block opacity-0 transition-opacity duration-300">
+          <p className="text-center font-display text-[clamp(1.5rem,3.5vw,3.5rem)] font-extrabold uppercase leading-[0.95] tracking-tight text-white drop-shadow-lg">
+            Logistics that works as hard as you do.
+          </p>
         </div>
       </div>
     </section>
@@ -358,54 +450,7 @@ export default function Home() {
         </SuspenseBox>
       </StickyScene>
 
-      <StickyScene index="6" mode="OCEAN" bg="bg-[#1E56A0]" line="Ocean freight, end to end." scrub={oceanScrub} sub="FCL, LCL and specialised cargo — across every major trade lane.">
-        <SuspenseBox label="Ocean">
-          <SceneStage label="Ocean" tone="blue" camera={{ position: [0, 36, 16], fov: 35 }}>
-            <ShipScene scrub={oceanScrub} />
-          </SceneStage>
-        </SuspenseBox>
-        <div className="absolute left-6 top-8 z-10 md:left-10">
-          <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-white backdrop-blur">
-            <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-orange" />
-            Ocean Freight — FCL / LCL / Specialised
-          </p>
-        </div>
-        <div className="absolute right-6 top-8 z-10 hidden w-44 md:right-10 md:block">
-          <div className="rounded-md border border-white/15 bg-black/55 p-4 font-mono text-[10px] uppercase tracking-[0.14em] text-white backdrop-blur">
-            <p className="mb-2 text-white/50">Rates — FCL</p>
-            {[
-              ['20FT', '2,150'],
-              ['40FT', '3,900'],
-              ['REEFER', '5,400'],
-            ].map(([k, v]) => (
-              <div key={k} className="flex items-center justify-between border-t border-white/10 py-1.5">
-                <span className="text-white/70">{k}</span>
-                <span className="text-orange">${v}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        {/* Left micro-copy */}
-        <div className="absolute bottom-24 left-6 z-10 hidden max-w-[14rem] md:left-10 md:block">
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white">Compliance you can verify</p>
-          <p className="mt-2 text-[11px] leading-relaxed text-white/70">
-            Licensed in-house brokerage. Classification, duties, and quarantine handled end to end — no outsourcing.
-          </p>
-        </div>
-        {/* Right micro-copy */}
-        <div className="absolute bottom-24 right-6 z-10 hidden max-w-[14rem] text-right md:right-10 md:block">
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white">Competitive, transparent pricing</p>
-          <p className="mt-2 text-[11px] leading-relaxed text-white/70">
-            Clear quotes with no hidden fees. Rate confirmation before booking, every time.
-          </p>
-        </div>
-        {/* Big overlay headline */}
-        <div className="absolute bottom-32 left-1/2 z-10 hidden -translate-x-1/2 md:block">
-          <p className="text-center font-display text-[clamp(1.5rem,3.5vw,3.5rem)] font-extrabold uppercase leading-[0.95] tracking-tight text-white drop-shadow-lg">
-            Logistics that works as hard as you do.
-          </p>
-        </div>
-      </StickyScene>
+      <OceanSection scrub={oceanScrub} />
 
       {/* SERVICES MARQUEE */}
       <section className="border-y border-white/[0.07] py-5">
@@ -431,8 +476,42 @@ export default function Home() {
           <div className="mt-10 grid grid-cols-2 gap-x-8 gap-y-10 md:grid-cols-3 lg:grid-cols-6">
             {SERVICES.map((s, i) => (
               <div key={s.title} className="flex flex-col gap-3">
-                <div className="flex h-8 w-8 items-center justify-center border border-white/15">
-                  <div className="h-3 w-3 bg-orange" />
+                <div className="flex h-8 w-8 items-center justify-center">
+                  {i === 0 && (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF4A00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 12h20M2 12l5-5m-5 5l5 5m14-5l-5-5m5 5l-5 5" />
+                    </svg>
+                  )}
+                  {i === 1 && (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF4A00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1v-11c-.6-.5-1.2-1-2.5-1-2.5 0-2.5 2-5 2-1.3 0-1.9-.5-2.5-1-.6-.5-1.2-1-2.5-1-2.5 0-2.5 2-5 2-1.3 0-1.9.5-2.5 1v11z" />
+                    </svg>
+                  )}
+                  {i === 2 && (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF4A00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                      <path d="M9 12l2 2 4-4" />
+                    </svg>
+                  )}
+                  {i === 3 && (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF4A00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="1" y="6" width="15" height="10" rx="1" />
+                      <path d="M16 10h3l3-3v9h-6z" />
+                      <circle cx="6" cy="18" r="2" />
+                      <circle cx="18" cy="18" r="2" />
+                    </svg>
+                  )}
+                  {i === 4 && (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF4A00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 21h18M3 21V10l9-6 9 6v11M9 21v-6h6v6" />
+                    </svg>
+                  )}
+                  {i === 5 && (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF4A00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="1" />
+                      <path d="M3 12h18M12 3v18" />
+                    </svg>
+                  )}
                 </div>
                 <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-orange">0{i + 1}</p>
                 <h3 className="font-display text-sm font-bold uppercase tracking-tight text-ink">{s.title}</h3>

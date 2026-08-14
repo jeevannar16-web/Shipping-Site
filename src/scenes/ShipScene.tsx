@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef, useMemo } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { VisualTest } from '../dev/VisualTest'
@@ -45,11 +45,29 @@ const hull = (() => {
   return g
 })()
 
+function makeFoamSprite() {
+  const c = document.createElement('canvas')
+  c.width = 32
+  c.height = 32
+  const g = c.getContext('2d')!
+  const grad = g.createRadialGradient(16, 16, 0, 16, 16, 16)
+  grad.addColorStop(0, 'rgba(255,255,255,0.8)')
+  grad.addColorStop(0.4, 'rgba(255,255,255,0.4)')
+  grad.addColorStop(1, 'rgba(255,255,255,0)')
+  g.fillStyle = grad
+  g.fillRect(0, 0, 32, 32)
+  const tex = new THREE.CanvasTexture(c)
+  return tex
+}
+
 export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
   const groupRef = useRef<THREE.Group>(null)
   const coreRef = useRef<THREE.Group>(null)
   const deckRef = useRef<THREE.InstancedMesh>(null)
+  const foamRef = useRef<THREE.InstancedMesh>(null)
+  const sternRef = useRef<THREE.InstancedMesh>(null)
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
+  const foamTex = useMemo(makeFoamSprite, [])
 
   useLayoutEffect(() => {
     const group = groupRef.current
@@ -82,7 +100,8 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
         for (let k = 0; k < h; k++) {
           m.setPosition(-3.25 + x * 1.3, 3.2 + k * 1.22, -9 + z * 2.4)
           deckRef.current!.setMatrixAt(i, m)
-          deckRef.current!.setColorAt(i, c.set(PAL[(x * 5 + z * 3 + k) % 7]))
+          // color per COLUMN (colIndex % palette) → clean vertical stripes
+          deckRef.current!.setColorAt(i, c.set(PAL[z % PAL.length]))
           i++
         }
       }
@@ -123,8 +142,9 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
       <group ref={groupRef}>
         <group ref={coreRef}>
           <mesh geometry={hull} position={[0, -1.2, 0]}>
-            <meshStandardMaterial color="#101820" {...std} />
+            <meshStandardMaterial color="#101418" {...std} />
           </mesh>
+          {/* white deck edge */}
           <mesh position={[0, 0.8, 2]}>
             <boxGeometry args={[9.55, 0.22, 29]} />
             <meshStandardMaterial color="#F1F0EE" {...std} />
@@ -147,6 +167,7 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
           </mesh>
         </group>
 
+        {/* bow V + stern trail — keep soft, replace blocky shapes */}
         <mesh rotation={[-Math.PI / 2, 0, -0.5]} position={[1.6, 0.05, 15]}>
           <planeGeometry args={[2, 5]} />
           <meshBasicMaterial color="#ffffff" transparent opacity={0.3} side={THREE.DoubleSide} />
@@ -160,7 +181,8 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
           <meshBasicMaterial color="#ffffff" transparent opacity={0.3} side={THREE.DoubleSide} />
         </mesh>
 
-        <FoamQuads />
+        {/* soft round foam sprites + stern trail */}
+        <FoamSprites foamRef={foamRef} sternRef={sternRef} foamTex={foamTex} />
       </group>
 
       <VisualTest
@@ -178,8 +200,7 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
   )
 }
 
-function FoamQuads() {
-  const refs = useRef<Array<THREE.InstancedMesh | null>>([])
+function FoamSprites({ foamRef, sternRef, foamTex }: { foamRef: React.RefObject<THREE.InstancedMesh | null>; sternRef: React.RefObject<THREE.InstancedMesh | null>; foamTex: THREE.Texture }) {
   useLayoutEffect(() => {
     let seed = 7
     const rnd = () => {
@@ -187,26 +208,81 @@ function FoamQuads() {
       return (seed - 1) / 2147483646
     }
     const m = new THREE.Matrix4()
+    // side foam ~200 per side
     for (let k = 0; k < 400; k++) {
       const side = rnd() < 0.5 ? -1 : 1
-      const s = 0.4 + rnd() * 0.8
-      m.compose(new THREE.Vector3(side * (4.9 + rnd() * 0.8), 0.05, -16 + rnd() * 32), new THREE.Quaternion(), new THREE.Vector3(s, s, 1))
-      const idx = k % 4
-      refs.current[idx]!.setMatrixAt(Math.floor(k / 4), m)
+      const s = 0.15 + rnd() * 0.15 // size <= .3u
+      m.compose(
+        new THREE.Vector3(side * (4.9 + rnd() * 0.8), 0.05, -16 + rnd() * 32),
+        new THREE.Quaternion(),
+        new THREE.Vector3(s, s, 1),
+      )
+      foamRef.current!.setMatrixAt(k, m)
     }
-    refs.current.forEach((r) => {
-      r!.count = 100
-      r!.instanceMatrix.needsUpdate = true
-    })
-  }, [])
+    foamRef.current!.count = 400
+    foamRef.current!.instanceMatrix.needsUpdate = true
+
+    // stern trail ~100
+    for (let k = 0; k < 100; k++) {
+      const s = 0.1 + rnd() * 0.2
+      m.compose(
+        new THREE.Vector3((rnd() - 0.5) * 3, 0.02 + rnd() * 0.1, -12 - rnd() * 8),
+        new THREE.Quaternion(),
+        new THREE.Vector3(s, s, 1),
+      )
+      sternRef.current!.setMatrixAt(k, m)
+    }
+    sternRef.current!.count = 100
+    sternRef.current!.instanceMatrix.needsUpdate = true
+  }, [foamRef, sternRef])
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime
+    // drift aft and fade opacity via scale
+    if (foamRef.current) {
+      const m = new THREE.Matrix4()
+      for (let i = 0; i < foamRef.current.count; i++) {
+        foamRef.current.getMatrixAt(i, m)
+        const pos = new THREE.Vector3()
+        const quat = new THREE.Quaternion()
+        const scl = new THREE.Vector3()
+        m.decompose(pos, quat, scl)
+        pos.z += 0.02
+        pos.x += Math.sin(t + i) * 0.005
+        scl.multiplyScalar(0.998)
+        m.compose(pos, quat, scl)
+        foamRef.current.setMatrixAt(i, m)
+      }
+      foamRef.current.instanceMatrix.needsUpdate = true
+    }
+    if (sternRef.current) {
+      const m = new THREE.Matrix4()
+      for (let i = 0; i < sternRef.current.count; i++) {
+        sternRef.current.getMatrixAt(i, m)
+        const pos = new THREE.Vector3()
+        const quat = new THREE.Quaternion()
+        const scl = new THREE.Vector3()
+        m.decompose(pos, quat, scl)
+        pos.z -= 0.03
+        pos.x += Math.sin(t * 2 + i) * 0.01
+        scl.multiplyScalar(0.997)
+        m.compose(pos, quat, scl)
+        sternRef.current.setMatrixAt(i, m)
+      }
+      sternRef.current.instanceMatrix.needsUpdate = true
+    }
+  })
+
   return (
     <group>
-      {[0.2, 0.3, 0.4, 0.5].map((op, i) => (
-        <instancedMesh key={i} ref={(el) => (refs.current[i] = el)} args={[undefined as any, undefined as any, 100]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[1, 1]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={op} side={THREE.DoubleSide} />
-        </instancedMesh>
-      ))}
+      <instancedMesh ref={foamRef} args={[undefined as any, undefined as any, 400]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial map={foamTex} transparent opacity={0.6} side={THREE.DoubleSide} depthWrite={false} />
+      </instancedMesh>
+      <instancedMesh ref={sternRef} args={[undefined as any, undefined as any, 100]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial map={foamTex} transparent opacity={0.5} side={THREE.DoubleSide} depthWrite={false} />
+      </instancedMesh>
     </group>
   )
 }

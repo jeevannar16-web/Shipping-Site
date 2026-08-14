@@ -1,6 +1,8 @@
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, type MutableRefObject } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+
+export type WheelRefs = MutableRefObject<Array<THREE.Object3D | null>>
 
 export const CONTAINER_COLORS = ['#7a3222', '#b45a1e', '#2e5b40', '#24457a', '#6a6a6a', '#8b3a2a', '#c46a2b']
 
@@ -16,7 +18,6 @@ export function Container({ color = '#c46a2b', size = [2.4, 2.6, 6] as [number, 
   )
 }
 
-/** R2 — ribbed trailer face texture (no thin rib meshes). */
 function useRibbedTexture(color: string) {
   return useMemo(() => {
     const c = document.createElement('canvas')
@@ -37,7 +38,204 @@ function useRibbedTexture(color: string) {
   }, [color])
 }
 
-/** Procedural low-poly semi truck. Wheels spin when `driving`. */
+function useWheelSpinner(refs: WheelRefs, driving = true) {
+  useFrame((_, __dt) => {
+    if (!driving) return
+    refs.current.forEach((w: THREE.Object3D | null) => {
+      if (w) w.rotation.y += __dt * 8
+    })
+  })
+  return refs
+}
+
+export function ProceduralTruck({
+  cabColor = '#2F3236',
+  trailerColor = '#E3E2DF',
+  ribColor = '#C9C8C4',
+  chassisColor = '#141518',
+  tankColor = '#8A8D90',
+  tireColor = '#101112',
+  hubColor = '#7A7D80',
+  glassColor = '#0B0D0E',
+  driving = false,
+  bob = true,
+  shadow = false,
+  scale = 1,
+  wheelRefs,
+}: {
+  cabColor?: string
+  trailerColor?: string
+  ribColor?: string
+  chassisColor?: string
+  tankColor?: string
+  tireColor?: string
+  hubColor?: string
+  glassColor?: string
+  driving?: boolean
+  bob?: boolean
+  shadow?: boolean
+  scale?: number
+  wheelRefs?: WheelRefs
+}) {
+  const groupRef = useRef<THREE.Group | null>(null)
+  const chassisRef = useRef<THREE.Group>(null)
+  const localWheels = useRef<Array<THREE.Object3D | null>>([])
+  useWheelSpinner(
+    wheelRefs || localWheels,
+    driving,
+  )
+
+  const ribTex = useRibbedTexture(ribColor)
+  const cabStd = { roughness: 0.6, metalness: 0.2 }
+  const glassStd = { roughness: 0.15, metalness: 0.6 }
+  const chassisStd = { roughness: 0.9, metalness: 0.05 }
+  const tankStd = { roughness: 0.3, metalness: 0.7 }
+
+  useFrame((_, __dt) => {
+    if (bob && groupRef.current) {
+      groupRef.current.position.y = Math.sin(performance.now() / 220) * 0.02
+    }
+  })
+
+  return (
+    <group ref={groupRef} scale={scale}>
+      <group ref={chassisRef}>
+        {/* chassis frame */}
+        <mesh position={[0, 0.35, -0.9]}>
+          <boxGeometry args={[1.7, 0.12, 5.4]} />
+          <meshStandardMaterial color={chassisColor} {...chassisStd} />
+        </mesh>
+        {/* chassis skirt */}
+        <mesh position={[0, 0.15, -0.9]}>
+          <boxGeometry args={[1.8, 0.15, 5.4]} />
+          <meshStandardMaterial color={chassisColor} {...chassisStd} />
+        </mesh>
+        {/* bumper front */}
+        <mesh position={[0, 0.3, 2.9]}>
+          <boxGeometry args={[1.9, 0.4, 0.15]} />
+          <meshStandardMaterial color={chassisColor} {...chassisStd} />
+        </mesh>
+        {/* bumper rear */}
+        <mesh position={[0, 0.3, -4.5]}>
+          <boxGeometry args={[1.9, 0.4, 0.15]} />
+          <meshStandardMaterial color={chassisColor} {...chassisStd} />
+        </mesh>
+
+        {/* fuel tanks */}
+        {[-0.95, 0.95].map((z, i) => (
+          <mesh key={i} position={[0.75, 1.0, z]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.3, 0.3, 1.2, 16]} />
+            <meshStandardMaterial color={tankColor} {...tankStd} />
+          </mesh>
+        ))}
+        {/* exhaust */}
+        <mesh position={[3.0, 2.9, 0.6]}>
+          <cylinderGeometry args={[0.08, 0.08, 0.9, 12]} />
+          <meshStandardMaterial color="#111" roughness={0.6} metalness={0.4} />
+        </mesh>
+
+        {/* wheels — fixed LOCAL offsets, spin about axle (local Y inside rotated group) */}
+        {[
+          [-0.95, 0.42, 0.9], [0.95, 0.42, 0.9],
+          [-0.95, 0.42, -0.6], [0.95, 0.42, -0.6],
+          [-0.95, 0.42, -2.0], [0.95, 0.42, -2.0],
+          [-0.95, 0.42, -3.4], [0.95, 0.42, -3.4],
+        ].map((p, i) => (
+          <group key={i} position={p as [number, number, number]} rotation={[0, 0, Math.PI / 2]}>
+            <mesh>
+              <cylinderGeometry args={[0.42, 0.42, 0.25, 24]} />
+              <meshStandardMaterial color={tireColor} roughness={0.9} metalness={0} />
+            </mesh>
+            {[0.16, -0.16].map((off, j) => (
+              <mesh
+                key={j}
+                position={[0, off, 0]}
+                ref={(el) => {
+                  if (wheelRefs) {
+                    wheelRefs.current[i * 2 + j] = el
+                  } else {
+                    localWheels.current[i * 2 + j] = el
+                  }
+                }}
+              >
+                <cylinderGeometry args={[0.16, 0.16, 0.05, 16]} />
+                <meshStandardMaterial color={hubColor} roughness={0.5} metalness={0.4} />
+              </mesh>
+            ))}
+          </group>
+        ))}
+      </group>
+
+      {/* cab */}
+      <mesh position={[0, 1.1, 1.55]}>
+        <boxGeometry args={[2.2, 1.9, 2.4]} />
+        <meshStandardMaterial color={cabColor} {...cabStd} />
+      </mesh>
+      {/* windshield */}
+      <mesh position={[0, 1.35, 0.42]}>
+        <boxGeometry args={[2.0, 0.9, 0.08]} />
+        <meshStandardMaterial color={glassColor} {...glassStd} />
+      </mesh>
+      {/* side windows */}
+      <mesh position={[1.11, 1.35, 1.55]}>
+        <planeGeometry args={[0.08, 0.9]} />
+        <meshStandardMaterial color={glassColor} {...glassStd} />
+      </mesh>
+      <mesh position={[-1.11, 1.35, 1.55]}>
+        <planeGeometry args={[0.08, 0.9]} />
+        <meshStandardMaterial color={glassColor} {...glassStd} />
+      </mesh>
+      {/* grille */}
+      <mesh position={[0, 0.85, 2.78]}>
+        <boxGeometry args={[1.9, 0.7, 0.06]} />
+        <meshStandardMaterial color="#222" roughness={0.5} metalness={0.4} />
+      </mesh>
+      {/* headlights */}
+      {[-0.7, 0.7].map((x, i) => (
+        <mesh key={i} position={[x, 0.6, 2.8]}>
+          <cylinderGeometry args={[0.15, 0.15, 0.1, 16]} />
+          <meshStandardMaterial color="#ffffff" roughness={0.2} metalness={0.8} emissive="#ffffff" emissiveIntensity={0.3} />
+        </mesh>
+      ))}
+
+      {/* flatbed trailer */}
+      <mesh position={[0, 1.0, -1.9]}>
+        <boxGeometry args={[2.4, 0.1, 7.5]} />
+        <meshStandardMaterial color={chassisColor} roughness={0.9} metalness={0.05} />
+      </mesh>
+      {/* trailer side rails */}
+      {[-1.15, 1.15].map((x, i) => (
+        <mesh key={i} position={[x, 1.25, -1.9]}>
+          <boxGeometry args={[0.08, 0.4, 7.5]} />
+          <meshStandardMaterial color={chassisColor} roughness={0.9} metalness={0.05} />
+        </mesh>
+      ))}
+      {/* trailer rear rail */}
+      <mesh position={[0, 1.25, -5.65]}>
+        <boxGeometry args={[2.4, 0.4, 0.08]} />
+        <meshStandardMaterial color={chassisColor} roughness={0.9} metalness={0.05} />
+      </mesh>
+      {/* trailer front rail */}
+      <mesh position={[0, 1.25, 1.85]}>
+        <boxGeometry args={[2.4, 0.4, 0.08]} />
+        <meshStandardMaterial color={chassisColor} roughness={0.9} metalness={0.05} />
+      </mesh>
+      {/* trailer walls with ribs */}
+      <mesh position={[0, 1.85, -1.9]}>
+        <boxGeometry args={[2.4, 2.6, 7.5]} />
+        <meshStandardMaterial map={ribTex} color={trailerColor} roughness={0.5} metalness={0.1} />
+      </mesh>
+
+      {shadow && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -0.9]}>
+          <circleGeometry args={[1.7, 24]} />
+          <meshBasicMaterial color="#000000" transparent opacity={0.4} depthWrite={false} />
+        </mesh>
+      )}
+    </group>
+  )
+}
+
 export function Truck({
   cabColor = '#d0d0d0',
   containerColor = '#f0f0f0',

@@ -2,7 +2,7 @@ import { useMemo, useRef, useLayoutEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { VisualTest } from '../dev/VisualTest'
-import { TruckGLB, ContainerGLB, type WheelRefs } from '../components/Models'
+import { ProceduralTruck, type WheelRefs } from './builders'
 import type { ScrubRef } from '../lib/scrub'
 
 function ribWhite() {
@@ -33,7 +33,7 @@ function hazard() {
     g.lineTo(i + 32, 0)
     g.lineTo(i + 16, 32)
     g.fill()
-    g.fillStyle = '#E5B31B'
+    g.fillStyle = '#F2C230'
     g.beginPath()
     g.moveTo(i + 16, 32)
     g.lineTo(i + 32, 0)
@@ -60,8 +60,8 @@ function shadowBlob() {
 function Rig() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
   useLayoutEffect(() => {
-    camera.fov = 35
-    camera.position.set(-8, 4.2, 38)
+    camera.fov = 38
+    camera.position.set(-7, 3.6, 30)
     camera.lookAt(0, 2.6, 0)
     camera.updateProjectionMatrix()
   }, [camera])
@@ -83,6 +83,7 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
 
   const boom = useRef<THREE.Group>(null)
   const tele = useRef<THREE.Group>(null)
+  const boomTip = useRef<THREE.Group>(null)
   const truck = useRef<THREE.Group>(null)
   const truckWheels = useRef<Array<THREE.Object3D | null>>([]) as WheelRefs
   const held = useRef<THREE.Mesh>(null)
@@ -105,20 +106,15 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       THREE.MathUtils.lerp(5.6, 2.0, easeInOut(pC)),
       easeInOut(pB),
     )
-    if (held.current) {
-      held.current.position.set(hx, hy, 0)
-      held.current.rotation.set(0, 0, 0)
-    }
 
-    if (spreader.current) {
-      spreader.current.position.set(hx, hy + 0.95, 0)
-      spreader.current.rotation.set(0, 0, 0)
-      spreader.current.visible = p < 0.95
+    // spreader and held container are children of boomTip; animate boom angle + telescope only
+    if (boom.current) {
+      const tipX = hx + 2.4
+      const tipY = hy + 1.9 - 1.5
+      boom.current.rotation.z = Math.atan2(tipY, tipX)
     }
-
     const tipX = hx + 2.4
     const tipY = hy + 1.9 - 1.5
-    if (boom.current) boom.current.rotation.z = Math.atan2(tipY, tipX)
     const reach = Math.hypot(tipX, tipY)
     if (tele.current) {
       const extend = Math.min(Math.max(reach - 4.6, 0), 2.6)
@@ -134,19 +130,22 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       truck.current.position.x = -8 + drive
       truck.current.position.y = -0.05 * easeInOut(pD) + 0.02 * Math.sin(pDrv * Math.PI * 8)
     }
-    truckWheels.current.forEach((w) => w && (w.rotation.z = (16 * easeIn(pDrv)) / ((w.userData.radius as number) || 0.5)))
+    truckWheels.current.forEach((w: THREE.Object3D | null) => w && (w.rotation.y = (16 * easeIn(pDrv)) / ((w.userData.radius as number) || 0.5)))
 
     if (import.meta.env.DEV && held.current) {
       const d = Math.hypot(hx - STACK_TOP.x, hy - STACK_TOP.y)
       console.assert(d >= 1.0, `[SHOT2] held within 1.0 of stack at p=${p.toFixed(3)} d=${d.toFixed(2)}`)
-      console.assert(
-        held.current.quaternion.x === 0 && held.current.quaternion.y === 0 && held.current.quaternion.z === 0 && held.current.quaternion.w === 1,
-        '[SHOT2] held quaternion not identity',
-      )
       if (p < 0.01) console.assert(loaded.current?.visible === false, '[SHOT2] loaded must be hidden at p=0')
       if (p >= 0.99) {
         console.assert(Boolean(truck.current && truck.current.position.x <= -14), `[SHOT2] loadedTruck must drive ≤ -14 at p=1 (got ${truck.current?.position.x})`)
         console.assert(Boolean(loaded.current && loaded.current.parent === truck.current), '[SHOT2] loaded container must stay a child of the driving truck')
+      }
+      // wheel-attached assert
+      if (truckWheels.current[0] && truck.current) {
+        const wp = new THREE.Vector3()
+        truckWheels.current[0].getWorldPosition(wp)
+        const ca = truck.current.position.clone()
+        console.assert(wp.distanceTo(ca) < 0.5, `[SHOT2] wheel detached: dist=${wp.distanceTo(ca).toFixed(3)}`)
       }
     }
   })
@@ -164,10 +163,13 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       <group ref={fitRef} scale={0.85} position={[2.2, 0.6, 0]}>
         <VisualTest label="STACKER" target={() => fitRef.current} y={[320, 600]} x={[220, 1340]} />
 
-        {/* LEFT parked GLB truck — TruckGLB @ (-8,0,0), ContainerGLB on deck */}
+        {/* LEFT parked truck — ProceduralTruck @ (-8,0,0), ContainerGLB equivalent on flatbed */}
         <group ref={truck} position={[-8, 0, 0]}>
-          <TruckGLB wheels={truckWheels} tint="#3A3D42" />
-          <ContainerGLB ref={loaded} position={[0, 4.0, 0]} tint="#E8E8E8" />
+          <ProceduralTruck wheelRefs={truckWheels} driving={false} bob={false} />
+          <mesh ref={loaded} position={[0, 2.85, -1.9]} visible={false}>
+            <boxGeometry args={CONTAINER} />
+            <meshStandardMaterial map={ribT} color="#F4F3F1" {...std} />
+          </mesh>
           {/* shadowBlob MUST be a CHILD of the truck group (grep token: shadow-in-truck) */}
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
             <planeGeometry args={[15, 5]} />
@@ -175,7 +177,7 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
           </mesh>
         </group>
 
-        {/* RIGHT stack x +7: 2× white ribbed on top, then blue, then orange; ground box teal */}
+        {/* RIGHT stack x +7: TOP→BOTTOM [ribWhite, ribWhite, #1E6BB0, #E8590C] */}
         {STACK_COLS.map((c, i) => (
           <mesh key={i} position={[7, 0.8 + i * 1.65, 0]}>
             <boxGeometry args={CONTAINER} />
@@ -241,28 +243,29 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
         <group ref={boom} position={[-2.4, 1.5, 0]}>
           <mesh position={[1.5, 0, 0]} rotation={[0, 0, 0.15]}>
             <boxGeometry args={[3.0, 0.5, 0.45]} />
-            <meshStandardMaterial color="#1a1a1a" {...std} />
+            <meshStandardMaterial color="#17181A" {...std} />
           </mesh>
           <group ref={tele} position={[3.0, 0.4, 0]}>
             <mesh position={[1.3, 0, 0]} rotation={[0, 0, -0.1]}>
               <boxGeometry args={[2.6, 0.4, 0.4]} />
-              <meshStandardMaterial color="#1a1a1a" {...std} />
+              <meshStandardMaterial color="#17181A" {...std} />
             </mesh>
-            {/* spreader MUST be a CHILD of the boom-tip level group (grep token: spreader-child) */}
-            <group ref={spreader} position={[2.6, 0, 0]}>
-              <mesh>
-                <boxGeometry args={[1.9, 0.25, 2.3]} />
-                <meshStandardMaterial map={hazT} transparent opacity={1} {...std} />
-              </mesh>
+            {/* boomTip — spreader and held container are children of this (grep token: spreader-child) */}
+            <group ref={boomTip} position={[2.6, 0, 0]}>
+              <group ref={spreader} position={[0, 0, 0]}>
+                <mesh>
+                  <boxGeometry args={[1.9, 0.25, 2.3]} />
+                  <meshStandardMaterial map={hazT} transparent opacity={1} {...std} />
+                </mesh>
+                {/* held container — child of spreader */}
+                <mesh ref={held} position={[0, -0.95, 0]}>
+                  <boxGeometry args={CONTAINER} />
+                  <meshStandardMaterial map={ribT} color="#F4F3F1" {...std} />
+                </mesh>
+              </group>
             </group>
           </group>
         </group>
-
-        {/* ROOT-level held load */}
-        <mesh ref={held} position={[3.5, 0.85, 0]}>
-          <boxGeometry args={CONTAINER} />
-          <meshStandardMaterial map={ribT} color="#F4F3F1" {...std} />
-        </mesh>
       </group>
     </group>
   )

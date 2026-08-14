@@ -245,6 +245,13 @@ section.scene > .pin {
   box-shadow: 0 0 48px rgba(242, 242, 242, 0.14);
   will-change: transform;
 }
+.rib-bar-dark {
+  width: 64px;
+  height: 60vh;
+  background: repeating-linear-gradient(90deg, #0B0B0B 0 10px, #1a1a1a 10px 12px);
+  box-shadow: 0 0 48px rgba(0, 0, 0, 0.2);
+  will-change: transform;
+}
 
 /* F7 — section typography scale */
 .section-heading {

@@ -1,7 +1,7 @@
 import { useMemo, useRef, useLayoutEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { TruckGLB, ContainerGLB, type WheelRefs } from '../components/Models'
+import { ProceduralTruck, type WheelRefs } from './builders'
 import type { ScrubRef } from '../lib/scrub'
 
 function shadowBlob() {
@@ -56,8 +56,8 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
 
   useFrame(() => {
     const p = scrub?.current ?? 0
-    mainWheels.current.forEach((w) => w && (w.rotation.z = p * -18))
-    passWheels.current.forEach((w) => w && (w.rotation.z = p * -18))
+    mainWheels.current.forEach((w: THREE.Object3D | null) => w && (w.rotation.y = p * -18))
+    passWheels.current.forEach((w: THREE.Object3D | null) => w && (w.rotation.y = p * -18))
     if (dashGroup.current) dashGroup.current.position.x = -p * 36
     if (bgText.current) bgText.current.position.x = (p - 0.5) * 10
 
@@ -80,8 +80,6 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
       const pass = truckPass.current
       if (pass) {
         console.assert(pass.children.length >= 8, `[SHOT3] passing group has only ${pass.children.length} children`)
-        const tank = pass.getObjectByName('TANK')
-        console.assert(tank && tank.parent === pass, '[SHOT3] fuel tanks must be parented to the passing truck')
       }
       if (bgText.current) console.assert(bgText.current.renderOrder === -1, '[SHOT3] bg text must render behind the trucks')
     }
@@ -117,19 +115,22 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
         ))}
       </group>
 
-      {/* PASSING — orange cab tint, silver ribbed trailer, scale .9, z -5.5 */}
+      {/* PASSING — orange cab, silver ribbed trailer, scale .9, z -5.5 */}
       <group ref={truckPass} position={[10, 0, -5.5]} scale={0.9}>
-        <TruckGLB wheels={passWheels} tint="#E8590C" />
+        <ProceduralTruck wheelRefs={passWheels} driving={false} bob={false} cabColor="#E8590C" trailerColor="#E3E2DF" ribColor="#C9C8C4" />
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
           <planeGeometry args={[14, 5]} />
           <meshBasicMaterial map={blobT} transparent depthWrite={false} />
         </mesh>
       </group>
 
-      {/* MAIN — GLB truck carrying ContainerGLB, enters from left, exits right */}
+      {/* MAIN — silver semi + ribbed ContainerGLB on flatbed, enters from left, exits right */}
       <group ref={truckDrive} position={[-16, 0, 0]}>
-        <TruckGLB wheels={mainWheels} tint="#3A3D42" />
-        <ContainerGLB position={[0, 4.0, 0]} tint="#E8E8E8" />
+        <ProceduralTruck wheelRefs={mainWheels} driving={false} bob={false} cabColor="#3A3D42" trailerColor="#E3E2DF" ribColor="#C9C8C4" />
+        <mesh position={[0, 2.85, -1.9]}>
+          <boxGeometry args={[4.4, 1.6, 1.8]} />
+          <meshStandardMaterial color="#E8E8E8" roughness={0.7} metalness={0.15} />
+        </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
           <planeGeometry args={[15, 5]} />
           <meshBasicMaterial map={blobT} transparent depthWrite={false} />
