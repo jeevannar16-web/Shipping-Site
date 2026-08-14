@@ -4,9 +4,10 @@ import * as THREE from 'three'
 import { VisualTest } from '../dev/VisualTest'
 import type { ScrubRef } from '../lib/scrub'
 
-const PAL = ['#B4362B', '#24457A', '#2E5B40', '#C46A2B', '#D0D0D0', '#6B2B8A']
+/** v18 SHOT 7 — 7-tone container palette. */
+const PAL = ['#D64545', '#2456B0', '#E8590C', '#2E5B40', '#D8D2C8', '#6B2B8A', '#C46A2B']
 
-/** v14.2 — ship camera (0,36,16) fov35 lookAt(0,0,0); do NOT pull back or rotate. */
+/** v18 SHOT 7 — ship camera (0,36,16) fov 35, lookAt (0,0,0); do NOT pull back or rotate. */
 function Rig() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
   useLayoutEffect(() => {
@@ -37,12 +38,11 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
   const foamRef = useRef<THREE.InstancedMesh>(null)
 
   const hull = useMemo(() => {
+    // stern-origin hull: stern edge y -4 → local +z (near), bow tip y +34 → local -z (far/top)
     const s = new THREE.Shape()
-    s.moveTo(-4.7, -13)
-    s.lineTo(4.7, -13)
-    s.lineTo(4.7, 13)
-    s.lineTo(0, 17)
-    s.lineTo(-4.7, 13)
+    s.moveTo(-4.7, -4)
+    s.lineTo(4.7, -4)
+    s.lineTo(0, 34)
     s.closePath()
     const g = new THREE.ExtrudeGeometry(s, { depth: 3.8, bevelEnabled: false })
     g.rotateX(-Math.PI / 2)
@@ -56,14 +56,14 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
     const m = new THREE.Matrix4()
     const c = new THREE.Color()
     let i = 0
-    // v14 deck — ONLY 1-2 high (x*7+z*3)%2
+    // deck — 6×8, heights 1–2, colors from the 7-tone palette
     for (let x = 0; x < 6; x++)
       for (let z = 0; z < 8; z++) {
         const h = 1 + ((x * 7 + z * 3) % 2)
         for (let k = 0; k < h; k++) {
-          m.setPosition(-3.25 + x * 1.3, 3.22 + k * 1.22, -10 + z * 2.4)
+          m.setPosition(-3.25 + x * 1.3, 3.22 + k * 1.22, -28 + z * 2.4)
           deckRef.current!.setMatrixAt(i, m)
-          deckRef.current!.setColorAt(i, c.set(PAL[(x * 5 + z * 3 + k) % 6]))
+          deckRef.current!.setColorAt(i, c.set(PAL[(x * 5 + z * 3 + k) % 7]))
           i++
         }
       }
@@ -71,24 +71,24 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
     deckRef.current!.instanceMatrix.needsUpdate = true
     if (deckRef.current!.instanceColor) deckRef.current!.instanceColor.needsUpdate = true
 
-    // FOAM fleet — 220 small planes scattered along both hull sides
+    // FOAM — 400 quads, sizes .35–1.15, opacity .2–.5, scattered along the hull sides
     const f = new THREE.Matrix4()
-    for (let k = 0; k < 220; k++) {
+    for (let k = 0; k < 400; k++) {
       const side = Math.random() < 0.5 ? -1 : 1
-      const s = 0.6 + Math.random() * 0.8
+      const s = 0.35 + Math.random() * 0.8
       f.makeScale(s, s, 1)
-      f.setPosition(side * (4.9 + Math.random() * 1.0), 0.05, -16 + Math.random() * 32)
+      f.setPosition(side * (4.9 + Math.random() * 1.0), 0.05, -20 + Math.random() * 20)
       foamRef.current!.setMatrixAt(k, f)
     }
-    foamRef.current!.count = 220
+    foamRef.current!.count = 400
     foamRef.current!.instanceMatrix.needsUpdate = true
   }, [])
 
   useFrame(() => {
     if (groupRef.current) {
       const p = scrub?.current ?? 0
-      groupRef.current.position.z = THREE.MathUtils.lerp(-16, -8, p)
-      groupRef.current.rotation.y = Math.PI
+      // v18 — the ship runs its course toward the focal plane
+      groupRef.current.position.z = THREE.MathUtils.lerp(10, 1, p)
     }
   })
 
@@ -97,17 +97,17 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
   return (
     <group>
       <Rig />
-      <color attach="background" args={['#1E56A0']} />
-      <fog attach="fog" args={['#1E56A0', 60, 180]} />
+      <color attach="background" args={['#1565C0']} />
+      <fog attach="fog" args={['#1565C0', 60, 180]} />
       {/* ocean cove sphere — sibling of the traveling ship (pixel harness backdrop) */}
       <mesh scale={200}>
         <sphereGeometry args={[1, 32, 32]} />
-        <meshBasicMaterial color="#1E56A0" side={THREE.BackSide} />
+        <meshBasicMaterial color="#1565C0" side={THREE.BackSide} />
       </mesh>
       {/* sea floor — sibling of the traveling ship (pixel harness backdrop) */}
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[400, 400]} />
-        <meshStandardMaterial color="#1E56A0" {...std} />
+        <meshStandardMaterial color="#1565C0" {...std} />
       </mesh>
       <mesh geometry={noiseA} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
         <meshBasicMaterial color="#ffffff" transparent opacity={0.08} />
@@ -120,17 +120,17 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
       <group ref={groupRef}>
         <group ref={coreRef}>
           <mesh geometry={hull} position={[0, -1.2, 0]}>
-            <meshStandardMaterial color="#14213D" {...std} />
+            <meshStandardMaterial color="#101820" {...std} />
           </mesh>
-          <mesh position={[0, 0.1, 0]}>
+          <mesh position={[0, 0.1, -19]}>
             <boxGeometry args={[9.6, 0.15, 26]} />
             <meshStandardMaterial color="#F2F2F2" {...std} />
           </mesh>
-          <mesh position={[0, 0.1, -15]}>
+          <mesh position={[0, 0.1, -32]}>
             <boxGeometry args={[4.4, 0.1, 2]} />
-            <meshStandardMaterial color="#14213D" {...std} />
+            <meshStandardMaterial color="#101820" {...std} />
           </mesh>
-          <mesh position={[0, 2.7, 14.5]}>
+          <mesh position={[0, 2.7, -4]}>
             <boxGeometry args={[7, 0.2, 4]} />
             <meshStandardMaterial color="#D8D2C8" {...std} />
           </mesh>
@@ -138,36 +138,36 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
             <boxGeometry args={[1.25, 1.2, 2.3]} />
             <meshStandardMaterial {...std} />
           </instancedMesh>
-          <mesh position={[0, 5.1, -11.5]}>
+          <mesh position={[0, 5.1, -6]}>
             <boxGeometry args={[7, 5, 2.4]} />
             <meshStandardMaterial color="#F2F2F2" {...std} />
           </mesh>
-          <mesh position={[0, 6.9, -11.5]}>
+          <mesh position={[0, 6.9, -6]}>
             <boxGeometry args={[7, 0.6, 2.5]} />
             <meshStandardMaterial color="#101418" {...std} />
           </mesh>
-          <mesh position={[0, 8, -11.5]}>
+          <mesh position={[0, 8, -6]}>
             <boxGeometry args={[1.2, 1.5, 1.2]} />
             <meshStandardMaterial color="#F2F2F2" {...std} />
           </mesh>
         </group>
 
         {/* bow V foam */}
-        <mesh rotation={[-Math.PI / 2, 0, -0.5]} position={[1.6, 0.05, 15.5]}>
+        <mesh rotation={[-Math.PI / 2, 0, -0.5]} position={[1.6, 0.05, -32]}>
           <planeGeometry args={[2, 5]} />
           <meshBasicMaterial color="#ffffff" transparent opacity={0.3} side={THREE.DoubleSide} />
         </mesh>
-        <mesh rotation={[-Math.PI / 2, 0, 0.5]} position={[-1.6, 0.05, 15.5]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0.5]} position={[-1.6, 0.05, -32]}>
           <planeGeometry args={[2, 5]} />
           <meshBasicMaterial color="#ffffff" transparent opacity={0.3} side={THREE.DoubleSide} />
         </mesh>
         {/* stern trail */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, -20]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 2]}>
           <planeGeometry args={[2.5, 12]} />
           <meshBasicMaterial color="#ffffff" transparent opacity={0.3} side={THREE.DoubleSide} />
         </mesh>
         {/* scattered foam fleet */}
-        <instancedMesh ref={foamRef} args={[undefined as any, undefined as any, 220]}>
+        <instancedMesh ref={foamRef} args={[undefined as any, undefined as any, 400]}>
           <planeGeometry args={[1, 1]} />
           <meshBasicMaterial color="#ffffff" transparent opacity={0.22} side={THREE.DoubleSide} />
         </instancedMesh>
@@ -177,10 +177,10 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
         label="SHIP"
         target={() => coreRef.current}
         ship={{
-          travel: [-16, -8],
+          travel: [10, 1],
           points: [
-            { at: 0, local: [0, 2.6, 17], tag: 'BOW@0' },
-            { at: 1, local: [0, 5.1, 11.5], tag: 'BRIDGE@1' },
+            { at: 0, local: [0, 2.6, -18], tag: 'BOW@0' },
+            { at: 1, local: [0, 5.1, -6], tag: 'BRIDGE@1' },
           ],
         }}
       />

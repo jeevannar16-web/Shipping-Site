@@ -237,6 +237,15 @@ section.scene > .pin {
   }
 }
 
+/* v18 SHOT 4 — white ribbed vertical bar (Reliability split) */
+.rib-bar {
+  width: 64px;
+  height: 60vh;
+  background: repeating-linear-gradient(90deg, #f2f2f2 0 10px, #d9d9d9 10px 12px);
+  box-shadow: 0 0 48px rgba(242, 242, 242, 0.14);
+  will-change: transform;
+}
+
 /* F7 — section typography scale */
 .section-heading {
   color: #f2f2f2;

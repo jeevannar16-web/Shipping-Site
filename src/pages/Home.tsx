@@ -48,7 +48,7 @@ function useSectionScrub(ref: RefObject<HTMLElement | null>, scrub?: ScrubRef) {
 }
 
 /** P1 — fixed right-edge rail showing which of the 6 film scenes is on screen. */
-const SCENE_RAIL_LABELS = ['Network', 'Terminal', 'Linehaul', 'Highway', 'Yard', 'Ocean']
+const SCENE_RAIL_LABELS = ['Network', 'Terminal', 'Linehaul', 'Reliability', 'Highway', 'Yard', 'Ocean']
 
 function SceneRail() {
   const [active, setActive] = useState<number | null>(null)
@@ -255,10 +255,110 @@ function TruckSection({ scrub }: { scrub: ScrubRef }) {
   )
 }
 
+/** v18 SHOT 4 — RELIABILITY split: heading + ribbed bar + feature blocks, riding the scrub. */
+function ReliabilitySection({ scrub }: { scrub: ScrubRef }) {
+  const wrapRef = useRef<HTMLElement>(null)
+  const ribRef = useRef<HTMLDivElement>(null)
+  const blk1 = useRef<HTMLDivElement>(null)
+  const blk2 = useRef<HTMLDivElement>(null)
+  const headRef = useRef<HTMLDivElement>(null)
+  useSectionScrub(wrapRef, scrub)
+  useEffect(() => {
+    registerGsap()
+    const el = wrapRef.current
+    const rib = ribRef.current
+    const b1 = blk1.current
+    const b2 = blk2.current
+    const hd = headRef.current
+    if (!el) return
+    const st = ScrollTrigger.create({
+      trigger: el,
+      start: 'top top',
+      end: 'bottom bottom',
+      scrub: true,
+      onUpdate: (self) => {
+        const p = self.progress
+        if (rib) rib.style.transform = `translateY(${(p * 2 - 1) * 15}%)`
+        if (b1) {
+          const o = Math.min(p / 0.45, 1)
+          b1.style.opacity = String(o)
+          b1.style.transform = `translateY(${(1 - o) * -20}px)`
+        }
+        if (b2) {
+          const o = Math.min(Math.max((p - 0.25) / 0.45, 0), 1)
+          b2.style.opacity = String(o)
+          b2.style.transform = `translateY(${(1 - o) * -20}px)`
+        }
+        if (hd) hd.style.opacity = String(Math.min(p / 0.35, 1))
+      },
+    })
+    return () => st.kill()
+  }, [])
+  return (
+    <section ref={wrapRef} className="scene bg-[#101010]">
+      <div className="pin flex flex-col">
+        <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 md:px-10">
+          <div className="flex flex-1 items-end justify-between gap-10 pb-10 pt-28 md:pt-36">
+            <div ref={headRef} className="max-w-2xl">
+              <p className="mb-4 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.3em] text-[#6a6a6a]">
+                <span className="h-px w-8 bg-[#6a6a6a]" />
+                Reliability
+              </p>
+              <h2 className="font-display text-[clamp(2.5rem,6vw,5.5rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-[#f2f2f2]">
+                At Every
+                <br />
+                Milestone
+              </h2>
+              <p className="mt-5 max-w-md font-mono text-[11px] uppercase leading-relaxed tracking-[0.18em] text-[#8a8a8a]">
+                One shipment, one team. No hand-off between vendors — freight, customs and transport run under a single escalation path.
+              </p>
+            </div>
+            <div className="hidden shrink-0 flex-col items-end gap-2 text-right font-mono text-[10px] uppercase tracking-[0.2em] text-[#4a4a4a] md:flex">
+              <span>Real-Time Visibility</span>
+              <span>Proactive Exceptions</span>
+              <span>Owned Outcome</span>
+            </div>
+          </div>
+
+          <div className="grid flex-1 grid-cols-1 items-stretch gap-10 border-t border-[#222] pb-8 pt-10 md:grid-cols-12 md:gap-8">
+            <div className="hidden flex-col justify-between md:col-span-4 md:flex">
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#4a4a4a]">
+                Live telemetry on every lane — booking, customs, transit, final mile.
+              </p>
+              <p className="font-display text-[clamp(3rem,7vw,6rem)] font-black leading-none text-[#1c1c1c]">04</p>
+            </div>
+            <div className="flex items-center justify-center md:col-span-2">
+              <div ref={ribRef} className="rib-bar" />
+            </div>
+            <div className="flex flex-col justify-center gap-10 md:col-span-6 md:gap-0">
+              <div ref={blk1} className="border-l border-white/10 pl-6 opacity-0 md:pb-10">
+                <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-orange">01</p>
+                <h3 className="mt-2 font-display text-xl font-bold uppercase tracking-tight text-[#f2f2f2]">Real-Time Freight Tracking</h3>
+                <p className="mt-2 max-w-md text-xs leading-relaxed text-[#8a8a8a]">
+                  Know exactly where your cargo is at every milestone. Live visibility means faster decisions and zero guesswork.
+                </p>
+              </div>
+              <div className="h-px w-20 bg-[#222]" />
+              <div ref={blk2} className="border-l border-white/10 pl-6 pt-10 opacity-0 md:pt-10">
+                <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-orange">02</p>
+                <h3 className="mt-2 font-display text-xl font-bold uppercase tracking-tight text-[#f2f2f2]">24/7 Customer Support</h3>
+                <p className="mt-2 max-w-md text-xs leading-relaxed text-[#8a8a8a]">
+                  Real people, always available. We pick up the phone and we own the outcome.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 export default function Home() {
   usePageReveals()
   const stackerScrub = useRef(0)
   const truckScrub = useRef(0)
+  const reliabilityScrub = useRef(0)
   const oceanScrub = useRef(0)
 
   return (
@@ -277,19 +377,21 @@ export default function Home() {
 
       <TruckSection scrub={truckScrub} />
 
-      <StickyScene index="4" mode="HIGHWAY" bg="bg-[#101410]" text="text-[#ededed]" line="Built for every lane.">
+      <ReliabilitySection scrub={reliabilityScrub} />
+
+      <StickyScene index="5" mode="HIGHWAY" bg="bg-[#101410]" text="text-[#ededed]" line="Built for every lane.">
         <SuspenseBox label="About">
           <ViaductScene />
         </SuspenseBox>
       </StickyScene>
 
-      <StickyScene index="5" mode="YARD" bg="bg-[#B8C4CC]" text="text-[#0a0a0a]" line="Powering the network.">
+      <StickyScene index="6" mode="YARD" bg="bg-[#C9D3D8]" text="text-[#0a0a0a]" line="Powering the network.">
         <SuspenseBox label="Terminal">
           <TerminalScene />
         </SuspenseBox>
       </StickyScene>
 
-      <StickyScene index="6" mode="OCEAN" bg="bg-[#1E56A0]" line="Ocean freight, end to end." scrub={oceanScrub} sub="FCL, LCL and specialised cargo — across every major trade lane.">
+      <StickyScene index="7" mode="OCEAN" bg="bg-[#1E56A0]" line="Ocean freight, end to end." scrub={oceanScrub} sub="FCL, LCL and specialised cargo — across every major trade lane.">
         <SuspenseBox label="Ocean">
           <SceneStage label="Ocean" tone="blue" camera={{ position: [0, 36, 16], fov: 35 }}>
             <ShipScene scrub={oceanScrub} />

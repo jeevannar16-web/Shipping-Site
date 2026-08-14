@@ -4,7 +4,19 @@ import * as THREE from 'three'
 import SceneCanvas from '../components/SceneCanvas'
 import { VisualTest } from '../dev/VisualTest'
 
-/** Bright sky gradient #B8C4CC → #D8DDE0 inside a dome. */
+function ribWhite() {
+  const c = document.createElement('canvas')
+  c.width = 256
+  c.height = 128
+  const g = c.getContext('2d')!
+  g.fillStyle = '#FAFAFA'
+  g.fillRect(0, 0, 256, 128)
+  g.fillStyle = '#d9d9d9'
+  for (let x = 8; x < 256; x += 16) g.fillRect(x, 0, 4, 128)
+  return new THREE.CanvasTexture(c)
+}
+
+/** v18 YARD — bright sky gradient #C9D3D8 → #D8DDE0 inside a dome. */
 function SkyDome() {
   const mat = useMemo(
     () =>
@@ -25,7 +37,7 @@ function SkyDome() {
           varying vec3 vWorldPos;
           void main() {
             float h = normalize(vWorldPos).y * 0.5 + 0.5;
-            vec3 col = mix(vec3(0.722, 0.769, 0.80), vec3(0.847, 0.867, 0.878), pow(h, 0.7));
+            vec3 col = mix(vec3(0.788, 0.827, 0.847), vec3(0.847, 0.867, 0.878), pow(h, 0.7));
             gl_FragColor = vec4(col, 1.0);
           }
         `,
@@ -40,16 +52,20 @@ function SkyDome() {
   )
 }
 
-/** YARD — LONG container block: containers LONG axis X (6,2.6,2.4), 4 rows × step 6.3, 6 cols z step 2.6, stacks 1–3. */
-const YARD_COLORS = ['#7a3222', '#b45a1e', '#2e5b40', '#24457a', '#6a6a6a', '#8b3a2a']
+/** v18 YARD — LONG containers (6,2.6,2.4), 4 rows × 6 cols; ~40% white ribbed, orange #E8590C in the mix. */
+const YARD_COLORS = ['#7a3222', '#E8590C', '#2e5b40', '#24457a', '#6a6a6a', '#8b3a2a']
 
 function ContainerYard() {
-  const meshes = useMemo(() => {
+  const ribT = useMemo(ribWhite, [])
+  const yard = useMemo(() => {
     const geo = new THREE.BoxGeometry(6, 2.6, 2.4)
-    const mats = YARD_COLORS.map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.7, metalness: 0.15, flatShading: true }))
-    const inst = mats.map(() => new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial(), 216))
+    const plainMats = YARD_COLORS.map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.7, metalness: 0.15, flatShading: true }))
+    const white = new THREE.MeshStandardMaterial({ color: '#FAFAFA', map: ribT, roughness: 0.75, metalness: 0.15, flatShading: true })
+    const plain = plainMats.map(() => new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial(), 216))
+    const whiteMesh = new THREE.InstancedMesh(geo, white, 216)
     const m = new THREE.Matrix4()
-    let idx = 0
+    let pi = 0
+    let wi = 0
     for (let r = 0; r < 4; r++) {
       const x = -9.45 + r * 6.3
       for (let c = 0; c < 6; c++) {
@@ -57,36 +73,43 @@ function ContainerYard() {
         const stack = 1 + ((r + c) % 3)
         for (let s = 0; s < stack; s++) {
           const y = 1.3 + s * 2.6
-          const mi = (r * 7 + c * 3 + s) % YARD_COLORS.length
           m.makeTranslation(x, y, z)
-          inst[mi].setMatrixAt(idx++, m)
+          const mi = (r * 7 + c * 3 + s) % YARD_COLORS.length
+          // ~40% white ribbed shells
+          if ((r + c + s) % 5 < 2) {
+            whiteMesh.setMatrixAt(wi++, m)
+          } else {
+            plain[mi].setMatrixAt(pi++, m)
+          }
         }
       }
     }
-    inst.forEach((mm, mi) => {
-      mm.count = idx
-      mm.material = mats[mi]
+    plain.forEach((mm, mi) => {
+      mm.count = pi
+      mm.material = plainMats[mi]
       mm.instanceMatrix.needsUpdate = true
     })
-    return inst
-  }, [])
+    whiteMesh.count = wi
+    whiteMesh.instanceMatrix.needsUpdate = true
+    return [...plain, whiteMesh]
+  }, [ribT])
 
   return (
     <group>
-      {meshes.map((mm, i) => (
+      {yard.map((mm, i) => (
         <primitive key={i} object={mm} />
       ))}
     </group>
   )
 }
 
-/** V6 — 2 white lane stripes painted on the dark apron (z ± 12). */
+/** v18 YARD — 2 white lane stripes painted on the dark apron (z ± 12). */
 function Lanes() {
   const stripes = useMemo(() => [-12, 12], [])
   return (
     <group>
       {stripes.map((z) => (
-        <mesh key={z} rotation={[0, 0, 0]} position={[0, 0.02, z]}>
+        <mesh key={z} position={[0, 0.02, z]}>
           <boxGeometry args={[40, 0.03, 0.08]} />
           <meshBasicMaterial color="#f2f2f2" />
         </mesh>
@@ -182,7 +205,7 @@ function GantryCrane() {
             <meshStandardMaterial color="#2a2a2a" metalness={0.8} />
           </mesh>
         ))}
-        {/* YARD — spreader + hung LONG container same size (6,2.6,2.4), orange, y 3..9 */}
+        {/* YARD — spreader + hung LONG container same size (6,2.6,2.4), orange #E8590C, y 3..9 */}
         <group ref={spreaderRef} position={[0, 9 - 10.7, 0]}>
           <mesh>
             <boxGeometry args={[6.4, 0.4, 2.6]} />
@@ -190,7 +213,7 @@ function GantryCrane() {
           </mesh>
           <mesh ref={containerRef} position={[0, -1.5, 0]}>
             <boxGeometry args={[6, 2.6, 2.4]} />
-            <meshStandardMaterial color="#c46a2b" roughness={0.7} metalness={0.15} flatShading />
+            <meshStandardMaterial color="#E8590C" roughness={0.7} metalness={0.15} flatShading />
           </mesh>
         </group>
       </group>
@@ -198,13 +221,13 @@ function GantryCrane() {
   )
 }
 
-/** YARD — camera (0,15,32), lookAt (0,5,0). */
+/** v18 YARD — camera (0,20,48), lookAt (0,7,0), fov 35. */
 function CameraRig() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
   useLayoutEffect(() => {
     camera.fov = 35
-    camera.position.set(0, 17, 40)
-    camera.lookAt(0, 6, 0)
+    camera.position.set(0, 20, 48)
+    camera.lookAt(0, 7, 0)
     camera.updateProjectionMatrix()
   }, [camera])
   return null
@@ -213,9 +236,9 @@ function CameraRig() {
 export default function TerminalScene() {
   const fitRef = useRef<THREE.Group>(null)
   return (
-    <SceneCanvas fallbackLabel="Terminal" tone="orange" camera={{ position: [0, 17, 40], fov: 35 }}>
-      <color attach="background" args={['#B8C4CC']} />
-      <fog attach="fog" args={['#B8C4CC', 50, 140]} />
+    <SceneCanvas fallbackLabel="Terminal" tone="orange" camera={{ position: [0, 20, 48], fov: 35 }}>
+      <color attach="background" args={['#C9D3D8']} />
+      <fog attach="fog" args={['#C9D3D8', 50, 140]} />
       <ambientLight intensity={0.75} />
       <directionalLight position={[-6, 12, 8]} intensity={1.1} color="#ffffff" />
 
@@ -228,7 +251,7 @@ export default function TerminalScene() {
       <Lanes />
 
       <group ref={fitRef}>
-        <VisualTest label="YARD" target={() => fitRef.current} y={[250, 490]} x={[330, 1170]} />
+        <VisualTest label="YARD" target={() => fitRef.current} y={[160, 500]} x={[270, 1360]} />
         <ContainerYard />
         <GantryCrane />
       </group>
