@@ -150,7 +150,7 @@ export function Truck({
   )
 }
 
-/** Ribbon road geometry from a CatmullRomCurve3 + instanced center dashes + edge lines. */
+/** Ribbon road geometry from a CatmullRomCurve3 + instanced center dashes + edge lines + barriers. */
 export function CurvedRoad({
   curve,
   width = 6,
@@ -158,6 +158,7 @@ export function CurvedRoad({
   y = 0,
   dashed = true,
   edgeLines = true,
+  barriers = false,
   dashSize = [0.18, 1.1] as [number, number],
   dashColor = '#f2f2f2',
   edgeColor = '#f2f2f2',
@@ -168,6 +169,7 @@ export function CurvedRoad({
   y?: number
   dashed?: boolean
   edgeLines?: boolean
+  barriers?: boolean
   dashSize?: [number, number]
   dashColor?: string
   edgeColor?: string
@@ -243,6 +245,17 @@ export function CurvedRoad({
           <mesh key={`e${i}`} position={e.pos} rotation={[0, e.rot, 0]}>
             <boxGeometry args={[0.09, 0.02, 1]} />
             <meshBasicMaterial color={edgeColor} />
+          </mesh>
+        ))}
+      {barriers &&
+        edges.map((e, i) => (
+          <mesh
+            key={`b${i}`}
+            position={[e.pos.x - Math.cos(e.rot) * 0.3 * e.side, y + 0.45, e.pos.z + Math.sin(e.rot) * 0.3 * e.side]}
+            rotation={[0, e.rot, 0]}
+          >
+            <boxGeometry args={[0.15, 0.9, 1.2]} />
+            <meshStandardMaterial color="#8a8a8a" roughness={0.6} />
           </mesh>
         ))}
     </group>

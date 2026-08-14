@@ -1,8 +1,9 @@
 import { useMemo, useRef } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import SceneCanvas from '../components/SceneCanvas'
 import { CurvedRoad, InstancedTrees, Truck } from './builders'
+import type { ScrubRef } from '../lib/scrub'
 
 function viaductCurve(offset = 0) {
   return new THREE.CatmullRomCurve3([
@@ -146,7 +147,7 @@ function SemiTraffic({ curve, laneSign = -1, cab = '#f2f2f2', container = '#ff4a
   )
 }
 
-export default function ViaductScene() {
+export default function ViaductScene({ scrub }: { scrub?: ScrubRef }) {
   const curveMain = useMemo(() => viaductCurve(), [])
   const curveMirror = useMemo(() => viaductCurveMirror(), [])
 
@@ -174,28 +175,30 @@ export default function ViaductScene() {
       <InstancedTrees count={300} min={1} max={2.2} area={42} center={[0, 0]} height={0} />
 
       {/* viaduct 1 */}
-      <CurvedRoad curve={curveMain} width={6} color="#6f6f6f" y={10.05} dashSize={[0.3, 3]} />
+      <CurvedRoad curve={curveMain} width={6} color="#6f6f6f" y={10.05} dashSize={[0.3, 3]} barriers />
       <Pillars curve={curveMain} />
       <Traffic curve={curveMain} laneSign={1} count={12} />
       <SemiTraffic curve={curveMain} laneSign={-1} cab="#f2f2f2" container="#ff4a00" offset={0.2} />
       <SemiTraffic curve={curveMain} laneSign={-1} cab="#f2f2f2" container="#f0f0f0" offset={0.7} />
 
       {/* viaduct 2 (mirror) */}
-      <CurvedRoad curve={curveMirror} width={6} color="#6f6f6f" y={10.05} dashSize={[0.3, 3]} />
+      <CurvedRoad curve={curveMirror} width={6} color="#6f6f6f" y={10.05} dashSize={[0.3, 3]} barriers />
       <Pillars curve={curveMirror} />
       <Traffic curve={curveMirror} laneSign={-1} count={12} />
       <SemiTraffic curve={curveMirror} laneSign={1} cab="#ff4a00" container="#f0f0f0" offset={0.5} />
 
-      <CameraDolly />
+      <CameraDolly scrub={scrub} />
     </SceneCanvas>
   )
 }
 
-function CameraDolly() {
-  useFrame((state) => {
-    const t = state.clock.elapsedTime
-    state.camera.position.set(0, 26 - Math.sin(t * 0.1) * 3, 34 - Math.sin(t * 0.1) * 5)
-    state.camera.lookAt(0, 8, 0)
+/** v19 SHOT 5 — scrub camera (0,26,34) → (0,20,24), lookAt (0,8,0). */
+function CameraDolly({ scrub }: { scrub?: ScrubRef }) {
+  const camera = useThree((s) => s.camera)
+  useFrame(() => {
+    const p = scrub?.current ?? 0
+    camera.position.set(0, THREE.MathUtils.lerp(26, 20, p), THREE.MathUtils.lerp(34, 24, p))
+    camera.lookAt(0, 8, 0)
   })
   return null
 }

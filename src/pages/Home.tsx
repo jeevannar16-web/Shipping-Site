@@ -48,7 +48,7 @@ function useSectionScrub(ref: RefObject<HTMLElement | null>, scrub?: ScrubRef) {
 }
 
 /** P1 — fixed right-edge rail showing which of the 6 film scenes is on screen. */
-const SCENE_RAIL_LABELS = ['Network', 'Terminal', 'Linehaul', 'Reliability', 'Highway', 'Yard', 'Ocean']
+const SCENE_RAIL_LABELS = ['Network', 'Terminal', 'Linehaul', 'Highway', 'Yard', 'Ocean']
 
 function SceneRail() {
   const [active, setActive] = useState<number | null>(null)
@@ -193,44 +193,18 @@ function HeroSection() {
   )
 }
 
-/** S1 SHOT 3 — side-view truck with the giant word scrubbing across. */
+/** S1 SHOT 3 — side-view truck; the giant word lives in the scene at z -12 behind the trucks. */
 function TruckSection({ scrub }: { scrub: ScrubRef }) {
   const wrapRef = useRef<HTMLElement>(null)
-  const wordRef = useRef<HTMLSpanElement>(null)
   useSectionScrub(wrapRef, scrub)
-  useEffect(() => {
-    registerGsap()
-    const el = wrapRef.current
-    const word = wordRef.current
-    if (!el || !word) return
-    const st = ScrollTrigger.create({
-      trigger: el,
-      start: 'top top',
-      end: 'bottom bottom',
-      scrub: true,
-      onUpdate: (self) => {
-        word.style.transform = `translateX(${(self.progress - 0.5) * 24}vw)`
-        word.style.opacity = String(Math.min(self.progress / 0.45, 1) * (1 - Math.max((self.progress - 0.82) / 0.18, 0)))
-      },
-    })
-    return () => st.kill()
-  }, [])
   return (
-    <section ref={wrapRef} className={`scene bg-[#E6E1D8]`}>
+    <section ref={wrapRef} className={`scene bg-[#FAF9F7]`}>
       <div className="pin">
         <div className="absolute left-6 top-8 z-20 md:left-10">
           <p className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.3em] text-orange">
             <span className="h-px w-8 bg-orange" />
             03 — Linehaul
           </p>
-        </div>
-        <div className="pointer-events-none absolute inset-0 z-10 flex items-center overflow-hidden">
-          <span
-            ref={wordRef}
-            className="slow-scroll whitespace-nowrap font-display text-[13vw] font-black uppercase leading-none tracking-tight text-[#d8d2c8]"
-          >
-            Under One Group
-          </span>
         </div>
         <div className="absolute inset-0">
           <SuspenseBox label="Linehaul">
@@ -325,7 +299,9 @@ function ReliabilitySection({ scrub }: { scrub: ScrubRef }) {
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#4a4a4a]">
                 Live telemetry on every lane — booking, customs, transit, final mile.
               </p>
-              <p className="font-display text-[clamp(3rem,7vw,6rem)] font-black leading-none text-[#1c1c1c]">04</p>
+              <p className="max-w-[10rem] font-mono text-[10px] uppercase leading-relaxed tracking-[0.2em] text-[#4a4a4a]">
+                One accountable team per shipment — every milestone, owned to delivery.
+              </p>
             </div>
             <div className="flex items-center justify-center md:col-span-2">
               <div ref={ribRef} className="rib-bar" />
@@ -359,6 +335,7 @@ export default function Home() {
   const stackerScrub = useRef(0)
   const truckScrub = useRef(0)
   const reliabilityScrub = useRef(0)
+  const viaductScrub = useRef(0)
   const oceanScrub = useRef(0)
 
   return (
@@ -367,7 +344,7 @@ export default function Home() {
       <SceneRail />
       <HeroSection />
 
-      <StickyScene index="2" mode="TERMINAL" bg="bg-[#E6E1D8]" text="text-[#0a0a0a]" line="One team, every mode." scrub={stackerScrub}>
+      <StickyScene index="2" mode="TERMINAL" bg="bg-[#FAF9F7]" text="text-[#0a0a0a]" line="One team, every mode." scrub={stackerScrub}>
         <SuspenseBox label="Freight">
           <SceneStage label="Freight" tone="orange">
             <StackerScene scrub={stackerScrub} />
@@ -379,19 +356,19 @@ export default function Home() {
 
       <ReliabilitySection scrub={reliabilityScrub} />
 
-      <StickyScene index="5" mode="HIGHWAY" bg="bg-[#101410]" text="text-[#ededed]" line="Built for every lane.">
+      <StickyScene index="4" mode="HIGHWAY" bg="bg-[#101410]" text="text-[#ededed]" line="Built for every lane." scrub={viaductScrub}>
         <SuspenseBox label="About">
-          <ViaductScene />
+          <ViaductScene scrub={viaductScrub} />
         </SuspenseBox>
       </StickyScene>
 
-      <StickyScene index="6" mode="YARD" bg="bg-[#C9D3D8]" text="text-[#0a0a0a]" line="Powering the network.">
+      <StickyScene index="5" mode="YARD" bg="bg-[#C9D3D8]" text="text-[#0a0a0a]" line="Powering the network.">
         <SuspenseBox label="Terminal">
           <TerminalScene />
         </SuspenseBox>
       </StickyScene>
 
-      <StickyScene index="7" mode="OCEAN" bg="bg-[#1E56A0]" line="Ocean freight, end to end." scrub={oceanScrub} sub="FCL, LCL and specialised cargo — across every major trade lane.">
+      <StickyScene index="6" mode="OCEAN" bg="bg-[#1E56A0]" line="Ocean freight, end to end." scrub={oceanScrub} sub="FCL, LCL and specialised cargo — across every major trade lane.">
         <SuspenseBox label="Ocean">
           <SceneStage label="Ocean" tone="blue" camera={{ position: [0, 36, 16], fov: 35 }}>
             <ShipScene scrub={oceanScrub} />

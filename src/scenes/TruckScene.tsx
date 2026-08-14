@@ -1,10 +1,10 @@
 import { useMemo, useRef, useLayoutEffect, type RefObject } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import { ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
 import { VisualTest } from '../dev/VisualTest'
 import type { ScrubRef } from '../lib/scrub'
 
+/** v19 studio — white seamless #FAF9F7, fog 25→70, BackSide sphere, NO floor plane. */
 function rib() {
   const c = document.createElement('canvas')
   c.width = 256
@@ -12,9 +12,37 @@ function rib() {
   const g = c.getContext('2d')!
   g.fillStyle = '#FAFAFA'
   g.fillRect(0, 0, 256, 128)
-  g.fillStyle = '#C9C9C9'
+  g.fillStyle = '#C9C7C4'
   for (let x = 8; x < 256; x += 16) g.fillRect(x, 0, 4, 128)
   return new THREE.CanvasTexture(c)
+}
+
+function shadowBlob() {
+  const c = document.createElement('canvas')
+  c.width = 128
+  c.height = 128
+  const g = c.getContext('2d')!
+  const grad = g.createRadialGradient(64, 64, 6, 64, 64, 62)
+  grad.addColorStop(0, 'rgba(0,0,0,0.3)')
+  grad.addColorStop(1, 'rgba(0,0,0,0)')
+  g.fillStyle = grad
+  g.fillRect(0, 0, 128, 128)
+  return new THREE.CanvasTexture(c)
+}
+
+function bgWords() {
+  const c = document.createElement('canvas')
+  c.width = 1024
+  c.height = 256
+  const g = c.getContext('2d')!
+  g.clearRect(0, 0, 1024, 256)
+  g.fillStyle = '#D8D2C8'
+  g.font = '800 150px Archivo, Arial, sans-serif'
+  g.textAlign = 'center'
+  g.textBaseline = 'middle'
+  g.fillText('UNDER ONE GROUP', 512, 128)
+  const t = new THREE.CanvasTexture(c)
+  return t
 }
 
 function Rig() {
@@ -28,76 +56,72 @@ function Rig() {
   return null
 }
 
-type TruckProps = { ribT: THREE.Texture; wheels?: RefObject<THREE.Group | null>; cabColor: string }
+type TruckModelProps = { cabColor: string; ribT: THREE.Texture; wheels?: RefObject<THREE.Group | null> }
 
-/** v18 SHOT 3 — chassis truck: white ribbed container (loaded) + cab. */
-function Truck({ ribT, wheels, cabColor }: TruckProps) {
+/** v19 SHOT 3 — TruckModel(cabColor): cab + windows, chassis, 5 dual wheels, tanks, exhaust, ribbed trailer. */
+function TruckModel({ cabColor, ribT, wheels }: TruckModelProps) {
   const std = { roughness: 0.9, metalness: 0 }
   return (
     <group>
-      <mesh position={[-0.2, 0.6, 0]}>
+      {/* chassis (11.6,.4,1.4) #101010 — exact length */}
+      <mesh position={[0, 0.78, 0]}>
         <boxGeometry args={[11.6, 0.4, 1.4]} />
         <meshStandardMaterial color="#101010" {...std} />
       </mesh>
-      {/* loaded white ribbed container over the rear axles */}
-      <mesh position={[-3.05, 1.95, 0]}>
-        <boxGeometry args={[5.6, 2.3, 2.3]} />
+      {/* ribbed trailer (9.5,2.6,2.4) #FAFAFA — carried at y 2.35 */}
+      <mesh name="CONTAINER" position={[0, 2.35, 0]}>
+        <boxGeometry args={[9.5, 2.6, 2.4]} />
         <meshStandardMaterial map={ribT} color="#FAFAFA" {...std} />
       </mesh>
-      <mesh position={[-5.8, 1.0, 0]}>
-        <boxGeometry args={[0.12, 0.3, 2.2]} />
-        <meshStandardMaterial color="#111" {...std} />
-      </mesh>
-      <group ref={wheels}>
-        {/* 5 full round dual wheels — r.6 + silver hub r.15, opaque */}
-        {[-4.6, -3.4, -2.2, 3.6, 4.8].map((x, i) => (
-          <group key={i} position={[x, 0.62, 0]} rotation={[0, 0, Math.PI / 2]}>
-            <mesh>
-              <cylinderGeometry args={[0.6, 0.6, 0.3, 32]} />
-              <meshStandardMaterial color="#101010" {...std} />
-            </mesh>
-            <mesh>
-              <cylinderGeometry args={[0.15, 0.15, 0.32, 16]} />
-              <meshStandardMaterial color="#8A8A8A" {...std} />
-            </mesh>
-          </group>
-        ))}
-      </group>
-      <mesh position={[4.4, 1.55, 0]}>
+      {/* cab (2.4,1.5,2.2) + windshield + side windows */}
+      <mesh position={[4.6, 1.73, 0]}>
         <boxGeometry args={[2.4, 1.5, 2.2]} />
         <meshStandardMaterial color={cabColor} {...std} />
       </mesh>
-      <mesh position={[5.55, 2.1, 0]} rotation={[0, 0, -0.28]}>
+      <mesh position={[5.75, 2.1, 0]} rotation={[0, 0, -0.28]}>
         <boxGeometry args={[0.12, 0.8, 2.0]} />
         <meshStandardMaterial color="#101418" {...std} />
       </mesh>
-      <mesh position={[4.4, 2.0, -1.11]}>
+      <mesh position={[4.6, 2.05, -1.11]}>
         <planeGeometry args={[1.4, 0.55]} />
         <meshStandardMaterial color="#101418" {...std} />
       </mesh>
-      <mesh position={[4.4, 2.0, 1.11]}>
+      <mesh position={[4.6, 2.05, 1.11]}>
         <planeGeometry args={[1.4, 0.55]} />
         <meshStandardMaterial color="#101418" {...std} />
       </mesh>
-      <mesh position={[5.62, 1.3, 0]}>
+      <mesh position={[5.8, 1.35, 0]}>
         <boxGeometry args={[0.1, 0.6, 1.8]} />
         <meshStandardMaterial color="#111" {...std} />
       </mesh>
-      <mesh position={[5.55, 1.7, -0.75]}>
-        <boxGeometry args={[0.06, 0.15, 0.3]} />
-        <meshStandardMaterial color="#f2f2f2" {...std} />
-      </mesh>
-      <mesh position={[5.55, 1.7, 0.75]}>
-        <boxGeometry args={[0.06, 0.15, 0.3]} />
-        <meshStandardMaterial color="#f2f2f2" {...std} />
-      </mesh>
-      <mesh position={[3.2, 2.6, 0]}>
+      {/* 5 dual wheels r.6 hub .15 — 24+ seg, opaque */}
+      <group ref={wheels}>
+        {[-5.0, -3.8, -2.6, 3.2, 4.4].map((x, i) =>
+          [-0.8, 0.8].map((z, j) => (
+            <group key={`${i}-${j}`} position={[x, 0.6, z]} rotation={[0, 0, Math.PI / 2]}>
+              <mesh>
+                <cylinderGeometry args={[0.6, 0.6, 0.3, 32]} />
+                <meshStandardMaterial color="#101010" {...std} />
+              </mesh>
+              <mesh>
+                <cylinderGeometry args={[0.15, 0.15, 0.32, 16]} />
+                <meshStandardMaterial color="#8A8A8A" {...std} />
+              </mesh>
+            </group>
+          )),
+        )}
+      </group>
+      {/* fuel tanks — 2 cyl r.3 len1.2 #9A9A9A at (2.2,1.0,±.95), attached */}
+      {[-0.95, 0.95].map((z, i) => (
+        <mesh key={i} name="TANK" position={[2.2, 1.0, z]} rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.3, 0.3, 1.2, 16]} />
+          <meshStandardMaterial color="#9A9A9A" {...std} />
+        </mesh>
+      ))}
+      {/* exhaust (0.08,.9,.08) @ (3.0,2.9,.6) */}
+      <mesh position={[3.0, 2.9, 0.6]}>
         <cylinderGeometry args={[0.08, 0.08, 0.9, 12]} />
         <meshStandardMaterial color="#111" {...std} />
-      </mesh>
-      <mesh position={[2.6, 1.1, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.25, 0.25, 1, 16]} />
-        <meshStandardMaterial color="#9A9A9A" {...std} />
       </mesh>
     </group>
   )
@@ -105,50 +129,86 @@ function Truck({ ribT, wheels, cabColor }: TruckProps) {
 
 export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
   const ribT = useMemo(rib, [])
+  const blobT = useMemo(shadowBlob, [])
+  const wordT = useMemo(bgWords, [])
   const wheels = useRef<THREE.Group>(null)
   const grp = useRef<THREE.Group>(null)
   const truckMain = useRef<THREE.Group>(null)
   const truckPass = useRef<THREE.Group>(null)
+  const bgText = useRef<THREE.Mesh>(null)
+  const dashGroup = useRef<THREE.Group>(null)
 
-  useFrame(({ clock }) => {
-    wheels.current?.children.forEach((w) => w && (w.rotation.x = clock.elapsedTime * 3))
+  useFrame(() => {
     const p = scrub?.current ?? 0
+    // wheels spin with the scrub
+    wheels.current?.children.forEach((w) => w && (w.rotation.x = p * -18))
+    // dashes + bg move as the trucks roll
+    if (dashGroup.current) dashGroup.current.position.x = -p * 36
+    if (bgText.current) bgText.current.position.x = (p - 0.5) * 10
+    // MAIN exits right p .85→1
     const pE = Math.min(Math.max((p - 0.85) / 0.15, 0), 1)
     const easeE = pE * pE * (3 - 2 * pE)
-    if (truckMain.current) truckMain.current.position.x = 5.5 * easeE
-    if (truckPass.current) truckPass.current.position.x = -10 + easeE * 16
-  })
+    if (truckMain.current) truckMain.current.position.x = 1.0 * easeE
+    // PASSING drives one continuous pass, one group x +10→-16
+    if (truckPass.current) truckPass.current.position.x = THREE.MathUtils.lerp(10, -16, p)
 
-  const std = { roughness: 0.9, metalness: 0 }
+    if (import.meta.env.DEV) {
+      const pass = truckPass.current
+      if (pass) {
+        console.assert(pass.children.length >= 8, `[SHOT3] passing group has only ${pass.children.length} children`)
+        const tank = pass.getObjectByName('TANK')
+        console.assert(tank && tank.parent === pass, '[SHOT3] fuel tanks must be parented to the passing truck')
+      }
+      if (bgText.current) console.assert(bgText.current.renderOrder === -1, '[SHOT3] bg text must render behind the trucks')
+    }
+  })
 
   return (
     <group>
       <Rig />
-      <color attach="background" args={['#EDE7DC']} />
-      <fog attach="fog" args={['#EDE7DC', 40, 120]} />
-      {/* studio cove sphere — sibling of the measured group (pixel harness) */}
+      <color attach="background" args={['#FAF9F7']} />
+      <fog attach="fog" args={['#FAF9F7', 25, 70]} />
       <mesh scale={200}>
         <sphereGeometry args={[1, 32, 32]} />
-        <meshBasicMaterial color="#EDE7DC" side={THREE.BackSide} />
+        <meshBasicMaterial color="#FAF9F7" side={THREE.BackSide} />
       </mesh>
-      {/* studio cove floor + contact shadow — siblings of the measured group (pixel harness) */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[400, 400]} />
-        <meshStandardMaterial color="#EDE7DC" {...std} />
-      </mesh>
-      <ContactShadows opacity={0.3} blur={3} scale={45} />
 
-      {/* ——— passing truck (deep, unmeasured) — orange cab, drives past from behind-left ——— */}
-      <group ref={truckPass} position={[-10, 0, -5.5]} scale={0.9}>
-        <Truck ribT={ribT} cabColor="#E8590C" />
+      {/* BG TEXT "UNDER ONE GROUP" — 3D plane at z -12, behind the trucks, never full-screen */}
+      <mesh ref={bgText} position={[0, 1.7, -12]} renderOrder={-1}>
+        <planeGeometry args={[26, 7.3]} />
+        <meshBasicMaterial map={wordT} color="#D8D2C8" transparent opacity={0.3} depthWrite={false} toneMapped={false} />
+      </mesh>
+
+      {/* floor dashes — move with the scrub */}
+      <group ref={dashGroup}>
+        {Array.from({ length: 14 }, (_, i) => (
+          <mesh key={i} position={[-21 + i * 3, 0.02, 0]}>
+            <boxGeometry args={[0.5, 0.02, 2.2]} />
+            <meshBasicMaterial color="#e8e5df" transparent opacity={0.6} />
+          </mesh>
+        ))}
       </group>
 
+      {/* PASSING — orange cab, scale .9, z -5.5, ONE group (all parts children) */}
+      <group ref={truckPass} position={[10, 0, -5.5]} scale={0.9}>
+        <TruckModel ribT={ribT} cabColor="#E8590C" />
+      </group>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, -5.5]}>
+        <planeGeometry args={[26, 6]} />
+        <meshBasicMaterial map={blobT} transparent depthWrite={false} />
+      </mesh>
+
+      {/* MAIN — #F1F0EE carrying the ribbed container */}
       <group ref={grp} position={[0, 0.05, 0]}>
-        <VisualTest label="TRUCK" target={() => grp.current} y={[285, 505]} x={[270, 1030]} />
+        <VisualTest label="TRUCK" target={() => grp.current} y={[244, 546]} x={[237, 1100]} />
         <group ref={truckMain}>
-          <Truck ribT={ribT} wheels={wheels} cabColor="#DFDFDF" />
+          <TruckModel ribT={ribT} wheels={wheels} cabColor="#F1F0EE" />
         </group>
       </group>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
+        <planeGeometry args={[26, 6]} />
+        <meshBasicMaterial map={blobT} transparent depthWrite={false} />
+      </mesh>
     </group>
   )
 }
