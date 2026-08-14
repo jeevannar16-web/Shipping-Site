@@ -58,13 +58,13 @@ function shadowBlob() {
   return new THREE.CanvasTexture(c)
 }
 
-/** v20 SHOT 2 — camera (-8, 4.0, 16.5), lookAt (0, 3.0, 0), fov 35. */
+/** v21 SHOT 2 — camera (-8, 4.2, 21.5), lookAt (0, 2.6, 0), fov 35 (distance adjusted for the .85 tableau). */
 function Rig() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
   useLayoutEffect(() => {
     camera.fov = 35
-    camera.position.set(-8, 4.0, 16.5)
-    camera.lookAt(0, 3.0, 0)
+    camera.position.set(-8, 4.2, 21.5)
+    camera.lookAt(0, 2.6, 0)
     camera.updateProjectionMatrix()
   }, [camera])
   return null
@@ -84,6 +84,7 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const boom = useRef<THREE.Group>(null)
   const tele = useRef<THREE.Group>(null)
   const truck = useRef<THREE.Group>(null)
+  const truckWheels = useRef<Array<THREE.Group | null>>([])
   const held = useRef<THREE.Mesh>(null)
   const loaded = useRef<THREE.Mesh>(null)
   const spreader = useRef<THREE.Mesh>(null)
@@ -133,7 +134,17 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     // RULE (d) — swap at p≥.78: loaded (parented to trailer) shows, held hides, spreader fades
     if (loaded.current) loaded.current.visible = p >= 0.78
     if (held.current) held.current.visible = p < 0.78
-    if (truck.current) truck.current.position.y = -0.05 * easeInOut(pD)
+
+    // RULE (f) — v21 drive-off: p .80-.82 hold (seated), .82→1.00 loadedTruck rolls LEFT
+    // x 0 → -16 ease-in (p*p); wheels rotate ∝ distance rolled; tiny y-bob ±.02.
+    const pDrv = Math.min(Math.max((p - 0.82) / 0.18, 0), 1)
+    const drive = -16 * pDrv * pDrv
+    if (truck.current) {
+      truck.current.position.x = drive
+      truck.current.position.y = -0.05 * easeInOut(pD) + 0.02 * Math.sin(pDrv * Math.PI * 8)
+    }
+    const spin = (16 * pDrv * pDrv) / 0.5
+    truckWheels.current.forEach((w) => w && (w.rotation.y = spin))
 
     // RULE (e) — held never within 1.0 of the 4-stack
     if (import.meta.env.DEV && held.current) {
@@ -144,6 +155,10 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
         '[SHOT2] held quaternion not identity',
       )
       if (p < 0.01) console.assert(loaded.current?.visible === false, '[SHOT2] loaded must be hidden at p=0')
+      if (p >= 0.99) {
+        console.assert(Boolean(truck.current && truck.current.position.x <= -14), `[SHOT2] loadedTruck must drive ≤ -14 at p=1 (got ${truck.current?.position.x})`)
+        console.assert(Boolean(loaded.current && loaded.current.parent === truck.current), '[SHOT2] loaded container must stay a child of the driving truck')
+      }
     }
   })
 
@@ -158,8 +173,8 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
         <meshBasicMaterial color="#FAF9F7" side={THREE.BackSide} />
       </mesh>
 
-      {/* fitted tableau — brings the wide cast into frame at the v20 camera (-8,4,16.5) */}
-      <group ref={fitRef} scale={0.732} position={[2.2, 1.24, 0]}>
+      {/* fitted tableau — v21 bigger + centered (scale .85) at the camera (-8,4.2,21.5) */}
+      <group ref={fitRef} scale={0.85} position={[2.2, 0.6, 0]}>
         <VisualTest label="STACKER" target={() => fitRef.current} y={[120, 560]} x={[180, 1100]} />
 
         {/* ——— LEFT parked truck — bed @ (-8,1.05,0), cab @ (-11.4,1.5,0) ——— */}
@@ -169,18 +184,20 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
             <boxGeometry args={[6.2, 0.3, 2.5]} />
             <meshStandardMaterial color="#101010" {...std} />
           </mesh>
-          {/* 5 dual wheels r.5 hub .12 */}
+          {/* 5 dual wheels r.5 hub .12 — spinning group per wheel (axle spins ∝ roll) */}
           {[-10.2, -9.1, -8, -6.9, -5.8].map((x, i) =>
             [-0.9, 0.9].map((z, j) => (
               <group key={`${i}-${j}`} position={[x, 0.5, z]} rotation={[Math.PI / 2, 0, 0]}>
-                <mesh>
-                  <cylinderGeometry args={[0.5, 0.5, 0.3, 24]} />
-                  <meshStandardMaterial color="#101010" {...std} />
-                </mesh>
-                <mesh>
-                  <cylinderGeometry args={[0.12, 0.12, 0.32, 16]} />
-                  <meshStandardMaterial color="#8A8A8A" {...std} />
-                </mesh>
+                <group ref={(el) => (truckWheels.current[i * 2 + j] = el)}>
+                  <mesh>
+                    <cylinderGeometry args={[0.5, 0.5, 0.3, 24]} />
+                    <meshStandardMaterial color="#101010" {...std} />
+                  </mesh>
+                  <mesh>
+                    <cylinderGeometry args={[0.12, 0.12, 0.32, 16]} />
+                    <meshStandardMaterial color="#8A8A8A" {...std} />
+                  </mesh>
+                </group>
               </group>
             )),
           )}

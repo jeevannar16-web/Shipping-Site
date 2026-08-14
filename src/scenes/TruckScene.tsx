@@ -134,7 +134,7 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
   const wordT = useMemo(bgWords, [])
   const wheels = useRef<THREE.Group>(null)
   const grp = useRef<THREE.Group>(null)
-  const truckMain = useRef<THREE.Group>(null)
+  const truckDrive = useRef<THREE.Group>(null)
   const truckPass = useRef<THREE.Group>(null)
   const bgText = useRef<THREE.Mesh>(null)
   const dashGroup = useRef<THREE.Group>(null)
@@ -146,10 +146,15 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
     // dashes + bg move as the trucks roll
     if (dashGroup.current) dashGroup.current.position.x = -p * 36
     if (bgText.current) bgText.current.position.x = (p - 0.5) * 10
-    // MAIN exits right p .85→1
+    // v21 continuity — truck arrives from the terminal: x -16 → 0 during p 0→.15 (ease-out),
+    // idles mid-scrub, exits right p .85→1 (existing). Drive on an outer wrapper so the
+    // VisualTest framing target stays at rest.
+    const pEnt = Math.min(Math.max(p / 0.15, 0), 1)
+    const easeEnt = 1 - Math.pow(1 - pEnt, 3)
+    const enterX = THREE.MathUtils.lerp(-16, 0, easeEnt)
     const pE = Math.min(Math.max((p - 0.85) / 0.15, 0), 1)
     const easeE = pE * pE * (3 - 2 * pE)
-    if (truckMain.current) truckMain.current.position.x = 1.0 * easeE
+    if (truckDrive.current) truckDrive.current.position.x = enterX + 1.0 * easeE
     // PASSING drives one continuous pass, one group x +10→-16
     if (truckPass.current) truckPass.current.position.x = THREE.MathUtils.lerp(10, -16, p)
 
@@ -199,10 +204,10 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
         <meshBasicMaterial map={blobT} transparent depthWrite={false} />
       </mesh>
 
-      {/* MAIN — #F1F0EE carrying the ribbed container */}
+      {/* MAIN — #F1F0EE carrying the ribbed container; drives in, idles, exits on the outer wrapper */}
       <group ref={grp} position={[0, 0.05, 0]}>
         <VisualTest label="TRUCK" target={() => grp.current} y={[285, 505]} x={[270, 1030]} />
-        <group ref={truckMain}>
+        <group ref={truckDrive}>
           <TruckModel ribT={ribT} wheels={wheels} cabColor="#F1F0EE" />
         </group>
       </group>

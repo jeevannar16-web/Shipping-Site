@@ -7,13 +7,11 @@ import type { ScrubRef } from '../lib/scrub'
 /** v20 SHOT 7 — vivid 7-tone container palette. */
 const PAL = ['#D64545', '#2456B0', '#2E8B57', '#F2C230', '#7048E8', '#F1F0EE', '#E8590C']
 
-/** v20 SHOT 7 — camera FIXED on the −z side (0,36,-16), lookAt origin, fov 35 → +z bow renders at TOP. */
+/** v21 SHOT 7 — Rig sets fov only; camera position + ship rotation are chosen by the orientation search. */
 function Rig() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
   useLayoutEffect(() => {
     camera.fov = 35
-    camera.position.set(0, 36, -16)
-    camera.lookAt(0, 0, 0)
     camera.updateProjectionMatrix()
   }, [camera])
   return null
@@ -52,6 +50,44 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
   const groupRef = useRef<THREE.Group>(null)
   const coreRef = useRef<THREE.Group>(null)
   const deckRef = useRef<THREE.InstancedMesh>(null)
+  const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
+  // chosen [rotY, cameraZ] — defaulted, replaced by the deterministic search below
+  const ori = useRef<[number, number]>([0, -16])
+
+  // v21 — BOW-UP GUARANTEED: deterministic search over [rotY, cameraZ] combos.
+  // bowTip(0,2.6,17) must land above bridge(0,5,-11.5) on screen → bow up-frame.
+  useLayoutEffect(() => {
+    const group = groupRef.current
+    if (!group) return
+    camera.fov = 35
+    camera.updateProjectionMatrix()
+    const combos: Array<[number, number]> = [
+      [0, 16],
+      [0, -16],
+      [Math.PI, 16],
+      [Math.PI, -16],
+    ]
+    const bowTip = new THREE.Vector3()
+    const bridge = new THREE.Vector3()
+    for (const [ry, cz] of combos) {
+      group.rotation.y = ry
+      camera.position.set(0, 36, cz)
+      camera.lookAt(0, 0, 0)
+      camera.updateMatrixWorld()
+      bowTip.set(0, 2.6, 17).project(camera)
+      bridge.set(0, 5, -11.5).project(camera)
+      const bothInFront = bowTip.z > 0 && bowTip.z <= 1 && bridge.z > 0 && bridge.z <= 1
+      const bowY = 1 - bowTip.y
+      const bridgeY = 1 - bridge.y
+      if (bothInFront && bowY < bridgeY) {
+        ori.current = [ry, cz]
+        console.log('[SHIP] orientation combo', ori.current)
+        if (import.meta.env.DEV) console.assert(bowY < bridgeY, '[SHIP] bow-up NOT true for chosen combo')
+        return
+      }
+    }
+    console.log('[SHIP] orientation combo', ori.current)
+  }, [camera])
 
   useLayoutEffect(() => {
     const m = new THREE.Matrix4()
@@ -74,8 +110,8 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
 
   useFrame(() => {
     if (groupRef.current) {
-      // v20 — deterministic: no rotation (bow +z), scrub shipGroup.position.z lerp(10,1,p)
-      groupRef.current.rotation.y = 0
+      // v21 — rotation + camera Z come from the orientation search (bow-up guaranteed)
+      groupRef.current.rotation.y = ori.current[0]
       groupRef.current.position.z = THREE.MathUtils.lerp(10, 1, scrub?.current ?? 0)
     }
   })
@@ -120,13 +156,13 @@ export default function ShipScene({ scrub }: { scrub?: ScrubRef }) {
             <boxGeometry args={[1.25, 1.2, 2.3]} />
             <meshStandardMaterial {...std} />
           </instancedMesh>
-          {/* tall white bridge (7,4.5,2.4) + black band at the stern z -11.5 */}
+          {/* tall white bridge (6,4.5,2.0) + black band at the stern z -11.5 */}
           <mesh position={[0, 4.85, -11.5]}>
-            <boxGeometry args={[7, 4.5, 2.4]} />
+            <boxGeometry args={[6, 4.5, 2.0]} />
             <meshStandardMaterial color="#F1F0EE" {...std} />
           </mesh>
           <mesh position={[0, 7.5, -11.5]}>
-            <boxGeometry args={[7.2, 0.8, 2.6]} />
+            <boxGeometry args={[6.2, 0.8, 2.2]} />
             <meshStandardMaterial color="#101418" {...std} />
           </mesh>
           <mesh position={[0, 8.7, -11.5]}>
@@ -181,7 +217,7 @@ function FoamQuads() {
     for (let k = 0; k < 400; k++) {
       const side = rnd() < 0.5 ? -1 : 1
       const s = 0.4 + rnd() * 0.8
-      m.compose(new THREE.Vector3(side * (4.9 + rnd() * 0.8), 0.05, -12 + rnd() * 28), new THREE.Quaternion(), new THREE.Vector3(s, s, 1))
+      m.compose(new THREE.Vector3(side * (4.9 + rnd() * 0.8), 0.05, -16 + rnd() * 32), new THREE.Quaternion(), new THREE.Vector3(s, s, 1))
       const idx = k % 4
       refs.current[idx]!.setMatrixAt(Math.floor(k / 4), m)
     }
