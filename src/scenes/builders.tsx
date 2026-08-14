@@ -62,6 +62,7 @@ export function ProceduralTruck({
   shadow = false,
   scale = 1,
   wheelRefs,
+  hideTrailer = false,
 }: {
   cabColor?: string
   trailerColor?: string
@@ -76,6 +77,7 @@ export function ProceduralTruck({
   shadow?: boolean
   scale?: number
   wheelRefs?: WheelRefs
+  hideTrailer?: boolean
 }) {
   const groupRef = useRef<THREE.Group | null>(null)
   const chassisRef = useRef<THREE.Group>(null)
@@ -221,10 +223,12 @@ export function ProceduralTruck({
         <meshStandardMaterial color={chassisColor} roughness={0.9} metalness={0.05} />
       </mesh>
       {/* trailer walls with ribs */}
-      <mesh position={[0, 1.85, -1.9]}>
-        <boxGeometry args={[2.4, 2.6, 7.5]} />
-        <meshStandardMaterial map={ribTex} color={trailerColor} roughness={0.5} metalness={0.1} />
-      </mesh>
+      {!hideTrailer && (
+        <mesh position={[0, 1.85, -1.9]}>
+          <boxGeometry args={[2.4, 2.6, 7.5]} />
+          <meshStandardMaterial map={ribTex} color={trailerColor} roughness={0.5} metalness={0.1} />
+        </mesh>
+      )}
 
       {shadow && (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -0.9]}>

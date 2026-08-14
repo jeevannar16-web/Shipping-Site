@@ -124,13 +124,9 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
         </mesh>
       </group>
 
-      {/* MAIN — silver semi + ribbed ContainerGLB on flatbed, enters from left, exits right */}
+      {/* MAIN — silver semi with ribbed trailer, enters from left, exits right */}
       <group ref={truckDrive} position={[-16, 0, 0]}>
         <ProceduralTruck wheelRefs={mainWheels} driving={false} bob={false} cabColor="#3A3D42" trailerColor="#E3E2DF" ribColor="#C9C8C4" />
-        <mesh position={[0, 2.85, -1.9]}>
-          <boxGeometry args={[4.4, 1.6, 1.8]} />
-          <meshStandardMaterial color="#E8E8E8" roughness={0.7} metalness={0.15} />
-        </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
           <planeGeometry args={[15, 5]} />
           <meshBasicMaterial map={blobT} transparent depthWrite={false} />

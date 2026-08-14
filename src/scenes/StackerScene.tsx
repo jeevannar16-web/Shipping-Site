@@ -73,7 +73,7 @@ const easeIn = (t: number) => t * t
 
 const STACK_TOP = new THREE.Vector3(7, 5.75, 0)
 const CONTAINER = [4.4, 1.6, 1.8] as const
-const STACK_COLS = ['ribWhite', 'ribWhite', '#1E6BB0', '#E8590C']
+const STACK_COLS = ['#E8590C', '#1E6BB0', 'ribWhite', 'ribWhite']
 const TEAL = '#2E9CC9'
 
 export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
@@ -102,8 +102,8 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
 
     const hx = THREE.MathUtils.lerp(THREE.MathUtils.lerp(3.5, 3.5, easeInOut(pA)), -8, easeInOut(pB))
     const hy = THREE.MathUtils.lerp(
-      THREE.MathUtils.lerp(0.85, 5.6, easeInOut(pA)),
-      THREE.MathUtils.lerp(5.6, 2.0, easeInOut(pC)),
+      THREE.MathUtils.lerp(0.85, 7.0, easeInOut(pA)),
+      THREE.MathUtils.lerp(7.0, 2.0, easeInOut(pC)),
       easeInOut(pB),
     )
 
@@ -163,10 +163,10 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       <group ref={fitRef} scale={0.85} position={[2.2, 0.6, 0]}>
         <VisualTest label="STACKER" target={() => fitRef.current} y={[320, 600]} x={[220, 1340]} />
 
-        {/* LEFT parked truck — ProceduralTruck @ (-8,0,0), ContainerGLB equivalent on flatbed */}
+        {/* LEFT parked truck — ProceduralTruck @ (-8,0,0), loaded container on flatbed */}
         <group ref={truck} position={[-8, 0, 0]}>
-          <ProceduralTruck wheelRefs={truckWheels} driving={false} bob={false} />
-          <mesh ref={loaded} position={[0, 2.85, -1.9]} visible={false}>
+          <ProceduralTruck wheelRefs={truckWheels} driving={false} bob={false} hideTrailer />
+          <mesh ref={loaded} position={[0, 1.85, -1.9]} visible={false}>
             <boxGeometry args={CONTAINER} />
             <meshStandardMaterial map={ribT} color="#F4F3F1" {...std} />
           </mesh>
