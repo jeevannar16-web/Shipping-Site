@@ -63,18 +63,23 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
 
     const pEnt = Math.min(Math.max(p / 0.15, 0), 1)
     const easeEnt = 1 - Math.pow(1 - pEnt, 3)
-    const enterX = THREE.MathUtils.lerp(-16, 0, easeEnt)
+    const enterX = THREE.MathUtils.lerp(-24, 0, easeEnt)
     const pE = Math.min(Math.max((p - 0.85) / 0.15, 0), 1)
     const easeE = pE * pE * (3 - 2 * pE)
     if (truckDrive.current) {
-      truckDrive.current.position.x = enterX + 1.0 * easeE
+      const exitX = THREE.MathUtils.lerp(0, 22, easeE)
+      const exitScale = THREE.MathUtils.lerp(1, 0.15, easeE)
+      truckDrive.current.position.x = enterX + exitX
+      truckDrive.current.scale.setScalar(exitScale)
       if (import.meta.env.DEV && mainWheels.current[0]) {
         const wp = mainWheels.current[0].getWorldPosition(new THREE.Vector3())
         const ca = chassisAnchor.current
         console.assert(wp.distanceTo(ca) < 0.5, `[SHOT3] wheel detached: dist=${wp.distanceTo(ca).toFixed(3)}`)
       }
     }
-    if (truckPass.current) truckPass.current.position.x = THREE.MathUtils.lerp(10, -16, p)
+    if (truckPass.current) {
+      truckPass.current.position.x = THREE.MathUtils.lerp(10, -28, p)
+    }
 
     if (import.meta.env.DEV) {
       const pass = truckPass.current
@@ -101,7 +106,7 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
         <meshBasicMaterial color="#FAF9F7" side={THREE.BackSide} />
       </mesh>
 
-      <mesh ref={bgText} position={[0, 1.7, -12]} renderOrder={-1}>
+      <mesh ref={bgText} position={[0, 6, -12]} renderOrder={-1}>
         <planeGeometry args={[26, 7.3]} />
         <meshBasicMaterial map={wordT} color="#D8D2C8" transparent opacity={0.3} depthWrite={false} toneMapped={false} />
       </mesh>
