@@ -27,7 +27,13 @@ function bgWords() {
   g.font = '800 150px Archivo, Arial, sans-serif'
   g.textAlign = 'center'
   g.textBaseline = 'middle'
-  g.fillText('UNDER ONE GROUP', 512, 128)
+  const TEXT = 'UNDER ONE GROUP'
+  let size = 150
+  while (size > 24 && g.measureText(TEXT).width > 1024 - 24) {
+    size -= 2
+    g.font = `800 ${size}px Archivo, Arial, sans-serif`
+  }
+  g.fillText(TEXT, 512, 128)
   const t = new THREE.CanvasTexture(c)
   return t
 }

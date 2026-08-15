@@ -128,12 +128,15 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     }
 
     const pDrv = Math.min(Math.max((p - 0.82) / 0.18, 0), 1)
-    const drive = -16 * easeIn(pDrv)
+    const driveEase = easeIn(pDrv)
+    const exitX = THREE.MathUtils.lerp(0, -22, driveEase)
+    const exitScale = THREE.MathUtils.lerp(1, 0.15, driveEase)
     if (truck.current) {
-      truck.current.position.x = -8 + drive
-      truck.current.position.y = -0.05 * easeInOut(pD) + 0.02 * Math.sin(pDrv * Math.PI * 8)
+      truck.current.position.x = -8 + exitX
+      truck.current.position.y = 0
+      truck.current.scale.setScalar(exitScale)
     }
-    truckWheels.current.forEach((w: THREE.Object3D | null) => w && (w.rotation.y = (16 * easeIn(pDrv)) / ((w.userData.radius as number) || 0.5)))
+    truckWheels.current.forEach((w: THREE.Object3D | null) => w && (w.rotation.y = (16 * driveEase) / ((w.userData.radius as number) || 0.5)))
 
     if (import.meta.env.DEV && held.current) {
       const d = Math.hypot(hx - STACK_TOP.x, hy - STACK_TOP.y)
