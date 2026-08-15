@@ -6,7 +6,8 @@ import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import type { ChromaticAberrationEffect } from 'postprocessing'
 import { VisualTest } from '../dev/VisualTest'
-import { ProceduralTruck, shadowBlob, asphalt, roughMap, dashTrack, type WheelRefs } from './builders'
+import { ProceduralTruck, shadowBlob, asphalt, roughMap, dashTrack, LANE, RoadStrip, type WheelRefs } from './builders'
+import { useCompact } from '../lib/media'
 import type { ScrubRef } from '../lib/scrub'
 
 function ribWhite() {
@@ -91,12 +92,13 @@ function oilSheen() {
 
 function Rig() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
+  const compact = useCompact()
   useLayoutEffect(() => {
-    camera.fov = 38
-    camera.position.set(-7, 3.6, 30)
+    camera.fov = compact ? 46 : 38
+    camera.position.set(-7, compact ? 4.2 : 3.6, compact ? 34 : 30)
     camera.lookAt(0, 2.6, 0)
     camera.updateProjectionMatrix()
-  }, [camera])
+  }, [camera, compact])
   return null
 }
 
@@ -199,8 +201,13 @@ const ARC = new THREE.CatmullRomCurve3([
 ])
 const BED_REST = new THREE.Vector3(-8, 1.85, -1.9)
 const IDLE_AIM = new THREE.Vector3(2.8, 1.6, 0)
-/** R12: spreader lock height — spreader center rides so its underside kisses the container's top corner castings. */
-const LOCK_LIFT = 0.8 + 0.125 // container half-height + spreader half-thickness
+/** R12/R13: spreader lock height — spreader center rides so the frame's underside clears the container's
+    raised corner-casting tops by a tiny seat gap, while the twistlock housings drop over the castings
+    (0.80–0.96) so the lock reads flush and gapless through lift/arc/place. */
+const CASTING_TOP = 0.96
+const LOCK_LIFT = CASTING_TOP + 0.02 + 0.125 // casting top + seat gap + spreader half-thickness
+/** R13: twistlock housing center nests the cargo's raised castings exactly (0.88 - LOCK_LIFT). */
+const TWISTLOCK_Y = 0.88 - LOCK_LIFT
 /** R12: container top-corner lock positions (X, Z) shared by the spreader twistlocks and the cargo castings. */
 const LOCK_CORNERS: Array<[number, number]> = [
   [-1.95, 0.65],
@@ -408,28 +415,24 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       {/* R8: environment shares fitRef's transform (local coords unchanged) but lives outside the
           machinery group so the STACKER bbox stays meaningful. */}
       <group scale={0.85} position={[2.2, 0.6, 0]}>
-        {/* R7/R12: terminal apron / road — faint clearcoat sheen across the asphalt, oil-sheen patches on top */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-12.5, 0, 5]}>
-          <planeGeometry args={[85, 50]} />
-          <meshPhysicalMaterial map={asphaltT} roughnessMap={roughT} roughness={0.92} metalness={0} clearcoat={0.15} clearcoatRoughness={0.55} />
-        </mesh>
+        {/* R13: shared straight lane — asphalt apron + dashed guide + edge lines, one corridor across every scene.
+            lane is env-scaled (÷0.85) so the world corridor still sits at ±LANE like Truck/Viaduct. */}
+        <RoadStrip
+          length={85}
+          width={50}
+          position={[-12.5, 0, 0]}
+          lane={LANE / 0.85}
+          asphaltT={asphaltT}
+          roughT={roughT}
+          dashT={dashT}
+          glow
+          clearcoat={0.15}
+        />
         {/* R12: oil-sheen reflections — glossy blotches that catch the key light and studio env as the camera/truck move */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-12.5, 0.006, 5]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-12.5, 0.006, 0]}>
           <planeGeometry args={[85, 50]} />
           <meshPhysicalMaterial map={sheenT} transparent roughness={0.2} metalness={0.8} clearcoat={0.6} clearcoatRoughness={0.3} envMapIntensity={1.5} depthWrite={false} />
         </mesh>
-        {/* R7: guiding track — dashed line along the truck's travel axis (z=0, drives toward -x exit) */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-20, 0.02, 0]}>
-          <planeGeometry args={[60, 0.4]} />
-          <meshStandardMaterial map={dashT} transparent roughness={0.9} emissive="#ffd900" emissiveIntensity={0.18} />
-        </mesh>
-        {/* R7: white lane edges framing the travel corridor */}
-        {[4.5, -4.5].map((z) => (
-          <mesh key={z} rotation={[-Math.PI / 2, 0, 0]} position={[-12.5, 0.02, z]}>
-            <planeGeometry args={[85, 0.28]} />
-            <meshStandardMaterial color="#E8E6E1" roughness={0.9} emissive="#ffffff" emissiveIntensity={0.08} />
-          </mesh>
-        ))}
         {/* R7: directional guide arrows pointing toward the left exit */}
         {[-10, -16, -22].map((x) => (
           <mesh key={x} rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.03, 0]}>
@@ -553,10 +556,11 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
                   <boxGeometry args={[4.4, 0.25, 1.8]} />
                   <meshStandardMaterial map={hazT} transparent opacity={1} {...std} />
                 </mesh>
-                {/* R12: corner twistlocks — stay keyed into the container's raised castings across lift/arc/place */}
+                {/* R13: corner twistlocks — housings drop over the cargo's raised castings (0.80–0.96) so the
+                    lock reads gapless across lift/arc/place */}
                 {LOCK_CORNERS.map(([x, z], i) => (
-                  <mesh key={i} position={[x, -0.19, z] as [number, number, number]}>
-                    <boxGeometry args={[0.3, 0.2, 0.3]} />
+                  <mesh key={i} position={[x, TWISTLOCK_Y, z] as [number, number, number]}>
+                    <boxGeometry args={[0.3, 0.24, 0.3]} />
                     <meshStandardMaterial color="#1f1f24" roughness={0.5} metalness={0.5} />
                   </mesh>
                 ))}

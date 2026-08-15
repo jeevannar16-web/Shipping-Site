@@ -1,17 +1,7 @@
 import { Canvas } from '@react-three/fiber'
-import { useEffect, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
+import { useMedia } from '../lib/media'
 import ErrorBoundary from './ErrorBoundary'
-
-function useMedia(query: string) {
-  const [matches, setMatches] = useState(() => window.matchMedia(query).matches)
-  useEffect(() => {
-    const m = window.matchMedia(query)
-    const onChange = () => setMatches(m.matches)
-    m.addEventListener('change', onChange)
-    return () => m.removeEventListener('change', onChange)
-  }, [query])
-  return matches
-}
 
 export function ScenePoster({ label, tone = 'orange' }: { label: string; tone?: 'orange' | 'blue' | 'violet' }) {
   const colors = {

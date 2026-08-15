@@ -84,6 +84,71 @@ export function dashTrack() {
   return t
 }
 
+/** R13: half-width of the travel corridor shared by every scene — the dashed center guide sits at z=0
+    and the white edge lines at ±LANE, so the road reads as one straight strip along the X axis (trucks drive ±x). */
+export const LANE = 4.5
+
+/** R13: one straight travel lane — asphalt apron + dashed center guide (z=0) + white edge lines (±lane),
+    all centered on the corridor so the same geometry is reused across the Stacker / Truck / Viaduct sections. */
+export function RoadStrip({
+  length,
+  width,
+  position = [0, 0, 0] as [number, number, number],
+  lane = LANE,
+  asphaltT,
+  roughT,
+  dashT,
+  glow = false,
+  clearcoat = 0,
+}: {
+  length: number
+  width: number
+  position?: [number, number, number]
+  lane?: number
+  asphaltT: THREE.Texture
+  roughT: THREE.Texture
+  dashT: THREE.Texture
+  glow?: boolean
+  clearcoat?: number
+}) {
+  return (
+    <group position={position}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
+        <planeGeometry args={[length, width]} />
+        <meshPhysicalMaterial
+          map={asphaltT}
+          roughnessMap={roughT}
+          roughness={0.95}
+          metalness={0}
+          clearcoat={clearcoat}
+          clearcoatRoughness={0.55}
+        />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
+        <planeGeometry args={[length, 0.4]} />
+        <meshStandardMaterial
+          map={dashT}
+          transparent
+          roughness={0.9}
+          emissive="#ffd900"
+          emissiveIntensity={glow ? 0.18 : 0}
+        />
+      </mesh>
+      {[lane, -lane].map((z) => (
+        <mesh key={z} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, z]}>
+          <planeGeometry args={[length, 0.28]} />
+          <meshStandardMaterial
+            color="#E8E6E1"
+            roughness={0.9}
+            emissive="#ffffff"
+            emissiveIntensity={glow ? 0.08 : 0}
+          />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
 /** Soft radial fake shadow that sits under vehicles (kept as a truck child so it follows it). */
 export function shadowBlob() {
   const c = document.createElement('canvas')

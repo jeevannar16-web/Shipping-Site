@@ -1,8 +1,9 @@
-import { useMemo, useRef } from 'react'
+import { useLayoutEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import SceneCanvas from '../components/SceneCanvas'
-import { CurvedRoad, InstancedTrees, Truck, asphalt, roughMap, dashTrack } from './builders'
+import { CurvedRoad, InstancedTrees, Truck, asphalt, roughMap, dashTrack, RoadStrip } from './builders'
+import { useCompact } from '../lib/media'
 import type { ScrubRef } from '../lib/scrub'
 
 const easeInOut = (t: number) => t * t * (3 - 2 * t)
@@ -215,15 +216,15 @@ export default function ViaductScene({ scrub }: { scrub?: ScrubRef }) {
         <meshBasicMaterial ref={domeMat} color="#101410" side={THREE.BackSide} />
       </mesh>
 
-      {/* R11: unified terminal apron — asphalt ground with lane stripes grounds the whole platform (same surface as the stacker/truck scenes) */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
-        <planeGeometry args={[90, 90]} />
-        <meshStandardMaterial map={asphaltT} roughnessMap={roughT} roughness={0.95} metalness={0} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-        <planeGeometry args={[90, 0.4]} />
-        <meshStandardMaterial map={dashT} transparent roughness={0.9} />
-      </mesh>
+      {/* R13: shared straight lane — same corridor (dash at z=0, edges at ±LANE) as the stacker/truck sections */}
+      <RoadStrip
+        length={90}
+        width={90}
+        position={[0, -0.05, 0]}
+        asphaltT={asphaltT}
+        roughT={roughT}
+        dashT={dashT}
+      />
 
       <InstancedTrees count={300} min={1} max={2.2} area={42} center={[0, 0]} height={0} />
 
@@ -245,7 +246,13 @@ export default function ViaductScene({ scrub }: { scrub?: ScrubRef }) {
 }
 
 function CameraRig() {
-  const camera = useThree((s) => s.camera)
+  const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
+  const compact = useCompact()
+  useLayoutEffect(() => {
+    camera.fov = compact ? 55 : 48
+    camera.position.set(-95, 30, 0)
+    camera.updateProjectionMatrix()
+  }, [camera, compact])
   useFrame(() => {
     camera.lookAt(0, 10, 0)
   })

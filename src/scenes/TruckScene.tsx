@@ -1,7 +1,8 @@
 import { useMemo, useRef, useLayoutEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { ProceduralTruck, shadowBlob, asphalt, roughMap, dashTrack, type WheelRefs } from './builders'
+import { ProceduralTruck, shadowBlob, asphalt, roughMap, dashTrack, RoadStrip, type WheelRefs } from './builders'
+import { useCompact } from '../lib/media'
 import type { ScrubRef } from '../lib/scrub'
 
 function bgWords() {
@@ -27,12 +28,13 @@ function bgWords() {
 
 function Rig() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
+  const compact = useCompact()
   useLayoutEffect(() => {
-    camera.fov = 38
-    camera.position.set(0, 4.5, 34)
+    camera.fov = compact ? 46 : 38
+    camera.position.set(0, compact ? 5.2 : 4.5, compact ? 38 : 34)
     camera.lookAt(0, 2, 0)
     camera.updateProjectionMatrix()
-  }, [camera])
+  }, [camera, compact])
   return null
 }
 
@@ -102,24 +104,16 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
         <meshBasicMaterial color="#FAF9F7" side={THREE.BackSide} />
       </mesh>
 
-      {/* R11: unified asphalt apron — grounds both trucks on the same terminal surface as the stacker scene */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[5, 0, -3]}>
-        <planeGeometry args={[72, 18]} />
-        <meshStandardMaterial map={asphaltT} roughnessMap={roughT} roughness={0.95} metalness={0} />
-      </mesh>
-      {/* R11: guide strip — dashed line along the main truck's travel axis (drives x: -24 → +34) */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[5, 0.02, 0]}>
-        <planeGeometry args={[72, 0.4]} />
-        <meshStandardMaterial map={dashT} transparent roughness={0.9} />
-      </mesh>
-      {/* R11: white lane edges framing the travel corridor */}
-      {[4.5, -4.5].map((z) => (
-        <mesh key={z} rotation={[-Math.PI / 2, 0, 0]} position={[5, 0.02, z]}>
-          <planeGeometry args={[72, 0.28]} />
-          <meshStandardMaterial color="#E8E6E1" roughness={0.9} />
-        </mesh>
-      ))}
-
+      {/* R13: shared straight lane — same corridor (dash at z=0, edges at ±LANE) as the stacker scene */}
+      <RoadStrip
+        length={72}
+        width={18}
+        position={[5, 0, 0]}
+        asphaltT={asphaltT}
+        roughT={roughT}
+        dashT={dashT}
+      />
+      {/* R11: white guide dashes — the main truck follows this strip down the lane */}
       <mesh ref={bgText} position={[0, 6, -12]} renderOrder={-1}>
         <planeGeometry args={[26, 7.3]} />
         <meshBasicMaterial map={wordT} color="#D8D2C8" transparent opacity={0.3} depthWrite={false} toneMapped={false} />
