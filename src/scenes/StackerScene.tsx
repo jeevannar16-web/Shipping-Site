@@ -2,6 +2,7 @@ import { useMemo, useRef, useLayoutEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { VisualTest } from '../dev/VisualTest'
 import { ProceduralTruck, type WheelRefs } from './builders'
 import type { ScrubRef } from '../lib/scrub'
@@ -86,7 +87,7 @@ function dashTrack() {
   c.height = 32
   const g = c.getContext('2d')!
   g.clearRect(0, 0, 512, 32)
-  g.fillStyle = 'rgba(240,240,236,0.95)'
+  g.fillStyle = 'rgba(232, 210, 84, 0.9)'
   for (let x = 0; x < 512; x += 96) g.fillRect(x, 10, 44, 12)
   const t = new THREE.CanvasTexture(c)
   t.wrapS = t.wrapT = THREE.RepeatWrapping
@@ -102,6 +103,23 @@ function Rig() {
     camera.lookAt(0, 2.6, 0)
     camera.updateProjectionMatrix()
   }, [camera])
+  return null
+}
+
+/** Studio-grade local env map (RoomEnvironment) so metals/teal get soft reflections instead of void-black. */
+function StudioEnv() {
+  const gl = useThree((s) => s.gl)
+  const scene = useThree((s) => s.scene)
+  useLayoutEffect(() => {
+    const pmrem = new THREE.PMREMGenerator(gl)
+    const envMap = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
+    scene.environment = envMap
+    return () => {
+      envMap.dispose()
+      pmrem.dispose()
+      scene.environment = null
+    }
+  }, [gl, scene])
   return null
 }
 
@@ -150,8 +168,11 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const cargo = useRef<THREE.Mesh>(null)
 
   const std = { roughness: 0.85, metalness: 0 }
+  const paint = { roughness: 0.35, metalness: 0.3 }
+  const paintDark = { roughness: 0.3, metalness: 0.55 }
+  const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     const p = scrub?.current ?? 0
     // Revision 6 state machine:
     //   State 0-1 (0 -> 0.30): reach & attach   — arm sweeps to the stack, container rests in stack
@@ -204,17 +225,26 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       }
     }
 
-    // Truck departure — preserved: monotonic exit, constant ground height, no vertical jump.
-    const pDrv = Math.min(Math.max((p - 0.82) / 0.18, 0), 1)
+    // Truck departure — heading pivots onto the road tangent (-x, forward = +z → rotation.y = -π/2) BEFORE
+    // driving forward, so the truck never slides sideways; then monotonic exit, constant ground height.
+    const pivot = easeInOut(Math.min(Math.max((p - 0.78) / 0.08, 0), 1))
+    const pDrv = Math.min(Math.max((p - 0.85) / 0.15, 0), 1)
     const driveEase = easeIn(pDrv)
     const exitX = THREE.MathUtils.lerp(0, -22, driveEase)
     const exitScale = THREE.MathUtils.lerp(1, 0.15, driveEase)
     if (truck.current) {
+      truck.current.rotation.y = (-Math.PI / 2) * pivot
       truck.current.position.x = -8 + exitX
       truck.current.position.y = 0
       truck.current.scale.setScalar(exitScale)
     }
     truckWheels.current.forEach((w: THREE.Object3D | null) => w && (w.rotation.y = (16 * driveEase) / ((w.userData.radius as number) || 0.5)))
+
+    // Camera parallax & damping — weighted follow toward a target that eases with scroll.
+    const camEase = easeInOut(p)
+    camera.position.x = THREE.MathUtils.damp(camera.position.x, THREE.MathUtils.lerp(-7, -8.6, camEase), 4, delta)
+    camera.position.y = THREE.MathUtils.damp(camera.position.y, THREE.MathUtils.lerp(3.6, 3.9, camEase), 4, delta)
+    camera.lookAt(THREE.MathUtils.lerp(0, -1.4, camEase), 2.6, 0)
 
     if (import.meta.env.DEV && cargo.current && truck.current) {
       if (p < 0.01) {
@@ -240,6 +270,10 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   return (
     <group>
       <Rig />
+      <StudioEnv />
+      {/* R8: localized studio lighting — warm key over the stack, cool fill toward the truck */}
+      <pointLight position={[5, 7, 6]} intensity={30} color="#FFD9A8" decay={2} />
+      <pointLight position={[-11, 4, 7]} intensity={18} color="#C9E0FF" decay={2} />
       <color attach="background" args={['#FAF9F7']} />
       <fog attach="fog" args={['#FAF9F7', 25, 70]} />
       <mesh scale={200}>
@@ -247,8 +281,10 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
         <meshBasicMaterial color="#FAF9F7" side={THREE.BackSide} />
       </mesh>
 
-      <group ref={fitRef} scale={0.85} position={[2.2, 0.6, 0]}>
-        {/* R7: terminal apron / road — grounds the machinery (fitRef-local y=0 sits at the vehicles' wheel base) */}
+      {/* R8: environment shares fitRef's transform (local coords unchanged) but lives outside the
+          machinery group so the STACKER bbox stays meaningful. */}
+      <group scale={0.85} position={[2.2, 0.6, 0]}>
+        {/* R7: terminal apron / road — grounds the machinery (y=0 sits at the vehicles' wheel base) */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-12.5, 0, 5]}>
           <planeGeometry args={[85, 50]} />
           <meshStandardMaterial map={asphaltT} roughness={0.95} metalness={0} />
@@ -274,7 +310,9 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
         ))}
         {/* R7: soft contact shadows anchoring stacker, containers, and truck to the road */}
         <ContactShadows position={[0, 0.05, 0]} scale={90} blur={2.4} far={10} opacity={0.45} resolution={1024} color="#111111" />
+      </group>
 
+      <group ref={fitRef} scale={0.85} position={[2.2, 0.6, 0]}>
         <VisualTest label="STACKER" target={() => fitRef.current} y={[320, 600]} x={[220, 1340]} />
 
         {/* LEFT parked truck — ProceduralTruck @ (-8,0,0); bed starts EMPTY (no static container mesh) */}
@@ -315,12 +353,12 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
           {/* body */}
           <mesh position={[0, 0.7, 0]}>
             <boxGeometry args={[4.4, 1.4, 2]} />
-            <meshStandardMaterial color={TEAL} {...std} />
+            <meshStandardMaterial color={TEAL} {...paint} />
           </mesh>
           {/* cab */}
           <mesh position={[-1.5, 1.55, 0]}>
             <boxGeometry args={[1.6, 1.3, 1.9]} />
-            <meshStandardMaterial color={TEAL} {...std} />
+            <meshStandardMaterial color={TEAL} {...paint} />
           </mesh>
           {/* glass window */}
           <mesh position={[-1.5, 1.75, 0]}>
@@ -330,7 +368,7 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
           {/* counterweight / engine block */}
           <mesh position={[1.5, 1.0, 0]}>
             <boxGeometry args={[1.2, 1.0, 1.8]} />
-            <meshStandardMaterial color="#1a1a1a" {...std} />
+            <meshStandardMaterial color="#1a1a1a" {...paintDark} />
           </mesh>
           {/* black tyres */}
           {[
