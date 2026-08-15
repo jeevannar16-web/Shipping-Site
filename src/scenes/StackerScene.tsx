@@ -6,7 +6,7 @@ import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import type { ChromaticAberrationEffect } from 'postprocessing'
 import { VisualTest } from '../dev/VisualTest'
-import { ProceduralTruck, shadowBlob, asphalt, roughMap, dashWhite, LANE, RoadStrip, type WheelRefs } from './builders'
+import { ProceduralTruck, shadowBlob, roughMap, dashWhite, LANE, RoadStrip, type WheelRefs } from './builders'
 import { useCompact } from '../lib/media'
 import type { ScrubRef } from '../lib/scrub'
 
@@ -49,17 +49,17 @@ function hazard() {
   return new THREE.CanvasTexture(c)
 }
 
-/** R12/R15: dusk-industrial vertical gradient for the sky dome — cool zenith dissolving into the
-    heavy gray-blue FogExp2 haze at the horizon so the dome and fog read as one continuous atmosphere. */
+/** R17: high-key studio vertical gradient for the sky dome — warm-white zenith dissolving into the
+    paper-tone FogExp2 haze at the horizon so the dome and fog read as one continuous atmosphere. */
 function skyGradient() {
   const c = document.createElement('canvas')
   c.width = 16
   c.height = 256
   const g = c.getContext('2d')!
   const grad = g.createLinearGradient(0, 0, 0, 256)
-  grad.addColorStop(0, '#232C38')
-  grad.addColorStop(0.45, '#1A222C')
-  grad.addColorStop(1, '#14181F')
+  grad.addColorStop(0, '#FFFFFF')
+  grad.addColorStop(0.45, '#F7F5F0')
+  grad.addColorStop(1, '#FAF9F7')
   g.fillStyle = grad
   g.fillRect(0, 0, 16, 256)
   const t = new THREE.CanvasTexture(c)
@@ -189,8 +189,10 @@ function Backdrop() {
 
 const STACK_TOP = new THREE.Vector3(3.5, 5.75, 0)
 const CONTAINER = [4.4, 1.6, 1.8] as const
-const STACK_COLS = ['ribWhite', 'ribWhite', '#1E6BB0', '#E8590C']
-const TEAL = '#2E9CC9'
+/** R17: container palette — stack Blue #2563EB, Red #DC2626, ribWhite, carried cargo Orange #FF8C00. */
+const STACK_COLS = ['#2563EB', '#DC2626', 'ribWhite', '#FF8C00']
+/** R17: reach stacker body — industrial blue #0077BE. */
+const STACKER_BLUE = '#0077BE'
 
 // Revision 6: spline-driven carry arch (fitRef-local space) from stack top over the truck bed.
 // All points sit inside the boom's reachable disc so the spreader can hold the cargo throughout.
@@ -221,7 +223,6 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const ribT = useMemo(ribWhite, [])
   const hazT = useMemo(hazard, [])
   const blobT = useMemo(shadowBlob, [])
-  const asphaltT = useMemo(asphalt, [])
   const roughT = useMemo(roughMap, [])
   const dashT = useMemo(dashWhite, [])
   const skyT = useMemo(skyGradient, [])
@@ -266,7 +267,7 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     }
   }, [])
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     const p = scrub?.current ?? 0
     // Revision 6 state machine:
     //   State 0-1 (0 -> 0.30): reach & attach   — arm sweeps to the stack, container rests in stack
@@ -294,15 +295,15 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       cargoTarget.copy(BED_REST).lerp(IDLE_AIM, easeHeavy(pD))
     }
 
-    // R15: pre-lift weight tension ("tug & flex") — the instant the spreader locks at the start of the lift
-    // segment, the whole assembly settles -0.08 under the container's mass and the mast springs back with a
-    // decaying oscillation before the upward arc translation takes over. Gated to the lift segment (p >= 0.3)
-    // so the resting/attach phases are untouched. No spatial pop: the spreader IK and the cargo's worldToLocal
-    // reparent both read the dipped cargoTarget on the same frame.
+    // R17: tension preload — the instant the spreader locks at the start of the lift, the assembly settles
+    // -0.05 under the container's mass over the first 0.1s of the lift segment (fast, precise), then the mast
+    // springs back with a decaying oscillation before the upward arc translation takes over. Gated to the lift
+    // segment (p >= 0.3) so the resting/attach phases are untouched. No spatial pop: the spreader IK and the
+    // cargo's worldToLocal reparent both read the dipped cargoTarget on the same frame.
     const inLift = p >= 0.3 && p < 0.75
     const pLift = pS2
-    const tug = inLift ? Math.max(0, 1 - pLift / 0.2) : 0
-    const tugDip = -0.08 * tug
+    const tug = inLift ? Math.max(0, 1 - pLift / 0.1) : 0
+    const tugDip = -0.05 * tug
     const tugFlex = -0.045 * Math.exp(-tug * 4) * Math.sin(tug * 16)
     cargoTarget.y += tugDip
 
@@ -362,23 +363,25 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     if (fillLight.current) fillLight.current.intensity = THREE.MathUtils.lerp(1.8, 2.6, exitTone)
     if (rimLight.current) rimLight.current.intensity = THREE.MathUtils.lerp(2.0, 1.5, exitTone)
 
-    // Camera parallax & damping — high-inertia follow (low lambda = more lag), FOV (38) and Z-distance (30)
-    // locked for constant world scale; faint organic roll/pitch banked off camera velocity (cinematic rig feel).
+    // R17: camera inertia & sway — damped follow toward the scroll target (lambda 3.5), a slow lookAt sway
+    // sin(elapsed * 1.5) * 0.1, and a subtle velocity-banked roll clamped to ±1.5° (cinematic rig feel).
+    const elapsed = state.clock.elapsedTime
     const camEase = easeInOut(p)
     const camTargetX = THREE.MathUtils.lerp(-7, -9.5, camEase)
     const camTargetY = THREE.MathUtils.lerp(3.6, 3.9, camEase)
-    camera.position.x = THREE.MathUtils.damp(camera.position.x, camTargetX, 3, delta)
-    camera.position.y = THREE.MathUtils.damp(camera.position.y, camTargetY, 3, delta)
+    camera.position.x = THREE.MathUtils.damp(camera.position.x, camTargetX, 3.5, delta)
+    camera.position.y = THREE.MathUtils.damp(camera.position.y, camTargetY, 3.5, delta)
     const velX = (camera.position.x - camPrevX.current) / Math.max(delta, 0.001)
     const velY = (camera.position.y - camPrevY.current) / Math.max(delta, 0.001)
     camPrevX.current = camera.position.x
     camPrevY.current = camera.position.y
+    const sway = Math.sin(elapsed * 1.5) * 0.1
     camera.lookAt(
       THREE.MathUtils.lerp(0, -2.5, camEase),
-      2.6 + THREE.MathUtils.clamp(velY * 0.02, -0.25, 0.25),
+      2.6 + THREE.MathUtils.clamp(velY * 0.02, -0.25, 0.25) + sway,
       0,
     )
-    camera.rotation.z = THREE.MathUtils.clamp(-velX * 0.004, -0.03, 0.03)
+    camera.rotation.z = THREE.MathUtils.clamp(velX * 0.05, -0.0262, 0.0262)
 
     if (import.meta.env.DEV && cargo.current && truck.current) {
       if (p < 0.01) {
@@ -405,14 +408,29 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     <group>
       <Rig />
       <StudioEnv />
-      {/* R15 reel blueprint: warm tungsten key (#FFE3B8), cool maritime fill (#B0C4DE), sharp industrial rim
-          (#E0F7FF) — a three-point studio setup on a dark industrial stage with heavy gray-blue atmospheric depth */}
-      <directionalLight ref={keyLight} position={[15, 20, 10]} intensity={3.5} color="#FFE3B8" />
-      <directionalLight ref={fillLight} position={[-15, 10, -10]} intensity={1.8} color="#B0C4DE" />
+      {/* R17 high-key studio: warm tungsten key (#FFE3B8, 2048px shadow map), cool maritime fill (#B0C4DE),
+          sharp industrial rim (#E0F7FF) — three-point rig on a bright paper-toned stage, shallow atmospheric depth */}
+      <directionalLight
+        ref={keyLight}
+        position={[20, 25, 15]}
+        intensity={3.5}
+        color="#FFE3B8"
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-left={-20}
+        shadow-camera-right={20}
+        shadow-camera-top={20}
+        shadow-camera-bottom={-20}
+        shadow-camera-near={1}
+        shadow-camera-far={60}
+        shadow-bias={-0.0004}
+      />
+      <directionalLight ref={fillLight} position={[-20, 15, -10]} intensity={1.8} color="#B0C4DE" />
       <directionalLight ref={rimLight} position={[0, 15, -20]} intensity={2.0} color="#E0F7FF" />
-      <ambientLight intensity={0.35} color="#2A3544" />
-      <color attach="background" args={['#14181F']} />
-      <fogExp2 attach="fog" args={['#14181F', 0.015]} />
+      <ambientLight intensity={0.35} color="#FAF9F7" />
+      <color attach="background" args={['#FAF9F7']} />
+      <fogExp2 attach="fog" args={['#FAF9F7', 0.012]} />
       {/* R12: atmospheric sky dome — vertical gradient (cool zenith → hazy horizon) adds real depth behind the fog */}
       <mesh scale={200}>
         <sphereGeometry args={[1, 32, 32]} />
@@ -433,19 +451,17 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
         {/* R13: shared straight lane — asphalt apron + dashed guide + edge lines, one corridor across every scene.
             lane is env-scaled (÷0.85) so the world corridor still sits at ±LANE like Truck/Viaduct. */}
         <RoadStrip
-          length={85}
-          width={50}
+          length={120}
+          width={40}
           position={[-12.5, 0, 0]}
           lane={LANE / 0.85}
-          asphaltT={asphaltT}
           roughT={roughT}
           dashT={dashT}
           glow
-          clearcoat={0.15}
         />
         {/* R12: oil-sheen reflections — glossy blotches that catch the key light and studio env as the camera/truck move */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-12.5, 0.006, 0]}>
-          <planeGeometry args={[85, 50]} />
+          <planeGeometry args={[120, 40]} />
           <meshPhysicalMaterial map={sheenT} transparent roughness={0.2} metalness={0.8} clearcoat={0.6} clearcoatRoughness={0.3} envMapIntensity={1.5} depthWrite={false} />
         </mesh>
         {/* R7: directional guide arrows pointing toward the left exit */}
@@ -456,7 +472,7 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
           </mesh>
         ))}
         {/* R7: soft contact shadows anchoring stacker, containers, and truck to the road */}
-        <ContactShadows position={[0, 0.05, 0]} scale={90} blur={2.4} far={10} opacity={0.45} resolution={1024} color="#111111" />
+        <ContactShadows position={[0, 0.05, 0]} scale={80} blur={2.2} far={10} opacity={0.45} resolution={1024} color="#111111" />
         {/* R10: horizon depth — stacks, fencing, gantry, all faded by fog */}
         <Backdrop />
       </group>
@@ -474,18 +490,18 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
           </mesh>
         </group>
 
-        {/* RIGHT stack x +3.5 (inside the boom's reach), bottom→top [ribWhite, ribWhite, #1E6BB0, cargo #E8590C];
+        {/* RIGHT stack x +3.5 (inside the boom's reach), bottom→top [Blue #2563EB, Red #DC2626, ribWhite, cargo Orange #FF8C00];
             the top container IS the carried cargo mesh (no static truck copy). */}
         {STACK_COLS.map((c, i) =>
           i === 3 ? null : (
-            <mesh key={i} position={[3.5, 0.8 + i * 1.65, 0]}>
+            <mesh key={i} position={[3.5, 0.8 + i * 1.65, 0]} castShadow>
               <boxGeometry args={CONTAINER} />
               <meshStandardMaterial color={c === 'ribWhite' ? '#F4F3F1' : c} map={c === 'ribWhite' ? ribT : undefined} {...std} />
             </mesh>
           ),
         )}
         <group ref={cargo} position={[3.5, 5.75, 0]}>
-          <mesh>
+          <mesh castShadow>
             <boxGeometry args={CONTAINER} />
             <meshStandardMaterial color={STACK_COLS[3]} {...std} />
           </mesh>
@@ -499,32 +515,32 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
         </group>
         <mesh position={[3.5, 0.05, 0]}>
           <boxGeometry args={[6, 0.3, 2.4]} />
-          <meshStandardMaterial color={TEAL} {...std} />
+          <meshStandardMaterial color={STACKER_BLUE} {...std} />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[3.5, 0.01, 0]}>
           <planeGeometry args={[6, 3]} />
           <meshBasicMaterial map={blobT} transparent depthWrite={false} />
         </mesh>
 
-        {/* CENTER teal reach stacker — body + cab with glass, black tyres, TWO-segment angled black boom, hazard-spreader, container hung */}
+        {/* CENTER industrial-blue reach stacker — body + cab with glass, black tyres, TWO-segment angled black boom, hazard-spreader, container hung */}
         <group>
           {/* body */}
-          <mesh position={[0, 0.7, 0]}>
+          <mesh position={[0, 0.7, 0]} castShadow>
             <boxGeometry args={[4.4, 1.4, 2]} />
-            <meshStandardMaterial color={TEAL} {...paint} />
+            <meshStandardMaterial color={STACKER_BLUE} {...paint} />
           </mesh>
           {/* cab */}
-          <mesh position={[-1.5, 1.55, 0]}>
+          <mesh position={[-1.5, 1.55, 0]} castShadow>
             <boxGeometry args={[1.6, 1.3, 1.9]} />
-            <meshStandardMaterial color={TEAL} {...paint} />
+            <meshStandardMaterial color={STACKER_BLUE} {...paint} />
           </mesh>
           {/* glass window */}
           <mesh position={[-1.5, 1.75, 0]}>
             <boxGeometry args={[1.4, 0.5, 1.7]} />
-            <meshStandardMaterial color="#101418" roughness={0.1} metalness={0.9} />
+            <meshStandardMaterial color="#1A1A1A" roughness={0.1} metalness={0.9} />
           </mesh>
           {/* counterweight / engine block */}
-          <mesh position={[1.5, 1.0, 0]}>
+          <mesh position={[1.5, 1.0, 0]} castShadow>
             <boxGeometry args={[1.2, 1.0, 1.8]} />
             <meshStandardMaterial color="#1a1a1a" {...paintDark} />
           </mesh>
@@ -554,12 +570,12 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
 
         {/* TWO-segment angled black boom, pivot (-2.4,1.5,0) */}
         <group ref={boom} position={[-2.4, 1.5, 0]}>
-          <mesh position={[1.5, 0, 0]} rotation={[0, 0, 0.15]}>
+          <mesh position={[1.5, 0, 0]} rotation={[0, 0, 0.15]} castShadow>
             <boxGeometry args={[3.0, 0.5, 0.45]} />
             <meshStandardMaterial color="#17181A" {...std} />
           </mesh>
           <group ref={tele} position={[3.0, 0.4, 0]}>
-            <mesh position={[1.3, 0, 0]} rotation={[0, 0, -0.1]}>
+            <mesh position={[1.3, 0, 0]} rotation={[0, 0, -0.1]} castShadow>
               <boxGeometry args={[2.6, 0.4, 0.4]} />
               <meshStandardMaterial color="#17181A" {...std} />
             </mesh>
@@ -567,7 +583,7 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
             <group ref={boomTip} position={[2.6, 0, 0]}>
               <group ref={spreader} position={[0, 0, 0]}>
                 {/* R12: spreader frame sized to the container top so the corner locks seat on the castings */}
-                <mesh>
+                <mesh castShadow>
                   <boxGeometry args={[4.4, 0.25, 1.8]} />
                   <meshStandardMaterial map={hazT} transparent opacity={1} {...std} />
                 </mesh>

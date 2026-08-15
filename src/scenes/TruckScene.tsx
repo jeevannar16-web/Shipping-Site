@@ -1,7 +1,7 @@
 import { useMemo, useRef, useLayoutEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { ProceduralTruck, shadowBlob, asphalt, roughMap, dashWhite, RoadStrip, type WheelRefs } from './builders'
+import { ProceduralTruck, shadowBlob, roughMap, dashWhite, RoadStrip, type WheelRefs } from './builders'
 import { useCompact } from '../lib/media'
 import type { ScrubRef } from '../lib/scrub'
 
@@ -41,7 +41,6 @@ function Rig() {
 export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
   const blobT = useMemo(shadowBlob, [])
   const wordT = useMemo(bgWords, [])
-  const asphaltT = useMemo(asphalt, [])
   const roughT = useMemo(roughMap, [])
   const dashT = useMemo(dashWhite, [])
   const mainWheels = useRef<Array<THREE.Object3D | null>>([]) as WheelRefs
@@ -105,14 +104,13 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
       </mesh>
 
       {/* R13: shared straight lane — same corridor (dash at z=0, edges at ±LANE) as the stacker scene */}
-      <RoadStrip
-        length={72}
-        width={18}
-        position={[5, 0, 0]}
-        asphaltT={asphaltT}
-        roughT={roughT}
-        dashT={dashT}
-      />
+        <RoadStrip
+          length={72}
+          width={18}
+          position={[5, 0, 0]}
+          roughT={roughT}
+          dashT={dashT}
+        />
       {/* R11: white guide dashes — the main truck follows this strip down the lane */}
       <mesh ref={bgText} position={[0, 6, -12]} renderOrder={-1}>
         <planeGeometry args={[26, 7.3]} />

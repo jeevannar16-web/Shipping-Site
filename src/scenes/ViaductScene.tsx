@@ -2,7 +2,7 @@ import { useLayoutEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import SceneCanvas from '../components/SceneCanvas'
-import { CurvedRoad, InstancedTrees, Truck, asphalt, roughMap, dashWhite, RoadStrip } from './builders'
+import { CurvedRoad, InstancedTrees, Truck, roughMap, dashWhite, RoadStrip } from './builders'
 import { useCompact } from '../lib/media'
 import type { ScrubRef } from '../lib/scrub'
 
@@ -199,7 +199,6 @@ export default function ViaductScene({ scrub }: { scrub?: ScrubRef }) {
   const curveMain = useMemo(() => viaductCurve(), [])
   const curveMirror = useMemo(() => viaductCurveMirror(), [])
   const domeMat = useRef<THREE.MeshBasicMaterial>(null)
-  const asphaltT = useMemo(asphalt, [])
   const roughT = useMemo(roughMap, [])
   const dashT = useMemo(dashWhite, [])
 
@@ -217,14 +216,13 @@ export default function ViaductScene({ scrub }: { scrub?: ScrubRef }) {
       </mesh>
 
       {/* R13: shared straight lane — same corridor (dash at z=0, edges at ±LANE) as the stacker/truck sections */}
-      <RoadStrip
-        length={90}
-        width={90}
-        position={[0, -0.05, 0]}
-        asphaltT={asphaltT}
-        roughT={roughT}
-        dashT={dashT}
-      />
+        <RoadStrip
+          length={90}
+          width={90}
+          position={[0, -0.05, 0]}
+          roughT={roughT}
+          dashT={dashT}
+        />
 
       <InstancedTrees count={300} min={1} max={2.2} area={42} center={[0, 0]} height={0} />
 

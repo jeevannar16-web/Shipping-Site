@@ -47,6 +47,7 @@ export default function SceneCanvas({
               frameloop="always"
               dpr={[1, 1.5]}
               camera={camera}
+              shadows
               gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
               onCreated={({ gl }) => {
                 gl.domElement.addEventListener('webglcontextlost', (e) => {

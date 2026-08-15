@@ -84,15 +84,15 @@ export function dashTrack() {
   return t
 }
 
-/** R15: crisp white dashed centerline texture for the straight travel lane (high-contrast against wet asphalt). */
+/** R17: crisp white dashed centerline texture — dash:gap = 2.0:1.5, high contrast against the pristine asphalt. */
 export function dashWhite() {
   const c = document.createElement('canvas')
   c.width = 512
   c.height = 32
   const g = c.getContext('2d')!
   g.clearRect(0, 0, 512, 32)
-  g.fillStyle = 'rgba(245, 244, 240, 0.95)'
-  for (let x = 0; x < 512; x += 96) g.fillRect(x, 10, 44, 12)
+  g.fillStyle = '#FFFFFF'
+  g.fillRect(0, 10, 292, 12)
   const t = new THREE.CanvasTexture(c)
   t.wrapS = t.wrapT = THREE.RepeatWrapping
   t.repeat.set(13, 1)
@@ -103,45 +103,34 @@ export function dashWhite() {
     and the white edge lines at ±LANE, so the road reads as one straight strip along the X axis (trucks drive ±x). */
 export const LANE = 4.5
 
-/** R13/R15: one straight travel lane — asphalt apron (wet-sheen: roughness 0.35 / metalness 0.1 over a
-    high-frequency rough map) + crisp white dashed center guide (z=0) + solid yellow boundary strips (±lane),
-    all centered on the corridor so the same geometry is reused across the Stacker / Truck / Viaduct sections. */
+/** R13/R17: one straight travel lane — pristine asphalt (color #2B2D31, roughness 0.4 / metalness 0.05 over a
+    procedural noise rough map) + crisp white dashed center guide (z=0, width 0.3) + solid yellow boundary strips
+    (±lane, width 0.2, #FFD700), all centered on the corridor and reused across Stacker / Truck / Viaduct. */
 export function RoadStrip({
   length,
   width,
   position = [0, 0, 0] as [number, number, number],
   lane = LANE,
-  asphaltT,
   roughT,
   dashT,
   glow = false,
-  clearcoat = 0,
 }: {
   length: number
   width: number
   position?: [number, number, number]
   lane?: number
-  asphaltT: THREE.Texture
   roughT: THREE.Texture
   dashT: THREE.Texture
   glow?: boolean
-  clearcoat?: number
 }) {
   return (
     <group position={position}>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[length, width]} />
-        <meshPhysicalMaterial
-          map={asphaltT}
-          roughnessMap={roughT}
-          roughness={0.35}
-          metalness={0.1}
-          clearcoat={clearcoat}
-          clearcoatRoughness={0.55}
-        />
+        <meshStandardMaterial color="#2B2D31" roughnessMap={roughT} roughness={0.4} metalness={0.05} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
-        <planeGeometry args={[length, 0.4]} />
+        <planeGeometry args={[length, 0.3]} />
         <meshStandardMaterial
           map={dashT}
           transparent
@@ -152,11 +141,11 @@ export function RoadStrip({
       </mesh>
       {[lane, -lane].map((z) => (
         <mesh key={z} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, z]}>
-          <planeGeometry args={[length, 0.28]} />
+          <planeGeometry args={[length, 0.2]} />
           <meshStandardMaterial
-            color="#E9B949"
+            color="#FFD700"
             roughness={0.85}
-            emissive="#E9B949"
+            emissive="#FFD700"
             emissiveIntensity={glow ? 0.1 : 0}
           />
         </mesh>
