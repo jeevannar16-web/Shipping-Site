@@ -125,6 +125,8 @@ function StudioEnv() {
 
 const easeInOut = (t: number) => t * t * (3 - 2 * t)
 const easeIn = (t: number) => t * t
+/** Heavier ease-in-out (cubic) for weighty machinery motion. */
+const easeHeavy = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 
 const STACK_TOP = new THREE.Vector3(3.5, 5.75, 0)
 const CONTAINER = [4.4, 1.6, 1.8] as const
@@ -139,7 +141,6 @@ const ARC = new THREE.CatmullRomCurve3([
   new THREE.Vector3(-3.5, 5.6, 0),
   new THREE.Vector3(-8, 3.6, 0),
 ])
-const HOVER = new THREE.Vector3(-8, 3.6, 0)
 const BED_REST = new THREE.Vector3(-8, 1.85, -1.9)
 const IDLE_AIM = new THREE.Vector3(2.8, 1.6, 0)
 
@@ -166,6 +167,9 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const spreader = useRef<THREE.Group>(null)
   const fitRef = useRef<THREE.Group>(null)
   const cargo = useRef<THREE.Mesh>(null)
+  const keyLight = useRef<THREE.PointLight>(null)
+  const fillLight = useRef<THREE.PointLight>(null)
+  const arcLag = useRef(0)
 
   const std = { roughness: 0.85, metalness: 0 }
   const paint = { roughness: 0.35, metalness: 0.3 }
@@ -184,16 +188,20 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     const pS3 = Math.min(Math.max((p - 0.55) / 0.2, 0), 1)
     const pD = Math.min(Math.max((p - 0.75) / 0.25, 0), 1)
 
+    // Heavy arc: damp the spline progress so the container lags with realistic weight.
+    arcLag.current = THREE.MathUtils.damp(arcLag.current, easeHeavy(pS2), 3.5, delta)
+    const arc = arcLag.current
+
     // Carried-container target (fitRef-local hang point of the cargo box).
     const cargoTarget = new THREE.Vector3()
     if (p < 0.3) {
-      cargoTarget.copy(IDLE_AIM).lerp(STACK_TOP, easeInOut(pS1))
+      cargoTarget.copy(IDLE_AIM).lerp(STACK_TOP, easeHeavy(pS1))
     } else if (p < 0.55) {
-      cargoTarget.copy(ARC.getPoint(easeInOut(pS2)))
+      cargoTarget.copy(ARC.getPoint(arc))
     } else if (p < 0.75) {
-      cargoTarget.copy(HOVER).lerp(BED_REST, easeInOut(pS3))
+      cargoTarget.copy(ARC.getPoint(arc)).lerp(BED_REST, easeHeavy(pS3))
     } else {
-      cargoTarget.copy(BED_REST).lerp(IDLE_AIM, easeInOut(pD))
+      cargoTarget.copy(BED_REST).lerp(IDLE_AIM, easeHeavy(pD))
     }
 
     // Reach-stacker arm IK: point the boom so the spreader hovers 0.95 above the target.
@@ -226,25 +234,29 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     }
 
     // Truck departure — heading pivots onto the road tangent (-x, forward = +z → rotation.y = -π/2) BEFORE
-    // driving forward, so the truck never slides sideways; then monotonic exit, constant ground height.
+    // driving forward, so the truck never slides sideways; world scale stays exactly 1 (no shrink), monotonic exit.
     const pivot = easeInOut(Math.min(Math.max((p - 0.78) / 0.08, 0), 1))
     const pDrv = Math.min(Math.max((p - 0.85) / 0.15, 0), 1)
     const driveEase = easeIn(pDrv)
     const exitX = THREE.MathUtils.lerp(0, -22, driveEase)
-    const exitScale = THREE.MathUtils.lerp(1, 0.15, driveEase)
     if (truck.current) {
       truck.current.rotation.y = (-Math.PI / 2) * pivot
       truck.current.position.x = -8 + exitX
       truck.current.position.y = 0
-      truck.current.scale.setScalar(exitScale)
+      truck.current.scale.setScalar(1)
     }
     truckWheels.current.forEach((w: THREE.Object3D | null) => w && (w.rotation.y = (16 * driveEase) / ((w.userData.radius as number) || 0.5)))
 
-    // Camera parallax & damping — weighted follow toward a target that eases with scroll.
+    // Scroll-blended lighting — warm key recedes, cool fill rises as the loaded truck departs (no hard cut).
+    const exitTone = Math.min(Math.max((p - 0.8) / 0.2, 0), 1)
+    if (keyLight.current) keyLight.current.intensity = THREE.MathUtils.lerp(30, 16, exitTone)
+    if (fillLight.current) fillLight.current.intensity = THREE.MathUtils.lerp(18, 28, exitTone)
+
+    // Camera parallax & damping — weighted follow, FOV (38) and Z-distance (30) locked for constant world scale.
     const camEase = easeInOut(p)
-    camera.position.x = THREE.MathUtils.damp(camera.position.x, THREE.MathUtils.lerp(-7, -8.6, camEase), 4, delta)
+    camera.position.x = THREE.MathUtils.damp(camera.position.x, THREE.MathUtils.lerp(-7, -9.5, camEase), 4, delta)
     camera.position.y = THREE.MathUtils.damp(camera.position.y, THREE.MathUtils.lerp(3.6, 3.9, camEase), 4, delta)
-    camera.lookAt(THREE.MathUtils.lerp(0, -1.4, camEase), 2.6, 0)
+    camera.lookAt(THREE.MathUtils.lerp(0, -2.5, camEase), 2.6, 0)
 
     if (import.meta.env.DEV && cargo.current && truck.current) {
       if (p < 0.01) {
@@ -272,8 +284,8 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       <Rig />
       <StudioEnv />
       {/* R8: localized studio lighting — warm key over the stack, cool fill toward the truck */}
-      <pointLight position={[5, 7, 6]} intensity={30} color="#FFD9A8" decay={2} />
-      <pointLight position={[-11, 4, 7]} intensity={18} color="#C9E0FF" decay={2} />
+      <pointLight ref={keyLight} position={[5, 7, 6]} intensity={30} color="#FFD9A8" decay={2} />
+      <pointLight ref={fillLight} position={[-11, 4, 7]} intensity={18} color="#C9E0FF" decay={2} />
       <color attach="background" args={['#FAF9F7']} />
       <fog attach="fog" args={['#FAF9F7', 25, 70]} />
       <mesh scale={200}>

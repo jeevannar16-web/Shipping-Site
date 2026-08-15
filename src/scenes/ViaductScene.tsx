@@ -5,6 +5,8 @@ import SceneCanvas from '../components/SceneCanvas'
 import { CurvedRoad, InstancedTrees, Truck } from './builders'
 import type { ScrubRef } from '../lib/scrub'
 
+const easeInOut = (t: number) => t * t * (3 - 2 * t)
+
 function viaductCurve(offset = 0) {
   return new THREE.CatmullRomCurve3([
     new THREE.Vector3(-14, 10, -40 + offset),
@@ -177,6 +179,23 @@ function SemiTraffic({
 export default function ViaductScene({ scrub }: { scrub?: ScrubRef }) {
   const curveMain = useMemo(() => viaductCurve(), [])
   const curveMirror = useMemo(() => viaductCurveMirror(), [])
+  const { scene } = useThree()
+  const domeMat = useRef<THREE.MeshBasicMaterial>(null)
+  const blendFrom = useMemo(() => new THREE.Color('#FAF9F7'), [])
+  const blendDark = useMemo(() => new THREE.Color('#101410'), [])
+  const blendTo = useMemo(() => new THREE.Color('#C9D3D8'), [])
+
+  // R9: seamless section blending — lighten the Highway from the outgoing light sections on entry
+  // (white→black flash) and drift toward the light Yard tone on exit (black→light flash).
+  useFrame(() => {
+    const p = scrub?.current ?? 0
+    const entry = Math.min(Math.max(p / 0.12, 0), 1)
+    const exit = Math.min(Math.max((p - 0.88) / 0.12, 0), 1)
+    const col = blendFrom.clone().lerp(blendDark, easeInOut(entry)).lerp(blendTo, easeInOut(exit))
+    if (scene.background instanceof THREE.Color) scene.background.copy(col)
+    if (scene.fog instanceof THREE.Fog) scene.fog.color.copy(col)
+    if (domeMat.current) domeMat.current.color.copy(col)
+  })
 
   return (
     <SceneCanvas fallbackLabel="About" tone="blue" camera={{ position: [-95, 30, 0], fov: 48 }}>
@@ -188,7 +207,7 @@ export default function ViaductScene({ scrub }: { scrub?: ScrubRef }) {
 
       <mesh scale={200}>
         <sphereGeometry args={[1, 32, 32]} />
-        <meshBasicMaterial color="#101410" side={THREE.BackSide} />
+        <meshBasicMaterial ref={domeMat} color="#101410" side={THREE.BackSide} />
       </mesh>
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>

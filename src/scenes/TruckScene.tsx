@@ -73,10 +73,10 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
     const pE = Math.min(Math.max((p - 0.85) / 0.15, 0), 1)
     const easeE = pE * pE * (3 - 2 * pE)
     if (truckDrive.current) {
-      const exitX = THREE.MathUtils.lerp(0, 22, easeE)
-      const exitScale = THREE.MathUtils.lerp(1, 0.15, easeE)
+      // R9: full-size drive-off (constant world scale 1), exits fully off-frame to the right.
+      const exitX = THREE.MathUtils.lerp(0, 34, easeE)
       truckDrive.current.position.x = enterX + exitX
-      truckDrive.current.scale.setScalar(exitScale)
+      truckDrive.current.scale.setScalar(1)
       if (import.meta.env.DEV && mainWheels.current[0]) {
         const wp = mainWheels.current[0].getWorldPosition(new THREE.Vector3())
         const ca = chassisAnchor.current
