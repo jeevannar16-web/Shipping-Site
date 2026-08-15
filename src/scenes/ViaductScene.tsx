@@ -140,20 +140,20 @@ function SemiTraffic({
   laneSign = -1,
   cab = '#f2f2f2',
   container = '#ff4a00',
-  offset = 0.4,
+  range = [0, 1],
   scrub,
 }: {
   curve: THREE.CatmullRomCurve3
   laneSign?: 1 | -1
   cab?: string
   container?: string
-  offset?: number
+  range?: [number, number]
   scrub?: ScrubRef
 }) {
   const ref = useRef<THREE.Group>(null)
   useFrame(() => {
     const p = scrub?.current ?? 0
-    const progress = Math.max(0, Math.min(1, p + offset))
+    const progress = range[0] + (range[1] - range[0]) * Math.max(0, Math.min(1, p))
     const point = curve.getPointAt(progress)
     const tangent = curve.getTangentAt(progress)
     const right = new THREE.Vector3(-tangent.z, 0, tangent.x).normalize()
@@ -161,7 +161,7 @@ function SemiTraffic({
     if (ref.current) {
       ref.current.position.set(
         point.x + right.x * 2.0 * laneSign,
-        9.755,
+        10.05,
         point.z + right.z * 2.0 * laneSign,
       )
       ref.current.rotation.set(0, Math.atan2(fwd.x, fwd.z), 0)
@@ -179,9 +179,9 @@ export default function ViaductScene({ scrub }: { scrub?: ScrubRef }) {
   const curveMirror = useMemo(() => viaductCurveMirror(), [])
 
   return (
-    <SceneCanvas fallbackLabel="About" tone="blue" camera={{ position: [0, 26, 34], fov: 35 }}>
+    <SceneCanvas fallbackLabel="About" tone="blue" camera={{ position: [-95, 30, 0], fov: 48 }}>
       <color attach="background" args={['#101410']} />
-      <fog attach="fog" args={['#101410', 60, 140]} />
+      <fog attach="fog" args={['#101410', 130, 420]} />
       <ambientLight intensity={0.6} />
       <directionalLight position={[-30, 40, -20]} intensity={2.2} color="#ffc98a" />
       <directionalLight position={[10, 4, 10]} intensity={0.3} color="#2b4bff" />
@@ -201,34 +201,23 @@ export default function ViaductScene({ scrub }: { scrub?: ScrubRef }) {
       <CurvedRoad curve={curveMain} width={6} color="#6f6f6f" y={10.05} dashSize={[0.3, 3]} barriers />
       <Pillars curve={curveMain} />
       <Traffic curve={curveMain} laneSign={1} count={12} />
-      <SemiTraffic curve={curveMain} laneSign={-1} cab="#f2f2f2" container="#D64545" offset={0.2} scrub={scrub} />
-      <SemiTraffic curve={curveMain} laneSign={1} cab="#D64545" container="#f0f0f0" offset={0.7} scrub={scrub} />
+      <SemiTraffic curve={curveMain} laneSign={-1} cab="#f2f2f2" container="#D64545" range={[0.05, 0.5]} scrub={scrub} />
+      <SemiTraffic curve={curveMain} laneSign={1} cab="#D64545" container="#f0f0f0" range={[0.55, 1]} scrub={scrub} />
 
       <CurvedRoad curve={curveMirror} width={6} color="#6f6f6f" y={10.05} dashSize={[0.3, 3]} barriers />
       <Pillars curve={curveMirror} />
       <Traffic curve={curveMirror} laneSign={-1} count={12} />
-      <SemiTraffic curve={curveMirror} laneSign={1} cab="#f2f2f2" container="#D64545" offset={0.5} scrub={scrub} />
+      <SemiTraffic curve={curveMirror} laneSign={1} cab="#f2f2f2" container="#D64545" range={[0.3, 0.75]} scrub={scrub} />
 
-      <CameraDolly scrub={scrub} curve={curveMain} />
+      <CameraRig />
     </SceneCanvas>
   )
 }
 
-function CameraDolly({ scrub, curve }: { scrub?: ScrubRef; curve: THREE.CatmullRomCurve3 }) {
+function CameraRig() {
   const camera = useThree((s) => s.camera)
   useFrame(() => {
-    const p = scrub?.current ?? 0
-    const t = Math.max(0, Math.min(1, p))
-    const point = curve.getPointAt(t)
-    const tangent = curve.getTangentAt(t).normalize()
-
-    const camPos = point.clone().addScaledVector(tangent, -8)
-    camPos.y += 16
-    camera.position.copy(camPos)
-
-    const lookT = Math.min(1, t + 0.15)
-    const lookPoint = curve.getPointAt(lookT)
-    camera.lookAt(lookPoint)
+    camera.lookAt(0, 10, 0)
   })
   return null
 }
