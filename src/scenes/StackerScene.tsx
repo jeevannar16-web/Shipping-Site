@@ -90,6 +90,8 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const loaded = useRef<THREE.Object3D>(null)
   const spreader = useRef<THREE.Group>(null)
   const fitRef = useRef<THREE.Group>(null)
+  const placed = useRef(false)
+  const placeStart = useRef(new THREE.Vector3(0, 1.85, -1.9))
 
   const std = { roughness: 0.85, metalness: 0 }
 
@@ -121,10 +123,34 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       tele.current.position.x = extend * (p < 0.75 ? 1 : 1 - easeInOut(pD))
     }
 
-    if (loaded.current) loaded.current.visible = p >= 0.78
     if (held.current) {
-      held.current.visible = p < 0.78
+      held.current.visible = p < 0.75
       held.current.rotation.z = -boom.current!.rotation.z
+    }
+
+    // Visible handoff: once the arm finishes lowering, the carried container becomes a child of
+    // the truck and is scrub-lerped from its arm-settled spot down onto the flatbed (single
+    // continuous interpolation; truck drive-off below stays untouched).
+    if (p >= 0.75 && !placed.current && held.current && truck.current) {
+      const wp = new THREE.Vector3()
+      held.current.updateWorldMatrix(true, false)
+      held.current.getWorldPosition(wp)
+      truck.current.updateWorldMatrix(true, false)
+      truck.current.worldToLocal(placeStart.current.copy(wp))
+      placed.current = true
+    }
+    if (p < 0.75) placed.current = false
+
+    const pPl = Math.min(Math.max((p - 0.75) / 0.07, 0), 1)
+    const plEase = easeInOut(pPl)
+    if (loaded.current) {
+      loaded.current.visible = p >= 0.75
+      const s = placeStart.current
+      loaded.current.position.set(
+        THREE.MathUtils.lerp(s.x, 0, plEase),
+        THREE.MathUtils.lerp(s.y, 1.85, plEase),
+        THREE.MathUtils.lerp(s.z, -1.9, plEase),
+      )
     }
 
     const pDrv = Math.min(Math.max((p - 0.82) / 0.18, 0), 1)
@@ -171,7 +197,7 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
 
         {/* LEFT parked truck — ProceduralTruck @ (-8,0,0), loaded container on flatbed */}
         <group ref={truck} position={[-8, 0, 0]}>
-          <ProceduralTruck wheelRefs={truckWheels} driving={false} bob={false} />
+          <ProceduralTruck wheelRefs={truckWheels} driving={false} bob={false} hideTrailer />
           <mesh ref={loaded} position={[0, 1.85, -1.9]} visible={false}>
             <boxGeometry args={CONTAINER} />
             <meshStandardMaterial map={ribT} color="#F4F3F1" {...std} />
