@@ -15,7 +15,7 @@ function ribWhite() {
   c.width = 256
   c.height = 128
   const g = c.getContext('2d')!
-  g.fillStyle = '#F4F3F1'
+  g.fillStyle = '#F4F4F9'
   g.fillRect(0, 0, 256, 128)
   g.fillStyle = '#C9C7C4'
   for (let x = 8; x < 256; x += 16) g.fillRect(x, 0, 4, 128)
@@ -71,11 +71,16 @@ function Rig() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
   const compact = useCompact()
   useLayoutEffect(() => {
-    camera.fov = compact ? 46 : 38
     camera.position.set(-7, compact ? 4.2 : 3.6, compact ? 34 : 30)
     camera.lookAt(0, 2.6, 0)
-    camera.updateProjectionMatrix()
   }, [camera, compact])
+  // R23 responsive FOV — portrait/mobile gets a wider 52°, desktop a tighter 38°, damped for smooth resizes.
+  useFrame((_, delta) => {
+    const aspect = window.innerWidth / window.innerHeight
+    const baseFOV = aspect < 1.0 ? 52 : 38
+    camera.fov = THREE.MathUtils.damp(camera.fov, baseFOV, 4, delta)
+    camera.updateProjectionMatrix()
+  })
   return null
 }
 
@@ -222,9 +227,9 @@ function Backdrop() {
 
 const STACK_TOP = new THREE.Vector3(3.5, 5.75, 0)
 const CONTAINER = [4.4, 1.6, 1.8] as const
-/** R17: container palette — stack Blue #2563EB, Red #DC2626, ribWhite, carried cargo Orange #FF8C00. */
-const STACK_COLS = ['#2563EB', '#DC2626', 'ribWhite', '#FF8C00']
-/** R17: reach stacker body — industrial blue #0077BE. */
+/** R23: container palette — Terminal Blue #1B4965, Cargo Orange #E07A5F, Steel White rib, carried cargo Terminal Blue. */
+const STACK_COLS = ['#1B4965', '#E07A5F', 'ribWhite', '#1B4965']
+/** R21: reach stacker body — industrial blue #0077BE. */
 const STACKER_BLUE = '#0077BE'
 
 // Revision 6: spline-driven carry arch (fitRef-local space) from stack top over the truck bed.
@@ -286,8 +291,8 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const camPrevY = useRef(0)
 
   const std = { roughness: 0.85, metalness: 0.05 }
-  /** R19: PBR painted steel — high metalness + low roughness so containers and machinery catch the studio env map. */
-  const cargoMtl = { roughness: 0.3, metalness: 0.8 }
+  /** R19/R23: PBR painted steel — metalness 0.85 + low roughness so containers and machinery catch the studio env map. */
+  const cargoMtl = { roughness: 0.3, metalness: 0.85 }
   /** R21: matte metallic stick steel — charcoal #2A2B2E, roughness 0.3, metalness 0.85. */
   const boomSteel = { roughness: 0.3, metalness: 0.85 }
   const paint = { roughness: 0.3, metalness: 0.8 }
@@ -305,39 +310,37 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
 
   useFrame((state, delta) => {
     const p = scrub?.current ?? 0
-    // Revision 6 state machine:
-    //   State 0-1 (0 -> 0.30): reach & attach   — arm sweeps to the stack, container rests in stack
-    //   State 2   (0.30 -> 0.55): lift & arc    — container follows the CatmullRomCurve3 over the truck
-    //   State 3   (0.55 -> 0.75): place         — container lowers onto the bed, reparents to truck
-    //   State 4   (0.75 -> 1.00): departure     — spreader retracts, truck drives off
-    const pS1 = Math.min(Math.max(p / 0.3, 0), 1)
-    const pS2 = Math.min(Math.max((p - 0.3) / 0.25, 0), 1)
-    const pS3 = Math.min(Math.max((p - 0.55) / 0.2, 0), 1)
+    // R23 four-phase transfer timeline:
+    //   Phase 1 (0.00 -> 0.35): approach & dock — spreader lowers onto the stack; twist-locks seat on castings
+    //   Phase 2 (0.35 -> 0.40): weight preload snap — -0.08 mast compression over 0.08s (30 tons of steel)
+    //   Phase 3 (0.40 -> 0.75): damped arc transfer — CatmullRomCurve3 with heavy cubic ease, zero popping
+    //   Phase 4 (0.75 -> 1.00): landing & truck departure — bed impact bounce, truck drives off at scale 1
+    const pS1 = Math.min(Math.max(p / 0.35, 0), 1)
+    const pLift = Math.min(Math.max((p - 0.35) / 0.05, 0), 1)
+    const pS3 = Math.min(Math.max((p - 0.4) / 0.35, 0), 1)
     const pD = Math.min(Math.max((p - 0.75) / 0.25, 0), 1)
 
     // Heavy arc: damp the spline progress so the container lags with realistic weight.
-    arcLag.current = THREE.MathUtils.damp(arcLag.current, easeHeavy(pS2), 3.5, delta)
+    arcLag.current = THREE.MathUtils.damp(arcLag.current, easeHeavy(pS3), 3.5, delta)
     const arc = arcLag.current
 
     // Carried-container target (fitRef-local hang point of the cargo box).
     const cargoTarget = new THREE.Vector3()
-    if (p < 0.3) {
+    if (p < 0.35) {
       cargoTarget.copy(IDLE_AIM).lerp(STACK_TOP, easeHeavy(pS1))
-    } else if (p < 0.55) {
-      cargoTarget.copy(ARC.getPoint(arc))
     } else if (p < 0.75) {
-      cargoTarget.copy(ARC.getPoint(arc)).lerp(BED_REST, easeHeavy(pS3))
+      // Arc then descend — the descent gates late so the container's bottom plane meets the bed exactly at p=0.75.
+      const descend = Math.min(Math.max((pS3 - 0.45) / 0.55, 0), 1)
+      cargoTarget.copy(ARC.getPoint(arc)).lerp(BED_REST, easeHeavy(descend))
     } else {
       cargoTarget.copy(BED_REST).lerp(IDLE_AIM, easeHeavy(pD))
     }
 
-    // R18: pre-lift tension snap — the instant the spreader locks at the start of the lift, the assembly
-    // cracks -0.08 under the container's mass over the first 0.08s of the lift segment (fast, surgical),
-    // then the mast springs back with a decaying oscillation before the upward arc takes over. Gated to the
-    // lift segment (p >= 0.3) so the resting/attach phases are untouched. No spatial pop: the spreader IK
-    // and the cargo's worldToLocal reparent both read the dipped cargoTarget on the same frame.
-    const inLift = p >= 0.3 && p < 0.75
-    const pLift = pS2
+    // R23 preload snap — the instant the twist-locks engage at p=0.35 the assembly cracks -0.08 under the
+    // container's mass over the first 0.08s of the preload window, then the mast springs back with a decaying
+    // oscillation before the arc takes over. No spatial pop: the spreader IK and the cargo worldToLocal reparent
+    // both read the dipped cargoTarget on the same frame.
+    const inLift = p >= 0.35 && p < 0.75
     const tug = inLift ? Math.max(0, 1 - pLift / 0.08) : 0
     const tugDip = -0.08 * tug
     const tugFlex = -0.045 * Math.exp(-tug * 4) * Math.sin(tug * 16)
@@ -352,7 +355,7 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     const teleX = Math.min(Math.max(Math.sqrt(Math.max(reach * reach - 0.16, 0)) - 5.6, 0), 2.6)
     // R19: hydraulic mast micro-vibration — high-frequency hydraulic shudder during the lift segment that decays
     // as the arc carries, layered on the pre-lift tension snap so the lift reads like real steel hydraulics under load.
-    const mastVib = p >= 0.3 && p < 0.55 ? Math.sin(pS2 * 200) * (1 - pS2) * 0.0018 : 0
+    const mastVib = p >= 0.35 && p < 0.75 ? Math.sin(pLift * 220) * (1 - pLift) * 0.0018 : 0
     if (boom.current) boom.current.rotation.z = Math.atan2(dy, dx) - Math.atan2(0.4, 5.6 + teleX) + tugFlex + mastVib
     if (tele.current) tele.current.position.x = 3.0 + teleX
     // R12: gravity-stabilized spreader — counter-rotate so the twistlocks stay level and flush on the container
@@ -361,7 +364,7 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
 
     // Container lifecycle — explicit parent switches with matrix attachment (no pre-loaded truck mesh).
     if (cargo.current) {
-      if (p < 0.3) {
+      if (p < 0.35) {
         if (cargo.current.parent !== fitRef.current) fitRef.current!.add(cargo.current)
         cargo.current.position.copy(STACK_TOP)
         cargo.current.rotation.z = 0
@@ -470,7 +473,7 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       <directionalLight ref={rimLight} position={[0, 15, -20]} intensity={2.0} color="#E0F7FF" />
       <ambientLight intensity={0.35} color="#F4F4F5" />
       <color attach="background" args={['#F4F4F5']} />
-      <fogExp2 attach="fog" args={['#F4F4F5', 0.009]} />
+      <fogExp2 attach="fog" args={['#F4F4F5', 0.008]} />
       {/* R12: atmospheric sky dome — vertical gradient (cool zenith → hazy horizon) adds real depth behind the fog */}
       <mesh scale={200}>
         <sphereGeometry args={[1, 32, 32]} />
@@ -525,14 +528,14 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
           </mesh>
         </group>
 
-        {/* RIGHT stack x +3.5 (inside the boom's reach), bottom→top [Blue #2563EB, Red #DC2626, ribWhite, cargo Orange #FF8C00];
-            the top container IS the carried cargo mesh (no static truck copy). */}
+        {/* RIGHT stack x +3.5 (inside the boom's reach), bottom→top [Terminal Blue #1B4965, Cargo Orange #E07A5F,
+            Steel White #F4F4F9, carried cargo Terminal Blue]; the top container IS the carried cargo mesh. */}
         {STACK_COLS.map((c, i) =>
           i === 3 ? null : (
             <mesh key={i} position={[3.5, 0.8 + i * 1.65, 0]} castShadow>
               <boxGeometry args={CONTAINER} />
               <meshStandardMaterial
-                color={c === 'ribWhite' ? '#F4F3F1' : c}
+                color={c === 'ribWhite' ? '#F4F4F9' : c}
                 map={c === 'ribWhite' ? ribT : undefined}
                 bumpMap={ribT}
                 bumpScale={0.02}

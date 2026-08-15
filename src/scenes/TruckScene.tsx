@@ -96,11 +96,11 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
   return (
     <group>
       <Rig />
-      <color attach="background" args={['#FAF9F7']} />
-      <fog attach="fog" args={['#FAF9F7', 25, 70]} />
+      <color attach="background" args={['#F4F4F5']} />
+      <fog attach="fog" args={['#F4F4F5', 25, 70]} />
       <mesh scale={200}>
         <sphereGeometry args={[1, 32, 32]} />
-        <meshBasicMaterial color="#FAF9F7" side={THREE.BackSide} />
+        <meshBasicMaterial color="#F4F4F5" side={THREE.BackSide} />
       </mesh>
 
       {/* R13: shared straight lane — same corridor (dash at z=0, edges at ±LANE) as the stacker scene */}
