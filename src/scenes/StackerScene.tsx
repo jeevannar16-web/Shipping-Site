@@ -1,5 +1,6 @@
 import { useMemo, useRef, useLayoutEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
+import { ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
 import { VisualTest } from '../dev/VisualTest'
 import { ProceduralTruck, type WheelRefs } from './builders'
@@ -57,6 +58,42 @@ function shadowBlob() {
   return new THREE.CanvasTexture(c)
 }
 
+function asphalt() {
+  const c = document.createElement('canvas')
+  c.width = 512
+  c.height = 512
+  const g = c.getContext('2d')!
+  g.fillStyle = '#3A3A3D'
+  g.fillRect(0, 0, 512, 512)
+  for (let i = 0; i < 30000; i++) {
+    const v = 24 + Math.random() * 70
+    g.fillStyle = `rgba(${v},${v},${v},0.35)`
+    const s = 1 + Math.random() * 2
+    g.fillRect(Math.random() * 512, Math.random() * 512, s, s)
+  }
+  g.fillStyle = 'rgba(0,0,0,0.10)'
+  for (let x = 0; x <= 512; x += 128) g.fillRect(x, 0, 2, 512)
+  const t = new THREE.CanvasTexture(c)
+  t.wrapS = t.wrapT = THREE.RepeatWrapping
+  t.repeat.set(9, 6)
+  t.colorSpace = THREE.SRGBColorSpace
+  return t
+}
+
+function dashTrack() {
+  const c = document.createElement('canvas')
+  c.width = 512
+  c.height = 32
+  const g = c.getContext('2d')!
+  g.clearRect(0, 0, 512, 32)
+  g.fillStyle = 'rgba(240,240,236,0.95)'
+  for (let x = 0; x < 512; x += 96) g.fillRect(x, 10, 44, 12)
+  const t = new THREE.CanvasTexture(c)
+  t.wrapS = t.wrapT = THREE.RepeatWrapping
+  t.repeat.set(13, 1)
+  return t
+}
+
 function Rig() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
   useLayoutEffect(() => {
@@ -92,6 +129,16 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const ribT = useMemo(ribWhite, [])
   const hazT = useMemo(hazard, [])
   const blobT = useMemo(shadowBlob, [])
+  const asphaltT = useMemo(asphalt, [])
+  const dashT = useMemo(dashTrack, [])
+  const arrowShape = useMemo(() => {
+    const s = new THREE.Shape()
+    s.moveTo(0, 0)
+    s.lineTo(1.4, 0.7)
+    s.lineTo(1.4, -0.7)
+    s.closePath()
+    return s
+  }, [])
 
   const boom = useRef<THREE.Group>(null)
   const tele = useRef<THREE.Group>(null)
@@ -201,6 +248,33 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       </mesh>
 
       <group ref={fitRef} scale={0.85} position={[2.2, 0.6, 0]}>
+        {/* R7: terminal apron / road — grounds the machinery (fitRef-local y=0 sits at the vehicles' wheel base) */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-12.5, 0, 5]}>
+          <planeGeometry args={[85, 50]} />
+          <meshStandardMaterial map={asphaltT} roughness={0.95} metalness={0} />
+        </mesh>
+        {/* R7: guiding track — dashed line along the truck's travel axis (z=0, drives toward -x exit) */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-20, 0.02, 0]}>
+          <planeGeometry args={[60, 0.4]} />
+          <meshStandardMaterial map={dashT} transparent roughness={0.9} />
+        </mesh>
+        {/* R7: white lane edges framing the travel corridor */}
+        {[4.5, -4.5].map((z) => (
+          <mesh key={z} rotation={[-Math.PI / 2, 0, 0]} position={[-12.5, 0.02, z]}>
+            <planeGeometry args={[85, 0.28]} />
+            <meshStandardMaterial color="#E8E6E1" roughness={0.9} />
+          </mesh>
+        ))}
+        {/* R7: directional guide arrows pointing toward the left exit */}
+        {[-10, -16, -22].map((x) => (
+          <mesh key={x} rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.03, 0]}>
+            <shapeGeometry args={[arrowShape]} />
+            <meshStandardMaterial color="#E8E6E1" transparent opacity={0.5} roughness={0.9} />
+          </mesh>
+        ))}
+        {/* R7: soft contact shadows anchoring stacker, containers, and truck to the road */}
+        <ContactShadows position={[0, 0.05, 0]} scale={90} blur={2.4} far={10} opacity={0.45} resolution={1024} color="#111111" />
+
         <VisualTest label="STACKER" target={() => fitRef.current} y={[320, 600]} x={[220, 1340]} />
 
         {/* LEFT parked truck — ProceduralTruck @ (-8,0,0); bed starts EMPTY (no static container mesh) */}
