@@ -49,8 +49,8 @@ function hazard() {
   return new THREE.CanvasTexture(c)
 }
 
-/** R19: high-key studio vertical gradient for the sky dome — warm-white zenith dissolving into the
-    minimalist warm-gray FogExp2 haze (#EAE8E4) at the horizon so the dome and fog read as one continuous haze. */
+/** R21: high-key studio vertical gradient for the sky dome — warm-white zenith dissolving into the
+    minimalist neutral FogExp2 haze (#F4F4F5) at the horizon so the dome and fog read as one continuous haze. */
 function skyGradient() {
   const c = document.createElement('canvas')
   c.width = 16
@@ -58,8 +58,8 @@ function skyGradient() {
   const g = c.getContext('2d')!
   const grad = g.createLinearGradient(0, 0, 0, 256)
   grad.addColorStop(0, '#FFFFFF')
-  grad.addColorStop(0.45, '#F1EFEA')
-  grad.addColorStop(1, '#EAE8E4')
+  grad.addColorStop(0.45, '#F7F6F5')
+  grad.addColorStop(1, '#F4F4F5')
   g.fillStyle = grad
   g.fillRect(0, 0, 16, 256)
   const t = new THREE.CanvasTexture(c)
@@ -94,6 +94,50 @@ function StudioEnv() {
     }
   }, [gl, scene])
   return null
+}
+
+/** R21: hydraulic lift ram — a thick actuator pinned to the chassis that extends/retracts toward the boom's
+    underside mount every frame, so its length and orientation track the boom elevation angle like real steel. */
+function Ram({
+  boomRef,
+  mount,
+  base,
+  baseLen = 3,
+}: {
+  boomRef: { current: THREE.Group | null }
+  mount: [number, number, number]
+  base: [number, number, number]
+  baseLen?: number
+}) {
+  const group = useRef<THREE.Group>(null)
+  useFrame(() => {
+    const b = boomRef.current
+    if (!b || !group.current) return
+    const parent = group.current.parent as THREE.Object3D | null
+    if (!parent) return
+    const m = new THREE.Vector3(...mount)
+    b.localToWorld(m)
+    parent.worldToLocal(m)
+    const s = new THREE.Vector3(...base)
+    const dir = m.sub(s)
+    const len = dir.length()
+    if (len < 0.001) return
+    group.current.position.copy(s).addScaledVector(dir.normalize(), len / 2)
+    group.current.scale.y = len / baseLen
+    group.current.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir)
+  })
+  return (
+    <group ref={group}>
+      <mesh castShadow>
+        <cylinderGeometry args={[0.2, 0.2, baseLen, 16]} />
+        <meshStandardMaterial color="#1A1A1A" roughness={0.3} metalness={0.85} />
+      </mesh>
+      <mesh position={[0, baseLen / 2 - 0.15, 0]}>
+        <cylinderGeometry args={[0.11, 0.11, 1.2, 12]} />
+        <meshStandardMaterial color="#9A9A9A" roughness={0.35} metalness={0.85} />
+      </mesh>
+    </group>
+  )
 }
 
 const easeInOut = (t: number) => t * t * (3 - 2 * t)
@@ -244,6 +288,8 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const std = { roughness: 0.85, metalness: 0.05 }
   /** R19: PBR painted steel — high metalness + low roughness so containers and machinery catch the studio env map. */
   const cargoMtl = { roughness: 0.3, metalness: 0.8 }
+  /** R21: matte metallic stick steel — charcoal #2A2B2E, roughness 0.3, metalness 0.85. */
+  const boomSteel = { roughness: 0.3, metalness: 0.85 }
   const paint = { roughness: 0.3, metalness: 0.8 }
   const paintDark = { roughness: 0.3, metalness: 0.85 }
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
@@ -353,7 +399,7 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
 
     // Scroll-blended lighting — warm key recedes, cool fill rises as the loaded truck departs (no hard cut).
     const exitTone = Math.min(Math.max((p - 0.8) / 0.2, 0), 1)
-    if (keyLight.current) keyLight.current.intensity = THREE.MathUtils.lerp(4.0, 2.6, exitTone)
+    if (keyLight.current) keyLight.current.intensity = THREE.MathUtils.lerp(4.2, 2.8, exitTone)
     if (fillLight.current) fillLight.current.intensity = THREE.MathUtils.lerp(2.2, 2.8, exitTone)
     if (rimLight.current) rimLight.current.intensity = THREE.MathUtils.lerp(2.0, 1.5, exitTone)
 
@@ -406,8 +452,8 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
           ambient fill (#D4E2F4), sharp industrial rim (#E0F7FF) — high-contrast rig on a bright #F4F4F5 stage */}
       <directionalLight
         ref={keyLight}
-        position={[25, 30, 20]}
-        intensity={4.0}
+        position={[25, 35, 20]}
+        intensity={4.2}
         color="#FFE3B8"
         castShadow
         shadow-mapSize-width={2048}
@@ -420,11 +466,11 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
         shadow-camera-far={60}
         shadow-bias={-0.0001}
       />
-      <directionalLight ref={fillLight} position={[-20, 15, -15]} intensity={2.2} color="#D4E2F4" />
+      <directionalLight ref={fillLight} position={[-25, 20, -15]} intensity={2.2} color="#D4E2F4" />
       <directionalLight ref={rimLight} position={[0, 15, -20]} intensity={2.0} color="#E0F7FF" />
-      <ambientLight intensity={0.35} color="#EAE8E4" />
-      <color attach="background" args={['#EAE8E4']} />
-      <fogExp2 attach="fog" args={['#EAE8E4', 0.01]} />
+      <ambientLight intensity={0.35} color="#F4F4F5" />
+      <color attach="background" args={['#F4F4F5']} />
+      <fogExp2 attach="fog" args={['#F4F4F5', 0.009]} />
       {/* R12: atmospheric sky dome — vertical gradient (cool zenith → hazy horizon) adds real depth behind the fog */}
       <mesh scale={200}>
         <sphereGeometry args={[1, 32, 32]} />
@@ -445,7 +491,7 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
         {/* R13: shared straight lane — asphalt apron + dashed guide + edge lines, one corridor across every scene.
             lane is env-scaled (÷0.85) so the world corridor still sits at ±LANE like Truck/Viaduct. */}
         <RoadStrip
-          length={120}
+          length={140}
           width={40}
           position={[-12.5, 0, 0]}
           lane={LANE / 0.85}
@@ -557,22 +603,28 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
               </mesh>
             </group>
           ))}
+          {/* R21: twin hydraulic lift rams — chassis-pinned, tracking the boom elevation angle each frame */}
+          <Ram boomRef={boom} mount={[3.4, -0.4, 0.55]} base={[-2.2, 0.95, 0.55]} />
+          <Ram boomRef={boom} mount={[3.4, -0.4, -0.55]} base={[-2.2, 0.95, -0.55]} />
         </group>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
           <planeGeometry args={[6, 3.2]} />
           <meshBasicMaterial map={blobT} transparent depthWrite={false} />
         </mesh>
 
-        {/* TWO-segment angled black boom, pivot (-2.4,1.5,0) */}
+        {/* R21 volumetric reach-stacker stick — solid 0.8×0.8 box-profile main boom in matte charcoal (#2A2B2E)
+            PBR steel, hinged at the chassis pivot (-2.4,1.5,0); telescopic 0.6×0.6 inner stick with yellow/black
+            hazard stripes slides out on reach. Never thin, never culled. The front tip permanently terminates at
+            the spreader's center of mass (rigid matrix parenting, zero floating offsets). */}
         <group ref={boom} position={[-2.4, 1.5, 0]}>
           <mesh position={[1.5, 0, 0]} rotation={[0, 0, 0.15]} castShadow>
-            <boxGeometry args={[3.0, 0.5, 0.45]} />
-            <meshStandardMaterial color="#17181A" {...cargoMtl} />
+            <boxGeometry args={[3.0, 0.8, 0.8]} />
+            <meshStandardMaterial color="#2A2B2E" {...boomSteel} />
           </mesh>
           <group ref={tele} position={[3.0, 0.4, 0]}>
             <mesh position={[1.3, 0, 0]} rotation={[0, 0, -0.1]} castShadow>
-              <boxGeometry args={[2.6, 0.4, 0.4]} />
-              <meshStandardMaterial color="#17181A" {...cargoMtl} />
+              <boxGeometry args={[2.6, 0.6, 0.6]} />
+              <meshStandardMaterial map={hazT} color="#ffffff" roughness={0.4} metalness={0.6} />
             </mesh>
             {/* boomTip — spreader is a child of this; cargo reparents here during carry (grep token: spreader-child) */}
             <group ref={boomTip} position={[2.6, 0, 0]}>
