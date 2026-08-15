@@ -277,11 +277,22 @@ function ReliabilitySection({ scrub }: { scrub: ScrubRef }) {
                 One shipment, one team. No hand-off between vendors — freight, customs and transport run under a single escalation path.
               </p>
             </div>
-            <div className="hidden shrink-0 flex-col items-end gap-2 text-right font-mono text-[10px] uppercase tracking-[0.2em] text-[#17181A] md:flex">
-              <span className="font-bold">04 — CUSTOMS SUPPORT ON CALL</span>
-              <span>Real-Time Visibility</span>
-              <span>Proactive Exceptions</span>
-              <span>Owned Outcome</span>
+            <div className="hidden shrink-0 flex-col items-end gap-4 text-right md:flex">
+              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#17181A]">
+                04 — Customs Support on Call
+              </p>
+              <div className="flex flex-col items-end gap-1">
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#17181A]">Real-Time Visibility</p>
+                <p className="max-w-[13rem] text-[11px] leading-snug text-[#3A3D40]">Follow every shipment live, from booking to delivery.</p>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#17181A]">Proactive Exceptions</p>
+                <p className="max-w-[13rem] text-[11px] leading-snug text-[#3A3D40]">We flag problems early, before they become delays.</p>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#17181A]">Owned Outcome</p>
+                <p className="max-w-[13rem] text-[11px] leading-snug text-[#3A3D40]">One accountable team sees your cargo through to delivery.</p>
+              </div>
             </div>
           </div>
 
