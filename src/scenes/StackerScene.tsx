@@ -1,9 +1,10 @@
 import { useMemo, useRef, useLayoutEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { ContactShadows } from '@react-three/drei'
-import { EffectComposer, Bloom, ChromaticAberration, Noise } from '@react-three/postprocessing'
+import { EffectComposer, Bloom, ChromaticAberration, Noise, Vignette } from '@react-three/postprocessing'
 import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
+import type { ChromaticAberrationEffect } from 'postprocessing'
 import { VisualTest } from '../dev/VisualTest'
 import { ProceduralTruck, shadowBlob, asphalt, roughMap, dashTrack, type WheelRefs } from './builders'
 import type { ScrubRef } from '../lib/scrub'
@@ -45,6 +46,47 @@ function hazard() {
     g.fill()
   }
   return new THREE.CanvasTexture(c)
+}
+
+/** R12: vertical atmospheric gradient for the sky dome — cooler at the zenith, hazy warm at the horizon. */
+function skyGradient() {
+  const c = document.createElement('canvas')
+  c.width = 16
+  c.height = 256
+  const g = c.getContext('2d')!
+  const grad = g.createLinearGradient(0, 0, 0, 256)
+  grad.addColorStop(0, '#EDE9E3')
+  grad.addColorStop(0.45, '#F5F2ED')
+  grad.addColorStop(1, '#FAF9F7')
+  g.fillStyle = grad
+  g.fillRect(0, 0, 16, 256)
+  const t = new THREE.CanvasTexture(c)
+  t.colorSpace = THREE.SRGBColorSpace
+  return t
+}
+
+/** R12: transparent oil-sheen blotch map — glossy patches on the asphalt that catch the key light and env reflections. */
+function oilSheen() {
+  const c = document.createElement('canvas')
+  c.width = 512
+  c.height = 512
+  const g = c.getContext('2d')!
+  g.clearRect(0, 0, 512, 512)
+  for (let i = 0; i < 16; i++) {
+    const x = 40 + Math.random() * 432
+    const y = 40 + Math.random() * 432
+    const r = 18 + Math.random() * 52
+    const grad = g.createRadialGradient(x, y, 2, x, y, r)
+    grad.addColorStop(0, 'rgba(192,202,212,0.85)')
+    grad.addColorStop(0.55, 'rgba(152,162,177,0.35)')
+    grad.addColorStop(1, 'rgba(120,130,145,0)')
+    g.fillStyle = grad
+    g.fillRect(x - r, y - r, r * 2, r * 2)
+  }
+  const t = new THREE.CanvasTexture(c)
+  t.wrapS = t.wrapT = THREE.RepeatWrapping
+  t.repeat.set(3, 3)
+  return t
 }
 
 function Rig() {
@@ -157,6 +199,15 @@ const ARC = new THREE.CatmullRomCurve3([
 ])
 const BED_REST = new THREE.Vector3(-8, 1.85, -1.9)
 const IDLE_AIM = new THREE.Vector3(2.8, 1.6, 0)
+/** R12: spreader lock height — spreader center rides so its underside kisses the container's top corner castings. */
+const LOCK_LIFT = 0.8 + 0.125 // container half-height + spreader half-thickness
+/** R12: container top-corner lock positions (X, Z) shared by the spreader twistlocks and the cargo castings. */
+const LOCK_CORNERS: Array<[number, number]> = [
+  [-1.95, 0.65],
+  [1.95, 0.65],
+  [-1.95, -0.65],
+  [1.95, -0.65],
+]
 
 export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const ribT = useMemo(ribWhite, [])
@@ -165,7 +216,10 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const asphaltT = useMemo(asphalt, [])
   const roughT = useMemo(roughMap, [])
   const dashT = useMemo(dashTrack, [])
+  const skyT = useMemo(skyGradient, [])
+  const sheenT = useMemo(oilSheen, [])
   const caOffset = useMemo(() => new THREE.Vector2(0.0012, 0.0007), [])
+  const caRef = useRef<ChromaticAberrationEffect | null>(null)
   const arrowShape = useMemo(() => {
     const s = new THREE.Shape()
     s.moveTo(0, 0)
@@ -182,7 +236,7 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const truckWheels = useRef<Array<THREE.Object3D | null>>([]) as WheelRefs
   const spreader = useRef<THREE.Group>(null)
   const fitRef = useRef<THREE.Group>(null)
-  const cargo = useRef<THREE.Mesh>(null)
+  const cargo = useRef<THREE.Group>(null)
   const keyLight = useRef<THREE.PointLight>(null)
   const fillLight = useRef<THREE.PointLight>(null)
   const arcLag = useRef(0)
@@ -193,6 +247,15 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const paint = { roughness: 0.35, metalness: 0.3 }
   const paintDark = { roughness: 0.3, metalness: 0.55 }
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
+
+  // R12: radial chromatic aberration — weaker in the middle, stronger toward the screen edges (set via ref, since
+  // the react wrapper's props type collapses the optional constructor options).
+  useLayoutEffect(() => {
+    if (caRef.current) {
+      caRef.current.radialModulation = true
+      caRef.current.modulationOffset = 0.4
+    }
+  }, [])
 
   useFrame((_, delta) => {
     const p = scrub?.current ?? 0
@@ -222,15 +285,18 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       cargoTarget.copy(BED_REST).lerp(IDLE_AIM, easeHeavy(pD))
     }
 
-    // Reach-stacker arm IK: point the boom so the spreader hovers 0.95 above the target.
+    // Reach-stacker arm IK: point the boom so the spreader sits flush on the container's top castings.
     const sx = cargoTarget.x
-    const sy = cargoTarget.y + 0.95
+    const sy = cargoTarget.y + LOCK_LIFT
     const dx = sx + 2.4
     const dy = sy - 1.5
     const reach = Math.hypot(dx, dy)
     const teleX = Math.min(Math.max(Math.sqrt(Math.max(reach * reach - 0.16, 0)) - 5.6, 0), 2.6)
     if (boom.current) boom.current.rotation.z = Math.atan2(dy, dx) - Math.atan2(0.4, 5.6 + teleX)
     if (tele.current) tele.current.position.x = 3.0 + teleX
+    // R12: gravity-stabilized spreader — counter-rotate so the twistlocks stay level and flush on the container
+    // throughout the lift/arc (the boom tips, the spreader never does).
+    if (spreader.current && boom.current) spreader.current.rotation.z = -boom.current.rotation.z
 
     // Container lifecycle — explicit parent switches with matrix attachment (no pre-loaded truck mesh).
     if (cargo.current) {
@@ -243,7 +309,7 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
         fitRef.current!.updateWorldMatrix(true, true)
         fitRef.current!.localToWorld(cargoTarget)
         spreader.current!.worldToLocal(cargo.current.position.copy(cargoTarget))
-        cargo.current.rotation.z = -boom.current!.rotation.z
+        cargo.current.rotation.z = 0 // level — the gravity-stabilized spreader is already upright
       } else {
         if (cargo.current.parent !== truck.current) truck.current!.add(cargo.current)
         cargo.current.position.set(0, 1.85, -1.9)
@@ -257,8 +323,9 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     const pDrv = Math.min(Math.max((p - 0.85) / 0.15, 0), 1)
     const driveEase = easeIn(pDrv)
     const exitX = THREE.MathUtils.lerp(0, -22, driveEase)
-    // R10: chassis micro-bounce — tons of steel hitting rubber tyres on placement (decaying sine, settles to 0).
-    const impact = Math.min(Math.max((p - 0.76) / 0.08, 0), 1)
+    // R12: chassis micro-bounce — fires the exact instant the container's bottom plane touches the bed
+    // (p=0.75, where the place-lerp completes and BED_REST bottom y=1.05 = deck top), then decays to 0.
+    const impact = Math.min(Math.max((p - 0.75) / 0.08, 0), 1)
     const bounce = -0.06 * Math.exp(-impact * 4.5) * Math.sin(impact * 16)
     if (truck.current) {
       truck.current.rotation.y = (-Math.PI / 2) * pivot
@@ -323,37 +390,44 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       <directionalLight position={[8, 12, 10]} intensity={0.8} color="#FFE3B8" />
       <ambientLight intensity={0.35} color="#DCE4F0" />
       <color attach="background" args={['#FAF9F7']} />
-      <fog attach="fog" args={['#FAF9F7', 25, 70]} />
+      <fog attach="fog" args={['#FAF9F7', 25, 74]} />
+      {/* R12: atmospheric sky dome — vertical gradient (cool zenith → hazy horizon) adds real depth behind the fog */}
       <mesh scale={200}>
         <sphereGeometry args={[1, 32, 32]} />
-        <meshBasicMaterial color="#FAF9F7" side={THREE.BackSide} />
+        <meshBasicMaterial map={skyT} side={THREE.BackSide} />
       </mesh>
 
-      {/* R10: post-processing — subtle bloom on hot highlights, lens chromatic aberration, film grain */}
+      {/* R12: studio color grading — bloom on hot highlights/markings, radial chromatic aberration, film grain, cinematic vignette */}
       <EffectComposer>
-        <Bloom intensity={0.35} luminanceThreshold={1.0} luminanceSmoothing={0.4} mipmapBlur />
-        <ChromaticAberration offset={caOffset} />
-        <Noise opacity={0.04} />
+        <Bloom intensity={0.5} luminanceThreshold={1.0} luminanceSmoothing={0.4} mipmapBlur />
+        <ChromaticAberration ref={caRef} offset={caOffset} />
+        <Noise opacity={0.05} />
+        <Vignette offset={0.2} darkness={0.68} />
       </EffectComposer>
 
       {/* R8: environment shares fitRef's transform (local coords unchanged) but lives outside the
           machinery group so the STACKER bbox stays meaningful. */}
       <group scale={0.85} position={[2.2, 0.6, 0]}>
-        {/* R7: terminal apron / road — grounds the machinery (y=0 sits at the vehicles' wheel base) */}
+        {/* R7/R12: terminal apron / road — faint clearcoat sheen across the asphalt, oil-sheen patches on top */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-12.5, 0, 5]}>
           <planeGeometry args={[85, 50]} />
-          <meshStandardMaterial map={asphaltT} roughnessMap={roughT} roughness={0.95} metalness={0} />
+          <meshPhysicalMaterial map={asphaltT} roughnessMap={roughT} roughness={0.92} metalness={0} clearcoat={0.15} clearcoatRoughness={0.55} />
+        </mesh>
+        {/* R12: oil-sheen reflections — glossy blotches that catch the key light and studio env as the camera/truck move */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-12.5, 0.006, 5]}>
+          <planeGeometry args={[85, 50]} />
+          <meshPhysicalMaterial map={sheenT} transparent roughness={0.2} metalness={0.8} clearcoat={0.6} clearcoatRoughness={0.3} envMapIntensity={1.5} depthWrite={false} />
         </mesh>
         {/* R7: guiding track — dashed line along the truck's travel axis (z=0, drives toward -x exit) */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-20, 0.02, 0]}>
           <planeGeometry args={[60, 0.4]} />
-          <meshStandardMaterial map={dashT} transparent roughness={0.9} />
+          <meshStandardMaterial map={dashT} transparent roughness={0.9} emissive="#ffd900" emissiveIntensity={0.18} />
         </mesh>
         {/* R7: white lane edges framing the travel corridor */}
         {[4.5, -4.5].map((z) => (
           <mesh key={z} rotation={[-Math.PI / 2, 0, 0]} position={[-12.5, 0.02, z]}>
             <planeGeometry args={[85, 0.28]} />
-            <meshStandardMaterial color="#E8E6E1" roughness={0.9} />
+            <meshStandardMaterial color="#E8E6E1" roughness={0.9} emissive="#ffffff" emissiveIntensity={0.08} />
           </mesh>
         ))}
         {/* R7: directional guide arrows pointing toward the left exit */}
@@ -392,10 +466,19 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
             </mesh>
           ),
         )}
-        <mesh ref={cargo} position={[3.5, 5.75, 0]}>
-          <boxGeometry args={CONTAINER} />
-          <meshStandardMaterial color={STACK_COLS[3]} {...std} />
-        </mesh>
+        <group ref={cargo} position={[3.5, 5.75, 0]}>
+          <mesh>
+            <boxGeometry args={CONTAINER} />
+            <meshStandardMaterial color={STACK_COLS[3]} {...std} />
+          </mesh>
+          {/* R12: raised top corner castings — the anchor seats for the spreader's twistlocks */}
+          {LOCK_CORNERS.map(([x, z], i) => (
+            <mesh key={i} position={[x, 0.88, z] as [number, number, number]}>
+              <boxGeometry args={[0.34, 0.16, 0.34]} />
+              <meshStandardMaterial color="#202024" roughness={0.45} metalness={0.45} />
+            </mesh>
+          ))}
+        </group>
         <mesh position={[3.5, 0.05, 0]}>
           <boxGeometry args={[6, 0.3, 2.4]} />
           <meshStandardMaterial color={TEAL} {...std} />
@@ -465,10 +548,18 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
             {/* boomTip — spreader is a child of this; cargo reparents here during carry (grep token: spreader-child) */}
             <group ref={boomTip} position={[2.6, 0, 0]}>
               <group ref={spreader} position={[0, 0, 0]}>
+                {/* R12: spreader frame sized to the container top so the corner locks seat on the castings */}
                 <mesh>
-                  <boxGeometry args={[1.9, 0.25, 2.3]} />
+                  <boxGeometry args={[4.4, 0.25, 1.8]} />
                   <meshStandardMaterial map={hazT} transparent opacity={1} {...std} />
                 </mesh>
+                {/* R12: corner twistlocks — stay keyed into the container's raised castings across lift/arc/place */}
+                {LOCK_CORNERS.map(([x, z], i) => (
+                  <mesh key={i} position={[x, -0.19, z] as [number, number, number]}>
+                    <boxGeometry args={[0.3, 0.2, 0.3]} />
+                    <meshStandardMaterial color="#1f1f24" roughness={0.5} metalness={0.5} />
+                  </mesh>
+                ))}
               </group>
             </group>
           </group>
