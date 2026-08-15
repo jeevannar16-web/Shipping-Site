@@ -38,7 +38,7 @@ function hazard() {
     g.lineTo(i + 32, 0)
     g.lineTo(i + 16, 32)
     g.fill()
-    g.fillStyle = '#F2C230'
+    g.fillStyle = '#FFCC00'
     g.beginPath()
     g.moveTo(i + 16, 32)
     g.lineTo(i + 32, 0)
@@ -49,8 +49,8 @@ function hazard() {
   return new THREE.CanvasTexture(c)
 }
 
-/** R21: high-key studio vertical gradient for the sky dome — warm-white zenith dissolving into the
-    minimalist neutral FogExp2 haze (#F4F4F5) at the horizon so the dome and fog read as one continuous haze. */
+/** R24: high-key studio vertical gradient for the sky dome — warm-white zenith dissolving into the
+    cool-neutral FogExp2 haze (#F0EFF1) at the horizon so the dome and fog read as one continuous haze. */
 function skyGradient() {
   const c = document.createElement('canvas')
   c.width = 16
@@ -58,8 +58,8 @@ function skyGradient() {
   const g = c.getContext('2d')!
   const grad = g.createLinearGradient(0, 0, 0, 256)
   grad.addColorStop(0, '#FFFFFF')
-  grad.addColorStop(0.45, '#F7F6F5')
-  grad.addColorStop(1, '#F4F4F5')
+  grad.addColorStop(0.45, '#F4F3F1')
+  grad.addColorStop(1, '#F0EFF1')
   g.fillStyle = grad
   g.fillRect(0, 0, 16, 256)
   const t = new THREE.CanvasTexture(c)
@@ -291,10 +291,10 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const camPrevY = useRef(0)
 
   const std = { roughness: 0.85, metalness: 0.05 }
-  /** R19/R23: PBR painted steel — metalness 0.85 + low roughness so containers and machinery catch the studio env map. */
-  const cargoMtl = { roughness: 0.3, metalness: 0.85 }
-  /** R21: matte metallic stick steel — charcoal #2A2B2E, roughness 0.3, metalness 0.85. */
-  const boomSteel = { roughness: 0.3, metalness: 0.85 }
+  /** R24: PBR painted steel — corrugated containers, roughness 0.3 / metalness 0.8, catching the studio env map. */
+  const cargoMtl = { roughness: 0.3, metalness: 0.8 }
+  /** R24: matte metallic stick steel — charcoal #222325, roughness 0.2, metalness 0.9 (high reflectivity). */
+  const boomSteel = { roughness: 0.2, metalness: 0.9 }
   const paint = { roughness: 0.3, metalness: 0.8 }
   const paintDark = { roughness: 0.3, metalness: 0.85 }
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
@@ -402,18 +402,18 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
 
     // Scroll-blended lighting — warm key recedes, cool fill rises as the loaded truck departs (no hard cut).
     const exitTone = Math.min(Math.max((p - 0.8) / 0.2, 0), 1)
-    if (keyLight.current) keyLight.current.intensity = THREE.MathUtils.lerp(4.2, 2.8, exitTone)
-    if (fillLight.current) fillLight.current.intensity = THREE.MathUtils.lerp(2.2, 2.8, exitTone)
+    if (keyLight.current) keyLight.current.intensity = THREE.MathUtils.lerp(5.0, 3.2, exitTone)
+    if (fillLight.current) fillLight.current.intensity = THREE.MathUtils.lerp(2.5, 3.0, exitTone)
     if (rimLight.current) rimLight.current.intensity = THREE.MathUtils.lerp(2.0, 1.5, exitTone)
 
-    // R17: camera inertia & sway — damped follow toward the scroll target (lambda 3.5), a slow lookAt sway
-    // sin(elapsed * 1.5) * 0.1, and a subtle velocity-banked roll clamped to ±1.5° (cinematic rig feel).
+    // R24: weighted camera inertia — high-inertia damped follow toward the scroll target (lambda 2.5), a slow
+    // lookAt sway sin(elapsed * 1.5) * 0.1, and a subtle velocity-banked roll clamped to ±1.5° (cinematic rig feel).
     const elapsed = state.clock.elapsedTime
     const camEase = easeInOut(p)
     const camTargetX = THREE.MathUtils.lerp(-7, -9.5, camEase)
     const camTargetY = THREE.MathUtils.lerp(3.6, 3.9, camEase)
-    camera.position.x = THREE.MathUtils.damp(camera.position.x, camTargetX, 3.5, delta)
-    camera.position.y = THREE.MathUtils.damp(camera.position.y, camTargetY, 3.5, delta)
+    camera.position.x = THREE.MathUtils.damp(camera.position.x, camTargetX, 2.5, delta)
+    camera.position.y = THREE.MathUtils.damp(camera.position.y, camTargetY, 2.5, delta)
     const velX = (camera.position.x - camPrevX.current) / Math.max(delta, 0.001)
     const velY = (camera.position.y - camPrevY.current) / Math.max(delta, 0.001)
     camPrevX.current = camera.position.x
@@ -455,8 +455,8 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
           ambient fill (#D4E2F4), sharp industrial rim (#E0F7FF) — high-contrast rig on a bright #F4F4F5 stage */}
       <directionalLight
         ref={keyLight}
-        position={[25, 35, 20]}
-        intensity={4.2}
+        position={[30, 40, 25]}
+        intensity={5.0}
         color="#FFE3B8"
         castShadow
         shadow-mapSize-width={2048}
@@ -469,11 +469,11 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
         shadow-camera-far={60}
         shadow-bias={-0.0001}
       />
-      <directionalLight ref={fillLight} position={[-25, 20, -15]} intensity={2.2} color="#D4E2F4" />
+      <directionalLight ref={fillLight} position={[-30, 20, -15]} intensity={2.5} color="#A5C4D4" />
       <directionalLight ref={rimLight} position={[0, 15, -20]} intensity={2.0} color="#E0F7FF" />
-      <ambientLight intensity={0.35} color="#F4F4F5" />
-      <color attach="background" args={['#F4F4F5']} />
-      <fogExp2 attach="fog" args={['#F4F4F5', 0.008]} />
+      <ambientLight intensity={0.25} color="#F0EFF1" />
+      <color attach="background" args={['#F0EFF1']} />
+      <fogExp2 attach="fog" args={['#F0EFF1', 0.012]} />
       {/* R12: atmospheric sky dome — vertical gradient (cool zenith → hazy horizon) adds real depth behind the fog */}
       <mesh scale={200}>
         <sphereGeometry args={[1, 32, 32]} />
@@ -510,7 +510,7 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
           </mesh>
         ))}
         {/* R18: soft contact shadows anchoring stacker, containers, and truck to the road */}
-        <ContactShadows position={[0, 0.02, 0]} scale={90} blur={1.8} far={10} opacity={0.5} resolution={1024} color="#111111" />
+        <ContactShadows position={[0, 0.02, 0]} scale={100} blur={2.0} far={10} opacity={0.6} resolution={1024} color="#111111" />
         {/* R10: horizon depth — stacks, fencing, gantry, all faded by fog */}
         <Backdrop />
       </group>
@@ -622,7 +622,7 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
         <group ref={boom} position={[-2.4, 1.5, 0]}>
           <mesh position={[1.5, 0, 0]} rotation={[0, 0, 0.15]} castShadow>
             <boxGeometry args={[3.0, 0.8, 0.8]} />
-            <meshStandardMaterial color="#2A2B2E" {...boomSteel} />
+            <meshStandardMaterial color="#222325" {...boomSteel} />
           </mesh>
           <group ref={tele} position={[3.0, 0.4, 0]}>
             <mesh position={[1.3, 0, 0]} rotation={[0, 0, -0.1]} castShadow>

@@ -70,7 +70,7 @@ export function dashWhite() {
     and the white edge lines at ±LANE, so the road reads as one straight strip along the X axis (trucks drive ±x). */
 export const LANE = 4.5
 
-/** R18: one straight travel lane — pristine matte asphalt (color #1E2022, roughness 0.25 / metalness 0.1 over a
+/** R24: one straight travel lane — reflective matte asphalt (color #1A1C1E, roughness 0.2 / metalness 0.15 over a
     subtle grayscale roughness map for clean studio reflections) + razor-sharp white dashed center guide (z=0,
     width 0.3) + solid yellow boundary strips (±lane, width 0.15, #FFD700), each layer at its own height so the
     markings read crisp with zero shimmer. Reused across Stacker / Truck / Viaduct. */
@@ -95,7 +95,7 @@ export function RoadStrip({
     <group position={position}>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[length, width]} />
-        <meshStandardMaterial color="#1E2022" roughnessMap={roughT} roughness={0.25} metalness={0.1} />
+        <meshStandardMaterial color="#1A1C1E" roughnessMap={roughT} roughness={0.2} metalness={0.15} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
         <planeGeometry args={[length, 0.3]} />
