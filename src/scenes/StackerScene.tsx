@@ -71,10 +71,22 @@ function Rig() {
 const easeInOut = (t: number) => t * t * (3 - 2 * t)
 const easeIn = (t: number) => t * t
 
-const STACK_TOP = new THREE.Vector3(7, 5.75, 0)
+const STACK_TOP = new THREE.Vector3(3.5, 5.75, 0)
 const CONTAINER = [4.4, 1.6, 1.8] as const
 const STACK_COLS = ['ribWhite', 'ribWhite', '#1E6BB0', '#E8590C']
 const TEAL = '#2E9CC9'
+
+// Revision 6: spline-driven carry arch (fitRef-local space) from stack top over the truck bed.
+// All points sit inside the boom's reachable disc so the spreader can hold the cargo throughout.
+const ARC = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(3.5, 5.75, 0),
+  new THREE.Vector3(0.5, 6.5, 0),
+  new THREE.Vector3(-3.5, 5.6, 0),
+  new THREE.Vector3(-8, 3.6, 0),
+])
+const HOVER = new THREE.Vector3(-8, 3.6, 0)
+const BED_REST = new THREE.Vector3(-8, 1.85, -1.9)
+const IDLE_AIM = new THREE.Vector3(2.8, 1.6, 0)
 
 export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const ribT = useMemo(ribWhite, [])
@@ -86,73 +98,66 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const boomTip = useRef<THREE.Group>(null)
   const truck = useRef<THREE.Group>(null)
   const truckWheels = useRef<Array<THREE.Object3D | null>>([]) as WheelRefs
-  const held = useRef<THREE.Mesh>(null)
-  const loaded = useRef<THREE.Object3D>(null)
   const spreader = useRef<THREE.Group>(null)
   const fitRef = useRef<THREE.Group>(null)
-  const placed = useRef(false)
-  const placeStart = useRef(new THREE.Vector3(0, 1.85, -1.9))
+  const cargo = useRef<THREE.Mesh>(null)
 
   const std = { roughness: 0.85, metalness: 0 }
 
   useFrame(() => {
     const p = scrub?.current ?? 0
-    const pA = Math.min(Math.max(p / 0.25, 0), 1)
-    const pB = Math.min(Math.max((p - 0.25) / 0.3, 0), 1)
-    const pC = Math.min(Math.max((p - 0.55) / 0.2, 0), 1)
+    // Revision 6 state machine:
+    //   State 0-1 (0 -> 0.30): reach & attach   — arm sweeps to the stack, container rests in stack
+    //   State 2   (0.30 -> 0.55): lift & arc    — container follows the CatmullRomCurve3 over the truck
+    //   State 3   (0.55 -> 0.75): place         — container lowers onto the bed, reparents to truck
+    //   State 4   (0.75 -> 1.00): departure     — spreader retracts, truck drives off
+    const pS1 = Math.min(Math.max(p / 0.3, 0), 1)
+    const pS2 = Math.min(Math.max((p - 0.3) / 0.25, 0), 1)
+    const pS3 = Math.min(Math.max((p - 0.55) / 0.2, 0), 1)
     const pD = Math.min(Math.max((p - 0.75) / 0.25, 0), 1)
 
-    const hx = THREE.MathUtils.lerp(THREE.MathUtils.lerp(3.5, 3.5, easeInOut(pA)), -8, easeInOut(pB))
-    const hy = THREE.MathUtils.lerp(
-      THREE.MathUtils.lerp(0.85, 7.0, easeInOut(pA)),
-      THREE.MathUtils.lerp(7.0, 2.0, easeInOut(pC)),
-      easeInOut(pB),
-    )
-
-    // spreader and held container are children of boomTip; animate boom angle + telescope only
-    if (boom.current) {
-      const tipX = hx + 2.4
-      const tipY = hy + 1.9 - 1.5
-      boom.current.rotation.z = Math.atan2(tipY, tipX)
-    }
-    const tipX = hx + 2.4
-    const tipY = hy + 1.9 - 1.5
-    const reach = Math.hypot(tipX, tipY)
-    if (tele.current) {
-      const extend = Math.min(Math.max(reach - 4.6, 0), 2.6)
-      tele.current.position.x = extend * (p < 0.75 ? 1 : 1 - easeInOut(pD))
+    // Carried-container target (fitRef-local hang point of the cargo box).
+    const cargoTarget = new THREE.Vector3()
+    if (p < 0.3) {
+      cargoTarget.copy(IDLE_AIM).lerp(STACK_TOP, easeInOut(pS1))
+    } else if (p < 0.55) {
+      cargoTarget.copy(ARC.getPoint(easeInOut(pS2)))
+    } else if (p < 0.75) {
+      cargoTarget.copy(HOVER).lerp(BED_REST, easeInOut(pS3))
+    } else {
+      cargoTarget.copy(BED_REST).lerp(IDLE_AIM, easeInOut(pD))
     }
 
-    if (held.current) {
-      held.current.visible = p < 0.75
-      held.current.rotation.z = -boom.current!.rotation.z
+    // Reach-stacker arm IK: point the boom so the spreader hovers 0.95 above the target.
+    const sx = cargoTarget.x
+    const sy = cargoTarget.y + 0.95
+    const dx = sx + 2.4
+    const dy = sy - 1.5
+    const reach = Math.hypot(dx, dy)
+    const teleX = Math.min(Math.max(Math.sqrt(Math.max(reach * reach - 0.16, 0)) - 5.6, 0), 2.6)
+    if (boom.current) boom.current.rotation.z = Math.atan2(dy, dx) - Math.atan2(0.4, 5.6 + teleX)
+    if (tele.current) tele.current.position.x = 3.0 + teleX
+
+    // Container lifecycle — explicit parent switches with matrix attachment (no pre-loaded truck mesh).
+    if (cargo.current) {
+      if (p < 0.3) {
+        if (cargo.current.parent !== fitRef.current) fitRef.current!.add(cargo.current)
+        cargo.current.position.copy(STACK_TOP)
+        cargo.current.rotation.z = 0
+      } else if (p < 0.75) {
+        if (cargo.current.parent !== spreader.current) spreader.current!.add(cargo.current)
+        fitRef.current!.updateWorldMatrix(true, true)
+        fitRef.current!.localToWorld(cargoTarget)
+        spreader.current!.worldToLocal(cargo.current.position.copy(cargoTarget))
+        cargo.current.rotation.z = -boom.current!.rotation.z
+      } else {
+        if (cargo.current.parent !== truck.current) truck.current!.add(cargo.current)
+        cargo.current.position.set(0, 1.85, -1.9)
+        cargo.current.rotation.z = 0
+      }
     }
 
-    // Visible handoff: once the arm finishes lowering, the carried container becomes a child of
-    // the truck and is scrub-lerped from its arm-settled spot down onto the flatbed (single
-    // continuous interpolation; truck drive-off below stays untouched).
-    if (p >= 0.75 && !placed.current && held.current && truck.current) {
-      const wp = new THREE.Vector3()
-      held.current.updateWorldMatrix(true, false)
-      held.current.getWorldPosition(wp)
-      truck.current.updateWorldMatrix(true, false)
-      truck.current.worldToLocal(placeStart.current.copy(wp))
-      placed.current = true
-    }
-    if (p < 0.75) placed.current = false
-
-    const pPl = Math.min(Math.max((p - 0.75) / 0.07, 0), 1)
-    const plEase = easeInOut(pPl)
-    if (loaded.current) {
-      loaded.current.visible = p >= 0.75
-      const s = placeStart.current
-      loaded.current.position.set(
-        THREE.MathUtils.lerp(s.x, 0, plEase),
-        THREE.MathUtils.lerp(s.y, 1.85, plEase),
-        THREE.MathUtils.lerp(s.z, -1.9, plEase),
-      )
-    }
-
+    // Truck departure — preserved: monotonic exit, constant ground height, no vertical jump.
     const pDrv = Math.min(Math.max((p - 0.82) / 0.18, 0), 1)
     const driveEase = easeIn(pDrv)
     const exitX = THREE.MathUtils.lerp(0, -22, driveEase)
@@ -164,15 +169,18 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     }
     truckWheels.current.forEach((w: THREE.Object3D | null) => w && (w.rotation.y = (16 * driveEase) / ((w.userData.radius as number) || 0.5)))
 
-    if (import.meta.env.DEV && held.current) {
-      const d = Math.hypot(hx - STACK_TOP.x, hy - STACK_TOP.y)
-      console.assert(d >= 1.0, `[SHOT2] held within 1.0 of stack at p=${p.toFixed(3)} d=${d.toFixed(2)}`)
-      if (p < 0.01) console.assert(loaded.current?.visible === false, '[SHOT2] loaded must be hidden at p=0')
-      if (p >= 0.99) {
-        console.assert(Boolean(truck.current && truck.current.position.x <= -14), `[SHOT2] loadedTruck must drive ≤ -14 at p=1 (got ${truck.current?.position.x})`)
-        console.assert(Boolean(loaded.current && loaded.current.parent === truck.current), '[SHOT2] loaded container must stay a child of the driving truck')
+    if (import.meta.env.DEV && cargo.current && truck.current) {
+      if (p < 0.01) {
+        console.assert(cargo.current.parent !== truck.current, '[SHOT2] truck must start empty (no pre-loaded container)')
+        const cw = new THREE.Vector3()
+        cargo.current.updateWorldMatrix(true, false)
+        cargo.current.getWorldPosition(cw)
+        console.assert(Math.abs(cw.x - (2.2 + 3.5 * 0.85)) < 0.1, `[SHOT2] container must rest in the stack at p=0 (x=${cw.x.toFixed(2)})`)
       }
-      // wheel-attached assert
+      if (p >= 0.99) {
+        console.assert(truck.current.position.x <= -14, `[SHOT2] loadedTruck must drive ≤ -14 at p=1 (got ${truck.current.position.x})`)
+        console.assert(cargo.current.parent === truck.current, '[SHOT2] loaded container must stay a child of the driving truck')
+      }
       if (truckWheels.current[0] && truck.current) {
         const wp = new THREE.Vector3()
         truckWheels.current[0].getWorldPosition(wp)
@@ -195,13 +203,9 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       <group ref={fitRef} scale={0.85} position={[2.2, 0.6, 0]}>
         <VisualTest label="STACKER" target={() => fitRef.current} y={[320, 600]} x={[220, 1340]} />
 
-        {/* LEFT parked truck — ProceduralTruck @ (-8,0,0), loaded container on flatbed */}
+        {/* LEFT parked truck — ProceduralTruck @ (-8,0,0); bed starts EMPTY (no static container mesh) */}
         <group ref={truck} position={[-8, 0, 0]}>
           <ProceduralTruck wheelRefs={truckWheels} driving={false} bob={false} hideTrailer />
-          <mesh ref={loaded} position={[0, 1.85, -1.9]} visible={false}>
-            <boxGeometry args={CONTAINER} />
-            <meshStandardMaterial map={ribT} color="#F4F3F1" {...std} />
-          </mesh>
           {/* shadowBlob MUST be a CHILD of the truck group (grep token: shadow-in-truck) */}
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
             <planeGeometry args={[15, 5]} />
@@ -209,18 +213,25 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
           </mesh>
         </group>
 
-        {/* RIGHT stack x +7: TOP→BOTTOM [ribWhite, ribWhite, #1E6BB0, #E8590C] */}
-        {STACK_COLS.map((c, i) => (
-          <mesh key={i} position={[7, 0.8 + i * 1.65, 0]}>
-            <boxGeometry args={CONTAINER} />
-            <meshStandardMaterial color={c === 'ribWhite' ? '#F4F3F1' : c} map={c === 'ribWhite' ? ribT : undefined} {...std} />
-          </mesh>
-        ))}
-        <mesh position={[7, 0.05, 0]}>
+        {/* RIGHT stack x +3.5 (inside the boom's reach), bottom→top [ribWhite, ribWhite, #1E6BB0, cargo #E8590C];
+            the top container IS the carried cargo mesh (no static truck copy). */}
+        {STACK_COLS.map((c, i) =>
+          i === 3 ? null : (
+            <mesh key={i} position={[3.5, 0.8 + i * 1.65, 0]}>
+              <boxGeometry args={CONTAINER} />
+              <meshStandardMaterial color={c === 'ribWhite' ? '#F4F3F1' : c} map={c === 'ribWhite' ? ribT : undefined} {...std} />
+            </mesh>
+          ),
+        )}
+        <mesh ref={cargo} position={[3.5, 5.75, 0]}>
+          <boxGeometry args={CONTAINER} />
+          <meshStandardMaterial color={STACK_COLS[3]} {...std} />
+        </mesh>
+        <mesh position={[3.5, 0.05, 0]}>
           <boxGeometry args={[6, 0.3, 2.4]} />
           <meshStandardMaterial color={TEAL} {...std} />
         </mesh>
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[7, 0.01, 0]}>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[3.5, 0.01, 0]}>
           <planeGeometry args={[6, 3]} />
           <meshBasicMaterial map={blobT} transparent depthWrite={false} />
         </mesh>
@@ -282,17 +293,12 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
               <boxGeometry args={[2.6, 0.4, 0.4]} />
               <meshStandardMaterial color="#17181A" {...std} />
             </mesh>
-            {/* boomTip — spreader and held container are children of this (grep token: spreader-child) */}
+            {/* boomTip — spreader is a child of this; cargo reparents here during carry (grep token: spreader-child) */}
             <group ref={boomTip} position={[2.6, 0, 0]}>
               <group ref={spreader} position={[0, 0, 0]}>
                 <mesh>
                   <boxGeometry args={[1.9, 0.25, 2.3]} />
                   <meshStandardMaterial map={hazT} transparent opacity={1} {...std} />
-                </mesh>
-                {/* held container — child of spreader */}
-                <mesh ref={held} position={[0, -0.95, 0]}>
-                  <boxGeometry args={CONTAINER} />
-                  <meshStandardMaterial map={ribT} color="#F4F3F1" {...std} />
                 </mesh>
               </group>
             </group>
