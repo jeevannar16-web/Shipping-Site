@@ -84,11 +84,27 @@ export function dashTrack() {
   return t
 }
 
+/** R15: crisp white dashed centerline texture for the straight travel lane (high-contrast against wet asphalt). */
+export function dashWhite() {
+  const c = document.createElement('canvas')
+  c.width = 512
+  c.height = 32
+  const g = c.getContext('2d')!
+  g.clearRect(0, 0, 512, 32)
+  g.fillStyle = 'rgba(245, 244, 240, 0.95)'
+  for (let x = 0; x < 512; x += 96) g.fillRect(x, 10, 44, 12)
+  const t = new THREE.CanvasTexture(c)
+  t.wrapS = t.wrapT = THREE.RepeatWrapping
+  t.repeat.set(13, 1)
+  return t
+}
+
 /** R13: half-width of the travel corridor shared by every scene — the dashed center guide sits at z=0
     and the white edge lines at ±LANE, so the road reads as one straight strip along the X axis (trucks drive ±x). */
 export const LANE = 4.5
 
-/** R13: one straight travel lane — asphalt apron + dashed center guide (z=0) + white edge lines (±lane),
+/** R13/R15: one straight travel lane — asphalt apron (wet-sheen: roughness 0.35 / metalness 0.1 over a
+    high-frequency rough map) + crisp white dashed center guide (z=0) + solid yellow boundary strips (±lane),
     all centered on the corridor so the same geometry is reused across the Stacker / Truck / Viaduct sections. */
 export function RoadStrip({
   length,
@@ -118,8 +134,8 @@ export function RoadStrip({
         <meshPhysicalMaterial
           map={asphaltT}
           roughnessMap={roughT}
-          roughness={0.95}
-          metalness={0}
+          roughness={0.35}
+          metalness={0.1}
           clearcoat={clearcoat}
           clearcoatRoughness={0.55}
         />
@@ -130,18 +146,18 @@ export function RoadStrip({
           map={dashT}
           transparent
           roughness={0.9}
-          emissive="#ffd900"
-          emissiveIntensity={glow ? 0.18 : 0}
+          emissive="#ffffff"
+          emissiveIntensity={glow ? 0.12 : 0}
         />
       </mesh>
       {[lane, -lane].map((z) => (
         <mesh key={z} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, z]}>
           <planeGeometry args={[length, 0.28]} />
           <meshStandardMaterial
-            color="#E8E6E1"
-            roughness={0.9}
-            emissive="#ffffff"
-            emissiveIntensity={glow ? 0.08 : 0}
+            color="#E9B949"
+            roughness={0.85}
+            emissive="#E9B949"
+            emissiveIntensity={glow ? 0.1 : 0}
           />
         </mesh>
       ))}

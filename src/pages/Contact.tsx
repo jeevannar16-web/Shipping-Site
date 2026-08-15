@@ -18,7 +18,7 @@ export default function Contact() {
       <div className="grid gap-12 section-pad md:grid-cols-12">
         {/* left column */}
         <div className="space-y-8 md:col-span-4">
-          <InfoBlock label="Hotline" value={CONTACT.email} />
+          <InfoBlock label="Office" value={CONTACT.address} />
           <InfoBlock label="Working Hours" value="Sun–Fri / 9AM–6PM NPT" />
           <InfoBlock label="Socials" value={['LinkedIn', 'X', 'Instagram']} />
           <InfoBlock label="Email" value={CONTACT.email} />

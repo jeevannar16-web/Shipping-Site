@@ -6,7 +6,7 @@ import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import type { ChromaticAberrationEffect } from 'postprocessing'
 import { VisualTest } from '../dev/VisualTest'
-import { ProceduralTruck, shadowBlob, asphalt, roughMap, dashTrack, LANE, RoadStrip, type WheelRefs } from './builders'
+import { ProceduralTruck, shadowBlob, asphalt, roughMap, dashWhite, LANE, RoadStrip, type WheelRefs } from './builders'
 import { useCompact } from '../lib/media'
 import type { ScrubRef } from '../lib/scrub'
 
@@ -49,16 +49,17 @@ function hazard() {
   return new THREE.CanvasTexture(c)
 }
 
-/** R12: vertical atmospheric gradient for the sky dome — cooler at the zenith, hazy warm at the horizon. */
+/** R12/R15: dusk-industrial vertical gradient for the sky dome — cool zenith dissolving into the
+    heavy gray-blue FogExp2 haze at the horizon so the dome and fog read as one continuous atmosphere. */
 function skyGradient() {
   const c = document.createElement('canvas')
   c.width = 16
   c.height = 256
   const g = c.getContext('2d')!
   const grad = g.createLinearGradient(0, 0, 0, 256)
-  grad.addColorStop(0, '#EDE9E3')
-  grad.addColorStop(0.45, '#F5F2ED')
-  grad.addColorStop(1, '#FAF9F7')
+  grad.addColorStop(0, '#232C38')
+  grad.addColorStop(0.45, '#1A222C')
+  grad.addColorStop(1, '#14181F')
   g.fillStyle = grad
   g.fillRect(0, 0, 16, 256)
   const t = new THREE.CanvasTexture(c)
@@ -222,7 +223,7 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const blobT = useMemo(shadowBlob, [])
   const asphaltT = useMemo(asphalt, [])
   const roughT = useMemo(roughMap, [])
-  const dashT = useMemo(dashTrack, [])
+  const dashT = useMemo(dashWhite, [])
   const skyT = useMemo(skyGradient, [])
   const sheenT = useMemo(oilSheen, [])
   const caOffset = useMemo(() => new THREE.Vector2(0.0012, 0.0007), [])
@@ -244,8 +245,9 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const spreader = useRef<THREE.Group>(null)
   const fitRef = useRef<THREE.Group>(null)
   const cargo = useRef<THREE.Group>(null)
-  const keyLight = useRef<THREE.PointLight>(null)
-  const fillLight = useRef<THREE.PointLight>(null)
+  const keyLight = useRef<THREE.DirectionalLight>(null)
+  const fillLight = useRef<THREE.DirectionalLight>(null)
+  const rimLight = useRef<THREE.DirectionalLight>(null)
   const arcLag = useRef(0)
   const camPrevX = useRef(0)
   const camPrevY = useRef(0)
@@ -292,6 +294,18 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       cargoTarget.copy(BED_REST).lerp(IDLE_AIM, easeHeavy(pD))
     }
 
+    // R15: pre-lift weight tension ("tug & flex") — the instant the spreader locks at the start of the lift
+    // segment, the whole assembly settles -0.08 under the container's mass and the mast springs back with a
+    // decaying oscillation before the upward arc translation takes over. Gated to the lift segment (p >= 0.3)
+    // so the resting/attach phases are untouched. No spatial pop: the spreader IK and the cargo's worldToLocal
+    // reparent both read the dipped cargoTarget on the same frame.
+    const inLift = p >= 0.3 && p < 0.75
+    const pLift = pS2
+    const tug = inLift ? Math.max(0, 1 - pLift / 0.2) : 0
+    const tugDip = -0.08 * tug
+    const tugFlex = -0.045 * Math.exp(-tug * 4) * Math.sin(tug * 16)
+    cargoTarget.y += tugDip
+
     // Reach-stacker arm IK: point the boom so the spreader sits flush on the container's top castings.
     const sx = cargoTarget.x
     const sy = cargoTarget.y + LOCK_LIFT
@@ -299,7 +313,7 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     const dy = sy - 1.5
     const reach = Math.hypot(dx, dy)
     const teleX = Math.min(Math.max(Math.sqrt(Math.max(reach * reach - 0.16, 0)) - 5.6, 0), 2.6)
-    if (boom.current) boom.current.rotation.z = Math.atan2(dy, dx) - Math.atan2(0.4, 5.6 + teleX)
+    if (boom.current) boom.current.rotation.z = Math.atan2(dy, dx) - Math.atan2(0.4, 5.6 + teleX) + tugFlex
     if (tele.current) tele.current.position.x = 3.0 + teleX
     // R12: gravity-stabilized spreader — counter-rotate so the twistlocks stay level and flush on the container
     // throughout the lift/arc (the boom tips, the spreader never does).
@@ -342,10 +356,11 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     }
     truckWheels.current.forEach((w: THREE.Object3D | null) => w && (w.rotation.y = (16 * driveEase) / ((w.userData.radius as number) || 0.5)))
 
-    // Scroll-blended lighting — warm key recedes, cool fill rises as the loaded truck departs (no hard cut).
+    // Scroll-blended lighting — warm key recedes, cool fill + rim rise as the loaded truck departs (no hard cut).
     const exitTone = Math.min(Math.max((p - 0.8) / 0.2, 0), 1)
-    if (keyLight.current) keyLight.current.intensity = THREE.MathUtils.lerp(30, 16, exitTone)
-    if (fillLight.current) fillLight.current.intensity = THREE.MathUtils.lerp(18, 28, exitTone)
+    if (keyLight.current) keyLight.current.intensity = THREE.MathUtils.lerp(3.5, 2.2, exitTone)
+    if (fillLight.current) fillLight.current.intensity = THREE.MathUtils.lerp(1.8, 2.6, exitTone)
+    if (rimLight.current) rimLight.current.intensity = THREE.MathUtils.lerp(2.0, 1.5, exitTone)
 
     // Camera parallax & damping — high-inertia follow (low lambda = more lag), FOV (38) and Z-distance (30)
     // locked for constant world scale; faint organic roll/pitch banked off camera velocity (cinematic rig feel).
@@ -390,14 +405,14 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     <group>
       <Rig />
       <StudioEnv />
-      {/* R8: localized studio lighting — warm key over the stack, cool fill toward the truck */}
-      <pointLight ref={keyLight} position={[5, 7, 6]} intensity={30} color="#FFD9A8" decay={2} />
-      <pointLight ref={fillLight} position={[-11, 4, 7]} intensity={18} color="#C9E0FF" decay={2} />
-      {/* R10: warm directional key + cool ambient fill complete the multi-point studio setup */}
-      <directionalLight position={[8, 12, 10]} intensity={0.8} color="#FFE3B8" />
-      <ambientLight intensity={0.35} color="#DCE4F0" />
-      <color attach="background" args={['#FAF9F7']} />
-      <fog attach="fog" args={['#FAF9F7', 25, 74]} />
+      {/* R15 reel blueprint: warm tungsten key (#FFE3B8), cool maritime fill (#B0C4DE), sharp industrial rim
+          (#E0F7FF) — a three-point studio setup on a dark industrial stage with heavy gray-blue atmospheric depth */}
+      <directionalLight ref={keyLight} position={[15, 20, 10]} intensity={3.5} color="#FFE3B8" />
+      <directionalLight ref={fillLight} position={[-15, 10, -10]} intensity={1.8} color="#B0C4DE" />
+      <directionalLight ref={rimLight} position={[0, 15, -20]} intensity={2.0} color="#E0F7FF" />
+      <ambientLight intensity={0.35} color="#2A3544" />
+      <color attach="background" args={['#14181F']} />
+      <fogExp2 attach="fog" args={['#14181F', 0.015]} />
       {/* R12: atmospheric sky dome — vertical gradient (cool zenith → hazy horizon) adds real depth behind the fog */}
       <mesh scale={200}>
         <sphereGeometry args={[1, 32, 32]} />

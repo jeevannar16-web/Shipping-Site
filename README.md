@@ -94,17 +94,17 @@ npm run preview # serve the built site locally
 | Layer | Technology |
 | --- | --- |
 | **Framework** | React 19 + Vite 8 (TypeScript) |
-| **Styling** | Tailwind CSS v4 (dark design system, gold / teal) |
+| **Styling** | Tailwind CSS v4 (dark design system, orange accent) |
 | **3D / WebGL** | Three.js + React Three Fiber + Drei |
 | **Animation** | GSAP (ScrollTrigger) + Lenis smooth scroll |
 | **Icons** | Lucide React |
-| **Typography** | Space Grotesk + Inter (Google Fonts) |
+| **Typography** | Archivo + IBM Plex Mono (Google Fonts) |
 
 ### Design tokens
 
-- Background — `#0a0a0c` (void), `#111114` (carbon), `#18181c` (graphite)
-- Accent — `#f5a524` (gold), `#2dd4bf` (teal)
-- Headlines — Space Grotesk · Body — Inter
+- Background — `#0a0a0a` (void), `#14181F` (industrial night), `#FAF9F7` (paper)
+- Accent — `#ff4a00` (orange), teal `#2E9CC9`
+- Headlines — Archivo · Body — IBM Plex Mono
 
 ---
 
@@ -113,33 +113,38 @@ npm run preview # serve the built site locally
 ```
 src/
 ├── components/
-│   ├── About.tsx            # Company story + animated stats
-│   ├── Contact.tsx          # Quote form + regional details + Footer
-│   ├── CTA.tsx              # Final call-to-action band
-│   ├── Cursor.tsx           # Custom glowing cursor ring
-│   ├── ErrorBoundary.tsx    # WebGL crash fallback
-│   ├── Estimators.tsx       # Tracking simulator + freight estimator
-│   ├── FAQ.tsx              # Animated accordion
-│   ├── Features.tsx         # Reliability cards
-│   ├── GlobalNetwork.tsx    # Regional hub selector with live clocks
-│   ├── Globe.tsx            # Interactive 3D globe canvas
-│   ├── Hero.tsx             # Editorial hero + globe
-│   ├── Insights.tsx         # Filterable case-study grid
-│   ├── LogisticsObjects.tsx # Low-poly plane + container ship
-│   ├── LogisticsScene.tsx   # Embedded 3D object canvases
-│   ├── MagneticButton.tsx   # Magnetic hover component
-│   ├── Navbar.tsx           # Nav + fullscreen overlay + UTC clocks
-│   ├── Partners.tsx         # Airline / shipping-line marquees
-│   ├── Services.tsx         # Services grid + ticker
-│   ├── Testimonials.tsx     # Client quotes
-│   └── WhyUs.tsx            # Value props
+│   ├── chrome/           # Header, Footer, NewsTicker, PageTransition, Preloader
+│   ├── CursorManager.tsx # Custom glowing cursor ring
+│   ├── ErrorBoundary.tsx # WebGL crash fallback
+│   ├── Models.tsx        # Shared 3D model loading
+│   ├── SceneCanvas.tsx   # <Canvas> wrapper (dpr, fallback poster, mobile gating)
+│   └── SceneStage.tsx    # Per-section scene mount (camera rig + global lights)
+├── dev/
+│   └── VisualTest.tsx    # DEV-only framing overlay
 ├── hooks/
-│   ├── useCountUp.ts        # Scroll-triggered number counter
-│   ├── useLerpDamped.ts     # Damped value lerp for camera
-│   └── useReducedMotion.ts  # prefers-reduced-motion detection
-├── data.ts                  # All site content (editable site content)
-├── App.tsx                  # Page composition + motion wiring
-├── index.css                # Tailwind v4 theme + design tokens
+│   ├── useCountUp.ts     # Scroll-triggered number counter
+│   ├── useLerpDamped.ts  # Damped value lerp for camera
+│   └── useReducedMotion.ts # prefers-reduced-motion detection
+├── lib/
+│   ├── lenis.tsx         # Lenis smooth-scroll provider
+│   ├── media.ts          # Shared useMedia / useCompact hooks
+│   ├── motion.tsx        # GSAP motion primitives (LineMask, FadeUp, Counter…)
+│   ├── nav.ts            # Navigation link data
+│   ├── navigation.ts     # Transition-aware routing
+│   └── scrub.ts          # ScrollTrigger scrub ref contract
+├── pages/
+│   ├── About.tsx / Contact.tsx / Home.tsx / Industries.tsx / Insights.tsx / Services.tsx
+├── scenes/
+│   ├── StackerScene.tsx  # Terminal: reach-stacker lift/arc/place + cinematic atmosphere
+│   ├── TruckScene.tsx    # Linehaul: dual-truck corridor
+│   ├── ViaductScene.tsx  # Highway: instanced traffic on an elevated viaduct
+│   ├── ShipScene.tsx     # Ocean section
+│   ├── GlobeScene.tsx    # Interactive 3D globe (hero)
+│   ├── TerminalScene.tsx / ForestRoadScene.tsx
+│   └── builders.tsx      # Shared asphalt/dash textures, trucks, RoadStrip, CurvedRoad
+├── App.tsx               # Routing + providers
+├── data.ts               # All site content (editable site content)
+├── index.css             # Tailwind v4 theme + design tokens
 └── main.tsx
 ```
 

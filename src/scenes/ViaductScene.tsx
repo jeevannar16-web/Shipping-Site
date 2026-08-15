@@ -2,7 +2,7 @@ import { useLayoutEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import SceneCanvas from '../components/SceneCanvas'
-import { CurvedRoad, InstancedTrees, Truck, asphalt, roughMap, dashTrack, RoadStrip } from './builders'
+import { CurvedRoad, InstancedTrees, Truck, asphalt, roughMap, dashWhite, RoadStrip } from './builders'
 import { useCompact } from '../lib/media'
 import type { ScrubRef } from '../lib/scrub'
 
@@ -201,7 +201,7 @@ export default function ViaductScene({ scrub }: { scrub?: ScrubRef }) {
   const domeMat = useRef<THREE.MeshBasicMaterial>(null)
   const asphaltT = useMemo(asphalt, [])
   const roughT = useMemo(roughMap, [])
-  const dashT = useMemo(dashTrack, [])
+  const dashT = useMemo(dashWhite, [])
 
   return (
     <SceneCanvas fallbackLabel="About" tone="blue" camera={{ position: [-95, 30, 0], fov: 48 }}>

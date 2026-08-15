@@ -426,7 +426,7 @@ export default function Home() {
       <SceneRail />
       <HeroSection />
 
-      <StickyScene index="2" mode="TERMINAL" bg="bg-[#FAF9F7]" text="text-[#0a0a0a]" line="One team, every mode." scrub={stackerScrub}>
+      <StickyScene index="2" mode="TERMINAL" bg="bg-[#14181F]" text="text-[#ededed]" line="One team, every mode." scrub={stackerScrub}>
         <SuspenseBox label="Freight">
           <SceneStage label="Freight" tone="orange">
             <StackerScene scrub={stackerScrub} />

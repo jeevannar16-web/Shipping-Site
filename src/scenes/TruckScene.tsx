@@ -1,7 +1,7 @@
 import { useMemo, useRef, useLayoutEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { ProceduralTruck, shadowBlob, asphalt, roughMap, dashTrack, RoadStrip, type WheelRefs } from './builders'
+import { ProceduralTruck, shadowBlob, asphalt, roughMap, dashWhite, RoadStrip, type WheelRefs } from './builders'
 import { useCompact } from '../lib/media'
 import type { ScrubRef } from '../lib/scrub'
 
@@ -43,7 +43,7 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
   const wordT = useMemo(bgWords, [])
   const asphaltT = useMemo(asphalt, [])
   const roughT = useMemo(roughMap, [])
-  const dashT = useMemo(dashTrack, [])
+  const dashT = useMemo(dashWhite, [])
   const mainWheels = useRef<Array<THREE.Object3D | null>>([]) as WheelRefs
   const passWheels = useRef<Array<THREE.Object3D | null>>([]) as WheelRefs
   const truckDrive = useRef<THREE.Group>(null)
