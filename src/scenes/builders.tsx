@@ -18,39 +18,6 @@ export function Container({ color = '#c46a2b', size = [2.4, 2.6, 6] as [number, 
   )
 }
 
-/** Shared terminal asphalt — dark grain with oil stains + expansion joints. Used across scenes for one continuous platform. */
-export function asphalt() {
-  const c = document.createElement('canvas')
-  c.width = 512
-  c.height = 512
-  const g = c.getContext('2d')!
-  g.fillStyle = '#3A3A3D'
-  g.fillRect(0, 0, 512, 512)
-  for (let i = 0; i < 30000; i++) {
-    const v = 24 + Math.random() * 70
-    g.fillStyle = `rgba(${v},${v},${v},0.35)`
-    const s = 1 + Math.random() * 2
-    g.fillRect(Math.random() * 512, Math.random() * 512, s, s)
-  }
-  for (let i = 0; i < 7; i++) {
-    const x = 20 + Math.random() * 472
-    const y = 20 + Math.random() * 472
-    const r = 14 + Math.random() * 34
-    const grad = g.createRadialGradient(x, y, 2, x, y, r)
-    grad.addColorStop(0, 'rgba(14,14,16,0.5)')
-    grad.addColorStop(1, 'rgba(14,14,16,0)')
-    g.fillStyle = grad
-    g.fillRect(x - r, y - r, r * 2, r * 2)
-  }
-  g.fillStyle = 'rgba(0,0,0,0.10)'
-  for (let x = 0; x <= 512; x += 128) g.fillRect(x, 0, 2, 512)
-  const t = new THREE.CanvasTexture(c)
-  t.wrapS = t.wrapT = THREE.RepeatWrapping
-  t.repeat.set(9, 6)
-  t.colorSpace = THREE.SRGBColorSpace
-  return t
-}
-
 /** Grayscale rough-map speckle that cuts the asphalt's sheen. */
 export function roughMap() {
   const c = document.createElement('canvas')
@@ -103,9 +70,10 @@ export function dashWhite() {
     and the white edge lines at ±LANE, so the road reads as one straight strip along the X axis (trucks drive ±x). */
 export const LANE = 4.5
 
-/** R13/R17: one straight travel lane — pristine asphalt (color #2B2D31, roughness 0.4 / metalness 0.05 over a
-    procedural noise rough map) + crisp white dashed center guide (z=0, width 0.3) + solid yellow boundary strips
-    (±lane, width 0.2, #FFD700), all centered on the corridor and reused across Stacker / Truck / Viaduct. */
+/** R18: one straight travel lane — pristine matte asphalt (color #1E2022, roughness 0.25 / metalness 0.1 over a
+    subtle grayscale roughness map for clean studio reflections) + razor-sharp white dashed center guide (z=0,
+    width 0.3) + solid yellow boundary strips (±lane, width 0.15, #FFD700), each layer at its own height so the
+    markings read crisp with zero shimmer. Reused across Stacker / Truck / Viaduct. */
 export function RoadStrip({
   length,
   width,
@@ -127,9 +95,9 @@ export function RoadStrip({
     <group position={position}>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[length, width]} />
-        <meshStandardMaterial color="#2B2D31" roughnessMap={roughT} roughness={0.4} metalness={0.05} />
+        <meshStandardMaterial color="#1E2022" roughnessMap={roughT} roughness={0.25} metalness={0.1} />
       </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
         <planeGeometry args={[length, 0.3]} />
         <meshStandardMaterial
           map={dashT}
@@ -140,8 +108,8 @@ export function RoadStrip({
         />
       </mesh>
       {[lane, -lane].map((z) => (
-        <mesh key={z} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, z]}>
-          <planeGeometry args={[length, 0.2]} />
+        <mesh key={z} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.035, z]}>
+          <planeGeometry args={[length, 0.15]} />
           <meshStandardMaterial
             color="#FFD700"
             roughness={0.85}

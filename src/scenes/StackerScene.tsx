@@ -49,8 +49,8 @@ function hazard() {
   return new THREE.CanvasTexture(c)
 }
 
-/** R17: high-key studio vertical gradient for the sky dome — warm-white zenith dissolving into the
-    paper-tone FogExp2 haze at the horizon so the dome and fog read as one continuous atmosphere. */
+/** R18: high-key studio vertical gradient for the sky dome — warm-white zenith dissolving into the
+    minimalist paper-tone FogExp2 haze (#F4F4F5) at the horizon so the dome and fog read as one continuous haze. */
 function skyGradient() {
   const c = document.createElement('canvas')
   c.width = 16
@@ -58,36 +58,12 @@ function skyGradient() {
   const g = c.getContext('2d')!
   const grad = g.createLinearGradient(0, 0, 0, 256)
   grad.addColorStop(0, '#FFFFFF')
-  grad.addColorStop(0.45, '#F7F5F0')
-  grad.addColorStop(1, '#FAF9F7')
+  grad.addColorStop(0.45, '#F7F6F4')
+  grad.addColorStop(1, '#F4F4F5')
   g.fillStyle = grad
   g.fillRect(0, 0, 16, 256)
   const t = new THREE.CanvasTexture(c)
   t.colorSpace = THREE.SRGBColorSpace
-  return t
-}
-
-/** R12: transparent oil-sheen blotch map — glossy patches on the asphalt that catch the key light and env reflections. */
-function oilSheen() {
-  const c = document.createElement('canvas')
-  c.width = 512
-  c.height = 512
-  const g = c.getContext('2d')!
-  g.clearRect(0, 0, 512, 512)
-  for (let i = 0; i < 16; i++) {
-    const x = 40 + Math.random() * 432
-    const y = 40 + Math.random() * 432
-    const r = 18 + Math.random() * 52
-    const grad = g.createRadialGradient(x, y, 2, x, y, r)
-    grad.addColorStop(0, 'rgba(192,202,212,0.85)')
-    grad.addColorStop(0.55, 'rgba(152,162,177,0.35)')
-    grad.addColorStop(1, 'rgba(120,130,145,0)')
-    g.fillStyle = grad
-    g.fillRect(x - r, y - r, r * 2, r * 2)
-  }
-  const t = new THREE.CanvasTexture(c)
-  t.wrapS = t.wrapT = THREE.RepeatWrapping
-  t.repeat.set(3, 3)
   return t
 }
 
@@ -226,7 +202,6 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const roughT = useMemo(roughMap, [])
   const dashT = useMemo(dashWhite, [])
   const skyT = useMemo(skyGradient, [])
-  const sheenT = useMemo(oilSheen, [])
   const caOffset = useMemo(() => new THREE.Vector2(0.0012, 0.0007), [])
   const caRef = useRef<ChromaticAberrationEffect | null>(null)
   const arrowShape = useMemo(() => {
@@ -295,15 +270,15 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       cargoTarget.copy(BED_REST).lerp(IDLE_AIM, easeHeavy(pD))
     }
 
-    // R17: tension preload — the instant the spreader locks at the start of the lift, the assembly settles
-    // -0.05 under the container's mass over the first 0.1s of the lift segment (fast, precise), then the mast
-    // springs back with a decaying oscillation before the upward arc translation takes over. Gated to the lift
-    // segment (p >= 0.3) so the resting/attach phases are untouched. No spatial pop: the spreader IK and the
-    // cargo's worldToLocal reparent both read the dipped cargoTarget on the same frame.
+    // R18: pre-lift tension snap — the instant the spreader locks at the start of the lift, the assembly
+    // cracks -0.08 under the container's mass over the first 0.08s of the lift segment (fast, surgical),
+    // then the mast springs back with a decaying oscillation before the upward arc takes over. Gated to the
+    // lift segment (p >= 0.3) so the resting/attach phases are untouched. No spatial pop: the spreader IK
+    // and the cargo's worldToLocal reparent both read the dipped cargoTarget on the same frame.
     const inLift = p >= 0.3 && p < 0.75
     const pLift = pS2
-    const tug = inLift ? Math.max(0, 1 - pLift / 0.1) : 0
-    const tugDip = -0.05 * tug
+    const tug = inLift ? Math.max(0, 1 - pLift / 0.08) : 0
+    const tugDip = -0.08 * tug
     const tugFlex = -0.045 * Math.exp(-tug * 4) * Math.sin(tug * 16)
     cargoTarget.y += tugDip
 
@@ -345,10 +320,11 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     const pDrv = Math.min(Math.max((p - 0.85) / 0.15, 0), 1)
     const driveEase = easeIn(pDrv)
     const exitX = THREE.MathUtils.lerp(0, -22, driveEase)
-    // R12: chassis micro-bounce — fires the exact instant the container's bottom plane touches the bed
-    // (p=0.75, where the place-lerp completes and BED_REST bottom y=1.05 = deck top), then decays to 0.
+    // R18: rigid bed impact & suspension decay — fires the exact instant the container's bottom plane touches
+    // the bed (p=0.75, where the place-lerp completes and BED_REST bottom y=1.05 = deck top), then decays to 0
+    // with the hard suspension envelope bounce = -0.07·e^(-5.0t)·sin(18t).
     const impact = Math.min(Math.max((p - 0.75) / 0.08, 0), 1)
-    const bounce = -0.06 * Math.exp(-impact * 4.5) * Math.sin(impact * 16)
+    const bounce = -0.07 * Math.exp(-impact * 5.0) * Math.sin(impact * 18)
     if (truck.current) {
       truck.current.rotation.y = (-Math.PI / 2) * pivot
       truck.current.position.x = -8 + exitX
@@ -357,10 +333,10 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     }
     truckWheels.current.forEach((w: THREE.Object3D | null) => w && (w.rotation.y = (16 * driveEase) / ((w.userData.radius as number) || 0.5)))
 
-    // Scroll-blended lighting — warm key recedes, cool fill + rim rise as the loaded truck departs (no hard cut).
+    // Scroll-blended lighting — warm key recedes, cool fill rises as the loaded truck departs (no hard cut).
     const exitTone = Math.min(Math.max((p - 0.8) / 0.2, 0), 1)
-    if (keyLight.current) keyLight.current.intensity = THREE.MathUtils.lerp(3.5, 2.2, exitTone)
-    if (fillLight.current) fillLight.current.intensity = THREE.MathUtils.lerp(1.8, 2.6, exitTone)
+    if (keyLight.current) keyLight.current.intensity = THREE.MathUtils.lerp(4.0, 2.6, exitTone)
+    if (fillLight.current) fillLight.current.intensity = THREE.MathUtils.lerp(2.2, 2.8, exitTone)
     if (rimLight.current) rimLight.current.intensity = THREE.MathUtils.lerp(2.0, 1.5, exitTone)
 
     // R17: camera inertia & sway — damped follow toward the scroll target (lambda 3.5), a slow lookAt sway
@@ -408,12 +384,12 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     <group>
       <Rig />
       <StudioEnv />
-      {/* R17 high-key studio: warm tungsten key (#FFE3B8, 2048px shadow map), cool maritime fill (#B0C4DE),
-          sharp industrial rim (#E0F7FF) — three-point rig on a bright paper-toned stage, shallow atmospheric depth */}
+      {/* R18 minimalist studio: warm tungsten key (#FFE3B8, 2048px razor-sharp soft-penumbra shadows), cool
+          ambient fill (#D4E2F4), sharp industrial rim (#E0F7FF) — high-contrast rig on a bright #F4F4F5 stage */}
       <directionalLight
         ref={keyLight}
-        position={[20, 25, 15]}
-        intensity={3.5}
+        position={[25, 30, 20]}
+        intensity={4.0}
         color="#FFE3B8"
         castShadow
         shadow-mapSize-width={2048}
@@ -424,13 +400,13 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
         shadow-camera-bottom={-20}
         shadow-camera-near={1}
         shadow-camera-far={60}
-        shadow-bias={-0.0004}
+        shadow-bias={-0.0001}
       />
-      <directionalLight ref={fillLight} position={[-20, 15, -10]} intensity={1.8} color="#B0C4DE" />
+      <directionalLight ref={fillLight} position={[-20, 15, -15]} intensity={2.2} color="#D4E2F4" />
       <directionalLight ref={rimLight} position={[0, 15, -20]} intensity={2.0} color="#E0F7FF" />
-      <ambientLight intensity={0.35} color="#FAF9F7" />
-      <color attach="background" args={['#FAF9F7']} />
-      <fogExp2 attach="fog" args={['#FAF9F7', 0.012]} />
+      <ambientLight intensity={0.35} color="#F4F4F5" />
+      <color attach="background" args={['#F4F4F5']} />
+      <fogExp2 attach="fog" args={['#F4F4F5', 0.008]} />
       {/* R12: atmospheric sky dome — vertical gradient (cool zenith → hazy horizon) adds real depth behind the fog */}
       <mesh scale={200}>
         <sphereGeometry args={[1, 32, 32]} />
@@ -459,20 +435,15 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
           dashT={dashT}
           glow
         />
-        {/* R12: oil-sheen reflections — glossy blotches that catch the key light and studio env as the camera/truck move */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-12.5, 0.006, 0]}>
-          <planeGeometry args={[120, 40]} />
-          <meshPhysicalMaterial map={sheenT} transparent roughness={0.2} metalness={0.8} clearcoat={0.6} clearcoatRoughness={0.3} envMapIntensity={1.5} depthWrite={false} />
-        </mesh>
         {/* R7: directional guide arrows pointing toward the left exit */}
         {[-10, -16, -22].map((x) => (
-          <mesh key={x} rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.03, 0]}>
+          <mesh key={x} rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.04, 0]}>
             <shapeGeometry args={[arrowShape]} />
             <meshStandardMaterial color="#E8E6E1" transparent opacity={0.5} roughness={0.9} />
           </mesh>
         ))}
-        {/* R7: soft contact shadows anchoring stacker, containers, and truck to the road */}
-        <ContactShadows position={[0, 0.05, 0]} scale={80} blur={2.2} far={10} opacity={0.45} resolution={1024} color="#111111" />
+        {/* R18: soft contact shadows anchoring stacker, containers, and truck to the road */}
+        <ContactShadows position={[0, 0.02, 0]} scale={90} blur={1.8} far={10} opacity={0.5} resolution={1024} color="#111111" />
         {/* R10: horizon depth — stacks, fencing, gantry, all faded by fog */}
         <Backdrop />
       </group>
