@@ -1,6 +1,7 @@
 import { useMemo, useRef, useLayoutEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { ContactShadows } from '@react-three/drei'
+import { EffectComposer, Bloom, ChromaticAberration, Noise } from '@react-three/postprocessing'
 import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { VisualTest } from '../dev/VisualTest'
@@ -72,12 +73,40 @@ function asphalt() {
     const s = 1 + Math.random() * 2
     g.fillRect(Math.random() * 512, Math.random() * 512, s, s)
   }
+  // R10: subtle oil staining puddle blotches
+  for (let i = 0; i < 7; i++) {
+    const x = 20 + Math.random() * 472
+    const y = 20 + Math.random() * 472
+    const r = 14 + Math.random() * 34
+    const grad = g.createRadialGradient(x, y, 2, x, y, r)
+    grad.addColorStop(0, 'rgba(14,14,16,0.5)')
+    grad.addColorStop(1, 'rgba(14,14,16,0)')
+    g.fillStyle = grad
+    g.fillRect(x - r, y - r, r * 2, r * 2)
+  }
   g.fillStyle = 'rgba(0,0,0,0.10)'
   for (let x = 0; x <= 512; x += 128) g.fillRect(x, 0, 2, 512)
   const t = new THREE.CanvasTexture(c)
   t.wrapS = t.wrapT = THREE.RepeatWrapping
   t.repeat.set(9, 6)
   t.colorSpace = THREE.SRGBColorSpace
+  return t
+}
+
+function roughMap() {
+  const c = document.createElement('canvas')
+  c.width = 256
+  c.height = 256
+  const g = c.getContext('2d')!
+  for (let i = 0; i < 14000; i++) {
+    const v = 110 + Math.random() * 90
+    g.fillStyle = `rgba(${v},${v},${v},0.4)`
+    const s = 1 + Math.random() * 2
+    g.fillRect(Math.random() * 256, Math.random() * 256, s, s)
+  }
+  const t = new THREE.CanvasTexture(c)
+  t.wrapS = t.wrapT = THREE.RepeatWrapping
+  t.repeat.set(5, 4)
   return t
 }
 
@@ -128,6 +157,68 @@ const easeIn = (t: number) => t * t
 /** Heavier ease-in-out (cubic) for weighty machinery motion. */
 const easeHeavy = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 
+/** R10: horizon depth — distant container stacks, perimeter fencing, and a gantry silhouette.
+    Lives in the env group (fitRef-local coords) so the heavy fog fades them into the background tone. */
+function Backdrop() {
+  const stackTints = ['#8a9499', '#75818a', '#a08d7d', '#6e7f86']
+  return (
+    <group>
+      {[-44, -34, -24].map((x, i) => (
+        <group key={i} position={[x, 0, -40]}>
+          {[0, 1, 2].map((j) => (
+            <mesh key={j} position={[0, 0.8 + j * 1.65, 0]}>
+              <boxGeometry args={[4.4, 1.6, 1.8]} />
+              <meshStandardMaterial color={stackTints[(i + j) % 4]} roughness={0.92} />
+            </mesh>
+          ))}
+        </group>
+      ))}
+      {[-32, -26, -18, -12, -4, 2].map((x, i) => (
+        <group key={`n${i}`} position={[x, 0, -18]}>
+          <mesh position={[0, 0.8, 0]}>
+            <boxGeometry args={[4.4, 1.6, 1.8]} />
+            <meshStandardMaterial color={stackTints[(i + 1) % 4]} roughness={0.92} />
+          </mesh>
+          <mesh position={[0, 2.45, 0]}>
+            <boxGeometry args={[4.4, 1.6, 1.8]} />
+            <meshStandardMaterial color={stackTints[(i + 2) % 4]} roughness={0.92} />
+          </mesh>
+        </group>
+      ))}
+      {/* perimeter fencing along the back */}
+      <mesh position={[-20, 1.0, -15.2]}>
+        <boxGeometry args={[55, 0.06, 0.06]} />
+        <meshStandardMaterial color="#26262a" roughness={0.9} />
+      </mesh>
+      <mesh position={[-20, 1.9, -15.2]}>
+        <boxGeometry args={[55, 0.05, 0.05]} />
+        <meshStandardMaterial color="#26262a" roughness={0.9} />
+      </mesh>
+      {Array.from({ length: 18 }, (_, i) => (
+        <mesh key={i} position={[-42.5 + i * 5, 1.0, -15.2]}>
+          <boxGeometry args={[0.08, 2.0, 0.08]} />
+          <meshStandardMaterial color="#26262a" roughness={0.9} />
+        </mesh>
+      ))}
+      {/* overhead gantry silhouette */}
+      <group position={[-14, 0, -17]}>
+        <mesh position={[0, 6.2, 0]}>
+          <boxGeometry args={[17, 0.6, 0.5]} />
+          <meshStandardMaterial color="#202024" roughness={0.9} />
+        </mesh>
+        <mesh position={[-8.5, 3.1, 0]}>
+          <boxGeometry args={[0.5, 6.2, 0.5]} />
+          <meshStandardMaterial color="#202024" roughness={0.9} />
+        </mesh>
+        <mesh position={[8.5, 3.1, 0]}>
+          <boxGeometry args={[0.5, 6.2, 0.5]} />
+          <meshStandardMaterial color="#202024" roughness={0.9} />
+        </mesh>
+      </group>
+    </group>
+  )
+}
+
 const STACK_TOP = new THREE.Vector3(3.5, 5.75, 0)
 const CONTAINER = [4.4, 1.6, 1.8] as const
 const STACK_COLS = ['ribWhite', 'ribWhite', '#1E6BB0', '#E8590C']
@@ -149,7 +240,9 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const hazT = useMemo(hazard, [])
   const blobT = useMemo(shadowBlob, [])
   const asphaltT = useMemo(asphalt, [])
+  const roughT = useMemo(roughMap, [])
   const dashT = useMemo(dashTrack, [])
+  const caOffset = useMemo(() => new THREE.Vector2(0.0012, 0.0007), [])
   const arrowShape = useMemo(() => {
     const s = new THREE.Shape()
     s.moveTo(0, 0)
@@ -170,6 +263,8 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const keyLight = useRef<THREE.PointLight>(null)
   const fillLight = useRef<THREE.PointLight>(null)
   const arcLag = useRef(0)
+  const camPrevX = useRef(0)
+  const camPrevY = useRef(0)
 
   const std = { roughness: 0.85, metalness: 0 }
   const paint = { roughness: 0.35, metalness: 0.3 }
@@ -239,10 +334,13 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     const pDrv = Math.min(Math.max((p - 0.85) / 0.15, 0), 1)
     const driveEase = easeIn(pDrv)
     const exitX = THREE.MathUtils.lerp(0, -22, driveEase)
+    // R10: chassis micro-bounce — tons of steel hitting rubber tyres on placement (decaying sine, settles to 0).
+    const impact = Math.min(Math.max((p - 0.76) / 0.08, 0), 1)
+    const bounce = -0.06 * Math.exp(-impact * 4.5) * Math.sin(impact * 16)
     if (truck.current) {
       truck.current.rotation.y = (-Math.PI / 2) * pivot
       truck.current.position.x = -8 + exitX
-      truck.current.position.y = 0
+      truck.current.position.y = bounce
       truck.current.scale.setScalar(1)
     }
     truckWheels.current.forEach((w: THREE.Object3D | null) => w && (w.rotation.y = (16 * driveEase) / ((w.userData.radius as number) || 0.5)))
@@ -252,11 +350,23 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     if (keyLight.current) keyLight.current.intensity = THREE.MathUtils.lerp(30, 16, exitTone)
     if (fillLight.current) fillLight.current.intensity = THREE.MathUtils.lerp(18, 28, exitTone)
 
-    // Camera parallax & damping — weighted follow, FOV (38) and Z-distance (30) locked for constant world scale.
+    // Camera parallax & damping — high-inertia follow (low lambda = more lag), FOV (38) and Z-distance (30)
+    // locked for constant world scale; faint organic roll/pitch banked off camera velocity (cinematic rig feel).
     const camEase = easeInOut(p)
-    camera.position.x = THREE.MathUtils.damp(camera.position.x, THREE.MathUtils.lerp(-7, -9.5, camEase), 4, delta)
-    camera.position.y = THREE.MathUtils.damp(camera.position.y, THREE.MathUtils.lerp(3.6, 3.9, camEase), 4, delta)
-    camera.lookAt(THREE.MathUtils.lerp(0, -2.5, camEase), 2.6, 0)
+    const camTargetX = THREE.MathUtils.lerp(-7, -9.5, camEase)
+    const camTargetY = THREE.MathUtils.lerp(3.6, 3.9, camEase)
+    camera.position.x = THREE.MathUtils.damp(camera.position.x, camTargetX, 3, delta)
+    camera.position.y = THREE.MathUtils.damp(camera.position.y, camTargetY, 3, delta)
+    const velX = (camera.position.x - camPrevX.current) / Math.max(delta, 0.001)
+    const velY = (camera.position.y - camPrevY.current) / Math.max(delta, 0.001)
+    camPrevX.current = camera.position.x
+    camPrevY.current = camera.position.y
+    camera.lookAt(
+      THREE.MathUtils.lerp(0, -2.5, camEase),
+      2.6 + THREE.MathUtils.clamp(velY * 0.02, -0.25, 0.25),
+      0,
+    )
+    camera.rotation.z = THREE.MathUtils.clamp(-velX * 0.004, -0.03, 0.03)
 
     if (import.meta.env.DEV && cargo.current && truck.current) {
       if (p < 0.01) {
@@ -286,6 +396,9 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       {/* R8: localized studio lighting — warm key over the stack, cool fill toward the truck */}
       <pointLight ref={keyLight} position={[5, 7, 6]} intensity={30} color="#FFD9A8" decay={2} />
       <pointLight ref={fillLight} position={[-11, 4, 7]} intensity={18} color="#C9E0FF" decay={2} />
+      {/* R10: warm directional key + cool ambient fill complete the multi-point studio setup */}
+      <directionalLight position={[8, 12, 10]} intensity={0.8} color="#FFE3B8" />
+      <ambientLight intensity={0.35} color="#DCE4F0" />
       <color attach="background" args={['#FAF9F7']} />
       <fog attach="fog" args={['#FAF9F7', 25, 70]} />
       <mesh scale={200}>
@@ -293,13 +406,20 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
         <meshBasicMaterial color="#FAF9F7" side={THREE.BackSide} />
       </mesh>
 
+      {/* R10: post-processing — subtle bloom on hot highlights, lens chromatic aberration, film grain */}
+      <EffectComposer>
+        <Bloom intensity={0.35} luminanceThreshold={1.0} luminanceSmoothing={0.4} mipmapBlur />
+        <ChromaticAberration offset={caOffset} />
+        <Noise opacity={0.04} />
+      </EffectComposer>
+
       {/* R8: environment shares fitRef's transform (local coords unchanged) but lives outside the
           machinery group so the STACKER bbox stays meaningful. */}
       <group scale={0.85} position={[2.2, 0.6, 0]}>
         {/* R7: terminal apron / road — grounds the machinery (y=0 sits at the vehicles' wheel base) */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-12.5, 0, 5]}>
           <planeGeometry args={[85, 50]} />
-          <meshStandardMaterial map={asphaltT} roughness={0.95} metalness={0} />
+          <meshStandardMaterial map={asphaltT} roughnessMap={roughT} roughness={0.95} metalness={0} />
         </mesh>
         {/* R7: guiding track — dashed line along the truck's travel axis (z=0, drives toward -x exit) */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-20, 0.02, 0]}>
@@ -322,6 +442,8 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
         ))}
         {/* R7: soft contact shadows anchoring stacker, containers, and truck to the road */}
         <ContactShadows position={[0, 0.05, 0]} scale={90} blur={2.4} far={10} opacity={0.45} resolution={1024} color="#111111" />
+        {/* R10: horizon depth — stacks, fencing, gantry, all faded by fog */}
+        <Backdrop />
       </group>
 
       <group ref={fitRef} scale={0.85} position={[2.2, 0.6, 0]}>
