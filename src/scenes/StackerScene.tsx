@@ -238,7 +238,9 @@ const ARC = new THREE.CatmullRomCurve3([
   new THREE.Vector3(-3.5, 5.6, 0),
   new THREE.Vector3(-8, 3.6, 0),
 ])
-const BED_REST = new THREE.Vector3(-8, 1.85, -1.9)
+// Truck parked at z=1.9 so its flatbed (truck-local z=-1.9) sits on the carry plane z=0 — the spreader rides
+// the container all the way onto the deck, no lateral slide-off. Bottom of the container at rest = 1.05 = deck top.
+const BED_REST = new THREE.Vector3(-8, 1.85, 0)
 const IDLE_AIM = new THREE.Vector3(2.8, 1.6, 0)
 /** R12/R13: spreader lock height — spreader center rides so the frame's underside clears the container's
     raised corner-casting tops by a tiny seat gap, while the twistlock housings drop over the castings
@@ -339,11 +341,12 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     const dx = sx + 2.4
     const dy = sy - 1.5
     const reach = Math.hypot(dx, dy)
-    const teleX = Math.min(Math.max(Math.sqrt(Math.max(reach * reach - 0.16, 0)) - 5.6, 0), 2.6)
+    // Collinear telescoping arm — the inner stick slides along the boom axis; tip distance = 5.6 + teleX.
+    const teleX = Math.min(Math.max(reach - 5.6, 0), 2.6)
     // R19: hydraulic mast micro-vibration — high-frequency hydraulic shudder during the lift segment that decays
     // as the arc carries, layered on the pre-lift tension snap so the lift reads like real steel hydraulics under load.
     const mastVib = p >= 0.35 && p < 0.75 ? Math.sin(pLift * 220) * (1 - pLift) * 0.0018 : 0
-    if (boom.current) boom.current.rotation.z = Math.atan2(dy, dx) - Math.atan2(0.4, 5.6 + teleX) + tugFlex + mastVib
+    if (boom.current) boom.current.rotation.z = Math.atan2(dy, dx) + tugFlex + mastVib
     if (tele.current) tele.current.position.x = 3.0 + teleX
     // R12: gravity-stabilized spreader — counter-rotate so the twistlocks stay level and flush on the container
     // throughout the lift/arc (the boom tips, the spreader never does).
@@ -496,8 +499,9 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       <group ref={fitRef} scale={0.85} position={[2.2, 0.6, 0]}>
         <VisualTest label="STACKER" target={() => fitRef.current} y={[320, 600]} x={[220, 1340]} />
 
-        {/* LEFT parked truck — ProceduralTruck @ (-8,0,0); bed starts EMPTY (no static container mesh) */}
-        <group ref={truck} position={[-8, 0, 0]}>
+        {/* LEFT parked truck — ProceduralTruck @ (-8,0,1.9); flatbed deck top at world y=1.05, centered on the
+            carry plane z=0; bed starts EMPTY (no static container mesh) */}
+        <group ref={truck} position={[-8, 0, 1.9]}>
           <ProceduralTruck wheelRefs={truckWheels} driving={false} bob={false} hideTrailer />
           {/* shadowBlob MUST be a CHILD of the truck group (grep token: shadow-in-truck) */}
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
@@ -593,17 +597,17 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
           <meshBasicMaterial map={blobT} transparent depthWrite={false} />
         </mesh>
 
-        {/* R21 volumetric reach-stacker stick — solid 0.8×0.8 box-profile main boom in matte charcoal (#2A2B2E)
-            PBR steel, hinged at the chassis pivot (-2.4,1.5,0); telescopic 0.6×0.6 inner stick with yellow/black
-            hazard stripes slides out on reach. Never thin, never culled. The front tip permanently terminates at
-            the spreader's center of mass (rigid matrix parenting, zero floating offsets). */}
+        {/* R21/P4 volumetric reach-stacker stick — ONE collinear telescoping arm: solid 0.8×0.8 box-profile main
+            boom in matte charcoal (#2A2B2E) PBR steel, hinged at the chassis pivot (-2.4,1.5,0), with a 0.6×0.6
+            inner stick that slides in-line (same axis, no angle or height offset) so the arm reads as a single
+            piece. The front tip permanently terminates at the spreader's center of mass (rigid matrix parenting). */}
         <group ref={boom} position={[-2.4, 1.5, 0]}>
-          <mesh position={[1.5, 0, 0]} rotation={[0, 0, 0.15]} castShadow>
+          <mesh position={[1.5, 0, 0]} castShadow>
             <boxGeometry args={[3.0, 0.8, 0.8]} />
             <meshStandardMaterial color="#222325" {...boomSteel} />
           </mesh>
-          <group ref={tele} position={[3.0, 0.4, 0]}>
-            <mesh position={[1.3, 0, 0]} rotation={[0, 0, -0.1]} castShadow>
+          <group ref={tele} position={[3.0, 0, 0]}>
+            <mesh position={[1.3, 0, 0]} castShadow>
               <boxGeometry args={[2.6, 0.6, 0.6]} />
               <meshStandardMaterial map={hazT} color="#ffffff" roughness={0.4} metalness={0.6} />
             </mesh>
