@@ -135,22 +135,35 @@ function Traffic({ curve, laneSign = 1, count = 12 }: { curve: THREE.CatmullRomC
   )
 }
 
-function SemiTraffic({ curve, laneSign = -1, cab = '#f2f2f2', container = '#ff4a00', offset = 0.4 }: {
+function SemiTraffic({
+  curve,
+  laneSign = -1,
+  cab = '#f2f2f2',
+  container = '#ff4a00',
+  offset = 0.4,
+  scrub,
+}: {
   curve: THREE.CatmullRomCurve3
   laneSign?: 1 | -1
   cab?: string
   container?: string
   offset?: number
+  scrub?: ScrubRef
 }) {
   const ref = useRef<THREE.Group>(null)
-  useFrame((state) => {
-    const progress = (state.clock.elapsedTime * 0.04 + offset) % 1
-    const p = curve.getPointAt(progress)
-    const t = curve.getTangentAt(progress)
-    const right = new THREE.Vector3(-t.z, 0, t.x).normalize()
-    const fwd = new THREE.Vector3(t.x, 0, t.z).normalize()
+  useFrame(() => {
+    const p = scrub?.current ?? 0
+    const progress = Math.max(0, Math.min(1, p + offset))
+    const point = curve.getPointAt(progress)
+    const tangent = curve.getTangentAt(progress)
+    const right = new THREE.Vector3(-tangent.z, 0, tangent.x).normalize()
+    const fwd = new THREE.Vector3(tangent.x, 0, tangent.z).normalize()
     if (ref.current) {
-      ref.current.position.set(p.x + right.x * 2.0 * laneSign, 10.02, p.z + right.z * 2.0 * laneSign)
+      ref.current.position.set(
+        point.x + right.x * 2.0 * laneSign,
+        9.755,
+        point.z + right.z * 2.0 * laneSign,
+      )
       ref.current.rotation.set(0, Math.atan2(fwd.x, fwd.z), 0)
     }
   })
@@ -188,25 +201,34 @@ export default function ViaductScene({ scrub }: { scrub?: ScrubRef }) {
       <CurvedRoad curve={curveMain} width={6} color="#6f6f6f" y={10.05} dashSize={[0.3, 3]} barriers />
       <Pillars curve={curveMain} />
       <Traffic curve={curveMain} laneSign={1} count={12} />
-      <SemiTraffic curve={curveMain} laneSign={-1} cab="#f2f2f2" container="#D64545" offset={0.2} />
-      <SemiTraffic curve={curveMain} laneSign={-1} cab="#D64545" container="#f0f0f0" offset={0.7} />
+      <SemiTraffic curve={curveMain} laneSign={-1} cab="#f2f2f2" container="#D64545" offset={0.2} scrub={scrub} />
+      <SemiTraffic curve={curveMain} laneSign={1} cab="#D64545" container="#f0f0f0" offset={0.7} scrub={scrub} />
 
       <CurvedRoad curve={curveMirror} width={6} color="#6f6f6f" y={10.05} dashSize={[0.3, 3]} barriers />
       <Pillars curve={curveMirror} />
       <Traffic curve={curveMirror} laneSign={-1} count={12} />
-      <SemiTraffic curve={curveMirror} laneSign={1} cab="#f2f2f2" container="#D64545" offset={0.5} />
+      <SemiTraffic curve={curveMirror} laneSign={1} cab="#f2f2f2" container="#D64545" offset={0.5} scrub={scrub} />
 
-      <CameraDolly scrub={scrub} />
+      <CameraDolly scrub={scrub} curve={curveMain} />
     </SceneCanvas>
   )
 }
 
-function CameraDolly({ scrub }: { scrub?: ScrubRef }) {
+function CameraDolly({ scrub, curve }: { scrub?: ScrubRef; curve: THREE.CatmullRomCurve3 }) {
   const camera = useThree((s) => s.camera)
   useFrame(() => {
     const p = scrub?.current ?? 0
-    camera.position.set(0, THREE.MathUtils.lerp(26, 20, p), THREE.MathUtils.lerp(34, 24, p))
-    camera.lookAt(0, 8, 0)
+    const t = Math.max(0, Math.min(1, p))
+    const point = curve.getPointAt(t)
+    const tangent = curve.getTangentAt(t).normalize()
+
+    const camPos = point.clone().addScaledVector(tangent, -8)
+    camPos.y += 16
+    camera.position.copy(camPos)
+
+    const lookT = Math.min(1, t + 0.15)
+    const lookPoint = curve.getPointAt(lookT)
+    camera.lookAt(lookPoint)
   })
   return null
 }
