@@ -1,10 +1,8 @@
 import { useMemo, useRef, useLayoutEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { ContactShadows } from '@react-three/drei'
-import { EffectComposer, Bloom, ChromaticAberration, Noise, Vignette } from '@react-three/postprocessing'
 import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
-import type { ChromaticAberrationEffect } from 'postprocessing'
 import { VisualTest } from '../dev/VisualTest'
 import { ProceduralTruck, shadowBlob, roughMap, dashWhite, LANE, RoadStrip, type WheelRefs } from './builders'
 import { useCompact } from '../lib/media'
@@ -264,8 +262,6 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const roughT = useMemo(roughMap, [])
   const dashT = useMemo(dashWhite, [])
   const skyT = useMemo(skyGradient, [])
-  const caOffset = useMemo(() => new THREE.Vector2(0.0012, 0.0007), [])
-  const caRef = useRef<ChromaticAberrationEffect | null>(null)
   const arrowShape = useMemo(() => {
     const s = new THREE.Shape()
     s.moveTo(0, 0)
@@ -291,22 +287,13 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const camPrevY = useRef(0)
 
   const std = { roughness: 0.85, metalness: 0.05 }
-  /** R24: PBR painted steel — corrugated containers, roughness 0.3 / metalness 0.8, catching the studio env map. */
-  const cargoMtl = { roughness: 0.3, metalness: 0.8 }
-  /** R24: matte metallic stick steel — charcoal #222325, roughness 0.2, metalness 0.9 (high reflectivity). */
-  const boomSteel = { roughness: 0.2, metalness: 0.9 }
-  const paint = { roughness: 0.3, metalness: 0.8 }
-  const paintDark = { roughness: 0.3, metalness: 0.85 }
+  /** R24/P4: matte painted steel — corrugated containers read as flat industrial equipment, not polished chrome. */
+  const cargoMtl = { roughness: 0.55, metalness: 0.35 }
+  /** R24/P4: matte metallic stick steel — charcoal #222325, satin not mirror. */
+  const boomSteel = { roughness: 0.45, metalness: 0.5 }
+  const paint = { roughness: 0.5, metalness: 0.4 }
+  const paintDark = { roughness: 0.5, metalness: 0.4 }
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
-
-  // R12: radial chromatic aberration — weaker in the middle, stronger toward the screen edges (set via ref, since
-  // the react wrapper's props type collapses the optional constructor options).
-  useLayoutEffect(() => {
-    if (caRef.current) {
-      caRef.current.radialModulation = true
-      caRef.current.modulationOffset = 0.4
-    }
-  }, [])
 
   useFrame((state, delta) => {
     const p = scrub?.current ?? 0
@@ -383,8 +370,8 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
 
     // Truck departure — heading pivots onto the road tangent (-x, forward = +z → rotation.y = -π/2) BEFORE
     // driving forward, so the truck never slides sideways; world scale stays exactly 1 (no shrink), monotonic exit.
-    const pivot = easeInOut(Math.min(Math.max((p - 0.78) / 0.08, 0), 1))
-    const pDrv = Math.min(Math.max((p - 0.85) / 0.15, 0), 1)
+    const pivot = easeInOut(Math.min(Math.max((p - 0.80) / 0.07, 0), 1))
+    const pDrv = Math.min(Math.max((p - 0.86) / 0.14, 0), 1)
     const driveEase = easeIn(pDrv)
     const exitX = THREE.MathUtils.lerp(0, -22, driveEase)
     // R18: rigid bed impact & suspension decay — fires the exact instant the container's bottom plane touches
@@ -401,10 +388,10 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     truckWheels.current.forEach((w: THREE.Object3D | null) => w && (w.rotation.y = (16 * driveEase) / ((w.userData.radius as number) || 0.5)))
 
     // Scroll-blended lighting — warm key recedes, cool fill rises as the loaded truck departs (no hard cut).
-    const exitTone = Math.min(Math.max((p - 0.8) / 0.2, 0), 1)
-    if (keyLight.current) keyLight.current.intensity = THREE.MathUtils.lerp(5.0, 3.2, exitTone)
-    if (fillLight.current) fillLight.current.intensity = THREE.MathUtils.lerp(2.5, 3.0, exitTone)
-    if (rimLight.current) rimLight.current.intensity = THREE.MathUtils.lerp(2.0, 1.5, exitTone)
+    const exitTone = Math.min(Math.max((p - 0.82) / 0.18, 0), 1)
+    if (keyLight.current) keyLight.current.intensity = THREE.MathUtils.lerp(3.2, 2.4, exitTone)
+    if (fillLight.current) fillLight.current.intensity = THREE.MathUtils.lerp(1.6, 2.0, exitTone)
+    if (rimLight.current) rimLight.current.intensity = THREE.MathUtils.lerp(1.2, 1.0, exitTone)
 
     // R24: weighted camera inertia — high-inertia damped follow toward the scroll target (lambda 2.5), a slow
     // lookAt sway sin(elapsed * 1.5) * 0.1, and a subtle velocity-banked roll clamped to ±1.5° (cinematic rig feel).
@@ -451,13 +438,12 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     <group>
       <Rig />
       <StudioEnv />
-      {/* R18 minimalist studio: warm tungsten key (#FFE3B8, 2048px razor-sharp soft-penumbra shadows), cool
-          ambient fill (#D4E2F4), sharp industrial rim (#E0F7FF) — high-contrast rig on a bright #F4F4F5 stage */}
+      {/* P4: soft neutral studio — even three-point rig on a bright #F0EFF1 stage, no harsh single-source contrast */}
       <directionalLight
         ref={keyLight}
         position={[30, 40, 25]}
-        intensity={5.0}
-        color="#FFE3B8"
+        intensity={3.2}
+        color="#FFE9C9"
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
@@ -469,9 +455,9 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
         shadow-camera-far={60}
         shadow-bias={-0.0001}
       />
-      <directionalLight ref={fillLight} position={[-30, 20, -15]} intensity={2.5} color="#A5C4D4" />
-      <directionalLight ref={rimLight} position={[0, 15, -20]} intensity={2.0} color="#E0F7FF" />
-      <ambientLight intensity={0.25} color="#F0EFF1" />
+      <directionalLight ref={fillLight} position={[-30, 20, -15]} intensity={1.6} color="#C9DCE8" />
+      <directionalLight ref={rimLight} position={[0, 15, -20]} intensity={1.2} color="#E8F4FF" />
+      <ambientLight intensity={0.45} color="#F0EFF1" />
       <color attach="background" args={['#F0EFF1']} />
       <fogExp2 attach="fog" args={['#F0EFF1', 0.012]} />
       {/* R12: atmospheric sky dome — vertical gradient (cool zenith → hazy horizon) adds real depth behind the fog */}
@@ -479,14 +465,6 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
         <sphereGeometry args={[1, 32, 32]} />
         <meshBasicMaterial map={skyT} side={THREE.BackSide} />
       </mesh>
-
-      {/* R12: studio color grading — bloom on hot highlights/markings, radial chromatic aberration, film grain, cinematic vignette */}
-      <EffectComposer>
-        <Bloom intensity={0.5} luminanceThreshold={1.0} luminanceSmoothing={0.4} mipmapBlur />
-        <ChromaticAberration ref={caRef} offset={caOffset} />
-        <Noise opacity={0.05} />
-        <Vignette offset={0.2} darkness={0.68} />
-      </EffectComposer>
 
       {/* R8: environment shares fitRef's transform (local coords unchanged) but lives outside the
           machinery group so the STACKER bbox stays meaningful. */}

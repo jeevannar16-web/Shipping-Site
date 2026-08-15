@@ -192,7 +192,7 @@ function TruckSection({ scrub }: { scrub: ScrubRef }) {
   const wrapRef = useRef<HTMLElement>(null)
   useSectionScrub(wrapRef, scrub)
   return (
-    <section ref={wrapRef} className={`scene bg-[#FAF9F7]`}>
+    <section ref={wrapRef} className={`scene bg-[#F4F4F5]`}>
       <div className="pin">
         <div className="absolute left-6 top-8 z-20 md:left-10">
           <p className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.3em] text-orange">
@@ -426,7 +426,7 @@ export default function Home() {
       <SceneRail />
       <HeroSection />
 
-      <StickyScene index="2" mode="TERMINAL" bg="bg-[#FAF9F7]" text="text-[#0a0a0a]" line="One team, every mode." scrub={stackerScrub}>
+      <StickyScene index="2" mode="TERMINAL" bg="bg-[#F0EFF1]" text="text-[#0a0a0a]" line="One team, every mode." scrub={stackerScrub}>
         <SuspenseBox label="Freight">
           <SceneStage label="Freight" tone="orange">
             <StackerScene scrub={stackerScrub} />
@@ -438,7 +438,7 @@ export default function Home() {
 
       <ReliabilitySection scrub={reliabilityScrub} />
 
-      <StickyScene index="4" mode="HIGHWAY" bg="bg-[#101410]" text="text-[#ededed]" line="Built for every lane." scrub={viaductScrub}>
+      <StickyScene index="4" mode="HIGHWAY" bg="bg-gradient-to-b from-[#FAF9F7] via-[#101410] to-[#C9D3D8]" text="text-[#ededed]" line="Built for every lane." scrub={viaductScrub}>
         <SuspenseBox label="About">
           <ViaductScene scrub={viaductScrub} />
         </SuspenseBox>
