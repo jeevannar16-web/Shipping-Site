@@ -35,9 +35,9 @@ function bgWords() {
 function Rig() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
   useLayoutEffect(() => {
-    camera.fov = 40
-    camera.position.set(0, 6, 42)
-    camera.lookAt(0, 1.8, 0)
+    camera.fov = 38
+    camera.position.set(0, 4.5, 34)
+    camera.lookAt(0, 2, 0)
     camera.updateProjectionMatrix()
   }, [camera])
   return null
@@ -116,7 +116,7 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
       </group>
 
       {/* PASSING — orange cab, silver ribbed trailer, scale .9, z -5.5 */}
-      <group ref={truckPass} position={[10, 0, -5.5]} scale={0.9}>
+      <group ref={truckPass} position={[10, 0, -5.5]} scale={0.9} rotation={[0, Math.PI / 2, 0]}>
         <ProceduralTruck wheelRefs={passWheels} driving={false} bob={false} cabColor="#E8590C" trailerColor="#E3E2DF" ribColor="#C9C8C4" />
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
           <planeGeometry args={[14, 5]} />
@@ -125,7 +125,7 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
       </group>
 
       {/* MAIN — silver semi with ribbed trailer, enters from left, exits right */}
-      <group ref={truckDrive} position={[-16, 0, 0]}>
+      <group ref={truckDrive} position={[-16, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
         <ProceduralTruck wheelRefs={mainWheels} driving={false} bob={false} cabColor="#3A3D42" trailerColor="#E3E2DF" ribColor="#C9C8C4" />
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
           <planeGeometry args={[15, 5]} />

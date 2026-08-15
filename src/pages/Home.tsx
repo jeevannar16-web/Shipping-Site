@@ -402,7 +402,7 @@ function OceanSection({ scrub }: { scrub: ScrubRef }) {
           </p>
         </div>
         {/* Big overlay headline */}
-        <div ref={overlayRef} className="absolute bottom-32 left-1/2 z-10 hidden -translate-x-1/2 md:block opacity-0 transition-opacity duration-300">
+        <div ref={overlayRef} className="absolute top-1/3 left-1/2 z-10 hidden -translate-x-1/2 md:block opacity-0 transition-opacity duration-300">
           <p className="text-center font-display text-[clamp(1.5rem,3.5vw,3.5rem)] font-extrabold uppercase leading-[0.95] tracking-tight text-white drop-shadow-lg">
             Logistics that works as hard as you do.
           </p>

@@ -202,8 +202,30 @@ export function ProceduralTruck({
 
       {/* flatbed trailer */}
       <mesh position={[0, 1.0, -1.9]}>
-        <boxGeometry args={[2.4, 0.1, 7.5]} />
+        <boxGeometry args={[4.6, 0.1, 7.5]} />
         <meshStandardMaterial color={chassisColor} roughness={0.9} metalness={0.05} />
+      </mesh>
+      {/* trailer side rails */}
+      {[-2.3, 2.3].map((x, i) => (
+        <mesh key={i} position={[x, 1.25, -1.9]}>
+          <boxGeometry args={[0.08, 0.4, 7.5]} />
+          <meshStandardMaterial color={chassisColor} roughness={0.9} metalness={0.05} />
+        </mesh>
+      ))}
+      {/* trailer rear rail */}
+      <mesh position={[0, 1.25, -5.65]}>
+        <boxGeometry args={[4.6, 0.4, 0.08]} />
+        <meshStandardMaterial color={chassisColor} roughness={0.9} metalness={0.05} />
+      </mesh>
+      {/* trailer front rail */}
+      <mesh position={[0, 1.25, 1.85]}>
+        <boxGeometry args={[4.6, 0.4, 0.08]} />
+        <meshStandardMaterial color={chassisColor} roughness={0.9} metalness={0.05} />
+      </mesh>
+      {/* trailer walls with ribs */}
+      <mesh position={[0, 1.85, -1.9]}>
+        <boxGeometry args={[4.6, 2.6, 7.5]} />
+        <meshStandardMaterial map={ribTex} color={trailerColor} roughness={0.5} metalness={0.1} />
       </mesh>
       {/* trailer side rails */}
       {[-1.15, 1.15].map((x, i) => (

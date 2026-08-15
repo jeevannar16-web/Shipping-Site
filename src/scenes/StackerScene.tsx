@@ -73,7 +73,7 @@ const easeIn = (t: number) => t * t
 
 const STACK_TOP = new THREE.Vector3(7, 5.75, 0)
 const CONTAINER = [4.4, 1.6, 1.8] as const
-const STACK_COLS = ['#E8590C', '#1E6BB0', 'ribWhite', 'ribWhite']
+const STACK_COLS = ['ribWhite', 'ribWhite', '#1E6BB0', '#E8590C']
 const TEAL = '#2E9CC9'
 
 export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
@@ -122,7 +122,10 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     }
 
     if (loaded.current) loaded.current.visible = p >= 0.78
-    if (held.current) held.current.visible = p < 0.78
+    if (held.current) {
+      held.current.visible = p < 0.78
+      held.current.rotation.z = -boom.current!.rotation.z
+    }
 
     const pDrv = Math.min(Math.max((p - 0.82) / 0.18, 0), 1)
     const drive = -16 * easeIn(pDrv)
@@ -165,7 +168,7 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
 
         {/* LEFT parked truck — ProceduralTruck @ (-8,0,0), loaded container on flatbed */}
         <group ref={truck} position={[-8, 0, 0]}>
-          <ProceduralTruck wheelRefs={truckWheels} driving={false} bob={false} hideTrailer />
+          <ProceduralTruck wheelRefs={truckWheels} driving={false} bob={false} />
           <mesh ref={loaded} position={[0, 1.85, -1.9]} visible={false}>
             <boxGeometry args={CONTAINER} />
             <meshStandardMaterial map={ribT} color="#F4F3F1" {...std} />
