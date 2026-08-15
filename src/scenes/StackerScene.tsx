@@ -5,7 +5,7 @@ import { EffectComposer, Bloom, ChromaticAberration, Noise } from '@react-three/
 import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { VisualTest } from '../dev/VisualTest'
-import { ProceduralTruck, type WheelRefs } from './builders'
+import { ProceduralTruck, shadowBlob, asphalt, roughMap, dashTrack, type WheelRefs } from './builders'
 import type { ScrubRef } from '../lib/scrub'
 
 function ribWhite() {
@@ -45,83 +45,6 @@ function hazard() {
     g.fill()
   }
   return new THREE.CanvasTexture(c)
-}
-
-function shadowBlob() {
-  const c = document.createElement('canvas')
-  c.width = 128
-  c.height = 128
-  const g = c.getContext('2d')!
-  const grad = g.createRadialGradient(64, 64, 6, 64, 64, 62)
-  grad.addColorStop(0, 'rgba(0,0,0,0.3)')
-  grad.addColorStop(1, 'rgba(0,0,0,0)')
-  g.fillStyle = grad
-  g.fillRect(0, 0, 128, 128)
-  return new THREE.CanvasTexture(c)
-}
-
-function asphalt() {
-  const c = document.createElement('canvas')
-  c.width = 512
-  c.height = 512
-  const g = c.getContext('2d')!
-  g.fillStyle = '#3A3A3D'
-  g.fillRect(0, 0, 512, 512)
-  for (let i = 0; i < 30000; i++) {
-    const v = 24 + Math.random() * 70
-    g.fillStyle = `rgba(${v},${v},${v},0.35)`
-    const s = 1 + Math.random() * 2
-    g.fillRect(Math.random() * 512, Math.random() * 512, s, s)
-  }
-  // R10: subtle oil staining puddle blotches
-  for (let i = 0; i < 7; i++) {
-    const x = 20 + Math.random() * 472
-    const y = 20 + Math.random() * 472
-    const r = 14 + Math.random() * 34
-    const grad = g.createRadialGradient(x, y, 2, x, y, r)
-    grad.addColorStop(0, 'rgba(14,14,16,0.5)')
-    grad.addColorStop(1, 'rgba(14,14,16,0)')
-    g.fillStyle = grad
-    g.fillRect(x - r, y - r, r * 2, r * 2)
-  }
-  g.fillStyle = 'rgba(0,0,0,0.10)'
-  for (let x = 0; x <= 512; x += 128) g.fillRect(x, 0, 2, 512)
-  const t = new THREE.CanvasTexture(c)
-  t.wrapS = t.wrapT = THREE.RepeatWrapping
-  t.repeat.set(9, 6)
-  t.colorSpace = THREE.SRGBColorSpace
-  return t
-}
-
-function roughMap() {
-  const c = document.createElement('canvas')
-  c.width = 256
-  c.height = 256
-  const g = c.getContext('2d')!
-  for (let i = 0; i < 14000; i++) {
-    const v = 110 + Math.random() * 90
-    g.fillStyle = `rgba(${v},${v},${v},0.4)`
-    const s = 1 + Math.random() * 2
-    g.fillRect(Math.random() * 256, Math.random() * 256, s, s)
-  }
-  const t = new THREE.CanvasTexture(c)
-  t.wrapS = t.wrapT = THREE.RepeatWrapping
-  t.repeat.set(5, 4)
-  return t
-}
-
-function dashTrack() {
-  const c = document.createElement('canvas')
-  c.width = 512
-  c.height = 32
-  const g = c.getContext('2d')!
-  g.clearRect(0, 0, 512, 32)
-  g.fillStyle = 'rgba(232, 210, 84, 0.9)'
-  for (let x = 0; x < 512; x += 96) g.fillRect(x, 10, 44, 12)
-  const t = new THREE.CanvasTexture(c)
-  t.wrapS = t.wrapT = THREE.RepeatWrapping
-  t.repeat.set(13, 1)
-  return t
 }
 
 function Rig() {

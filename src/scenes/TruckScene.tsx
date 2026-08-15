@@ -1,21 +1,8 @@
 import { useMemo, useRef, useLayoutEffect } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { ProceduralTruck, type WheelRefs } from './builders'
+import { ProceduralTruck, shadowBlob, asphalt, roughMap, dashTrack, type WheelRefs } from './builders'
 import type { ScrubRef } from '../lib/scrub'
-
-function shadowBlob() {
-  const c = document.createElement('canvas')
-  c.width = 128
-  c.height = 128
-  const g = c.getContext('2d')!
-  const grad = g.createRadialGradient(64, 64, 6, 64, 64, 62)
-  grad.addColorStop(0, 'rgba(0,0,0,0.3)')
-  grad.addColorStop(1, 'rgba(0,0,0,0)')
-  g.fillStyle = grad
-  g.fillRect(0, 0, 128, 128)
-  return new THREE.CanvasTexture(c)
-}
 
 function bgWords() {
   const c = document.createElement('canvas')
@@ -52,6 +39,9 @@ function Rig() {
 export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
   const blobT = useMemo(shadowBlob, [])
   const wordT = useMemo(bgWords, [])
+  const asphaltT = useMemo(asphalt, [])
+  const roughT = useMemo(roughMap, [])
+  const dashT = useMemo(dashTrack, [])
   const mainWheels = useRef<Array<THREE.Object3D | null>>([]) as WheelRefs
   const passWheels = useRef<Array<THREE.Object3D | null>>([]) as WheelRefs
   const truckDrive = useRef<THREE.Group>(null)
@@ -111,6 +101,24 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
         <sphereGeometry args={[1, 32, 32]} />
         <meshBasicMaterial color="#FAF9F7" side={THREE.BackSide} />
       </mesh>
+
+      {/* R11: unified asphalt apron — grounds both trucks on the same terminal surface as the stacker scene */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[5, 0, -3]}>
+        <planeGeometry args={[72, 18]} />
+        <meshStandardMaterial map={asphaltT} roughnessMap={roughT} roughness={0.95} metalness={0} />
+      </mesh>
+      {/* R11: guide strip — dashed line along the main truck's travel axis (drives x: -24 → +34) */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[5, 0.02, 0]}>
+        <planeGeometry args={[72, 0.4]} />
+        <meshStandardMaterial map={dashT} transparent roughness={0.9} />
+      </mesh>
+      {/* R11: white lane edges framing the travel corridor */}
+      {[4.5, -4.5].map((z) => (
+        <mesh key={z} rotation={[-Math.PI / 2, 0, 0]} position={[5, 0.02, z]}>
+          <planeGeometry args={[72, 0.28]} />
+          <meshStandardMaterial color="#E8E6E1" roughness={0.9} />
+        </mesh>
+      ))}
 
       <mesh ref={bgText} position={[0, 6, -12]} renderOrder={-1}>
         <planeGeometry args={[26, 7.3]} />

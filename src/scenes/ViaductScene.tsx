@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import SceneCanvas from '../components/SceneCanvas'
-import { CurvedRoad, InstancedTrees, Truck } from './builders'
+import { CurvedRoad, InstancedTrees, Truck, asphalt, roughMap, dashTrack } from './builders'
 import type { ScrubRef } from '../lib/scrub'
 
 const easeInOut = (t: number) => t * t * (3 - 2 * t)
@@ -198,6 +198,9 @@ export default function ViaductScene({ scrub }: { scrub?: ScrubRef }) {
   const curveMain = useMemo(() => viaductCurve(), [])
   const curveMirror = useMemo(() => viaductCurveMirror(), [])
   const domeMat = useRef<THREE.MeshBasicMaterial>(null)
+  const asphaltT = useMemo(asphalt, [])
+  const roughT = useMemo(roughMap, [])
+  const dashT = useMemo(dashTrack, [])
 
   return (
     <SceneCanvas fallbackLabel="About" tone="blue" camera={{ position: [-95, 30, 0], fov: 48 }}>
@@ -212,9 +215,14 @@ export default function ViaductScene({ scrub }: { scrub?: ScrubRef }) {
         <meshBasicMaterial ref={domeMat} color="#101410" side={THREE.BackSide} />
       </mesh>
 
+      {/* R11: unified terminal apron — asphalt ground with lane stripes grounds the whole platform (same surface as the stacker/truck scenes) */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
         <planeGeometry args={[90, 90]} />
-        <meshStandardMaterial color="#3e5e6e" roughness={0.4} metalness={0.3} />
+        <meshStandardMaterial map={asphaltT} roughnessMap={roughT} roughness={0.95} metalness={0} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
+        <planeGeometry args={[90, 0.4]} />
+        <meshStandardMaterial map={dashT} transparent roughness={0.9} />
       </mesh>
 
       <InstancedTrees count={300} min={1} max={2.2} area={42} center={[0, 0]} height={0} />
