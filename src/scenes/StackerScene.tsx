@@ -49,8 +49,8 @@ function hazard() {
   return new THREE.CanvasTexture(c)
 }
 
-/** R18: high-key studio vertical gradient for the sky dome — warm-white zenith dissolving into the
-    minimalist paper-tone FogExp2 haze (#F4F4F5) at the horizon so the dome and fog read as one continuous haze. */
+/** R19: high-key studio vertical gradient for the sky dome — warm-white zenith dissolving into the
+    minimalist warm-gray FogExp2 haze (#EAE8E4) at the horizon so the dome and fog read as one continuous haze. */
 function skyGradient() {
   const c = document.createElement('canvas')
   c.width = 16
@@ -58,8 +58,8 @@ function skyGradient() {
   const g = c.getContext('2d')!
   const grad = g.createLinearGradient(0, 0, 0, 256)
   grad.addColorStop(0, '#FFFFFF')
-  grad.addColorStop(0.45, '#F7F6F4')
-  grad.addColorStop(1, '#F4F4F5')
+  grad.addColorStop(0.45, '#F1EFEA')
+  grad.addColorStop(1, '#EAE8E4')
   g.fillStyle = grad
   g.fillRect(0, 0, 16, 256)
   const t = new THREE.CanvasTexture(c)
@@ -159,6 +159,19 @@ function Backdrop() {
           <meshStandardMaterial color="#202024" roughness={0.9} />
         </mesh>
       </group>
+      {/* R19: lighting pylons — tall poles with lit heads along the back, faded into the exponential fog */}
+      {[-30, -18, -6, 6].map((x) => (
+        <group key={`p${x}`} position={[x, 0, -15]}>
+          <mesh position={[0, 5.5, 0]}>
+            <cylinderGeometry args={[0.05, 0.09, 11, 8]} />
+            <meshStandardMaterial color="#2a2a2e" roughness={0.6} metalness={0.4} />
+          </mesh>
+          <mesh position={[0, 11, 0]}>
+            <cylinderGeometry args={[0.45, 0.45, 0.14, 16]} />
+            <meshStandardMaterial color="#E8E6E1" emissive="#FFF3D6" emissiveIntensity={0.6} />
+          </mesh>
+        </group>
+      ))}
     </group>
   )
 }
@@ -228,9 +241,11 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
   const camPrevX = useRef(0)
   const camPrevY = useRef(0)
 
-  const std = { roughness: 0.85, metalness: 0 }
-  const paint = { roughness: 0.35, metalness: 0.3 }
-  const paintDark = { roughness: 0.3, metalness: 0.55 }
+  const std = { roughness: 0.85, metalness: 0.05 }
+  /** R19: PBR painted steel — high metalness + low roughness so containers and machinery catch the studio env map. */
+  const cargoMtl = { roughness: 0.3, metalness: 0.8 }
+  const paint = { roughness: 0.3, metalness: 0.8 }
+  const paintDark = { roughness: 0.3, metalness: 0.85 }
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
 
   // R12: radial chromatic aberration — weaker in the middle, stronger toward the screen edges (set via ref, since
@@ -289,7 +304,10 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
     const dy = sy - 1.5
     const reach = Math.hypot(dx, dy)
     const teleX = Math.min(Math.max(Math.sqrt(Math.max(reach * reach - 0.16, 0)) - 5.6, 0), 2.6)
-    if (boom.current) boom.current.rotation.z = Math.atan2(dy, dx) - Math.atan2(0.4, 5.6 + teleX) + tugFlex
+    // R19: hydraulic mast micro-vibration — high-frequency hydraulic shudder during the lift segment that decays
+    // as the arc carries, layered on the pre-lift tension snap so the lift reads like real steel hydraulics under load.
+    const mastVib = p >= 0.3 && p < 0.55 ? Math.sin(pS2 * 200) * (1 - pS2) * 0.0018 : 0
+    if (boom.current) boom.current.rotation.z = Math.atan2(dy, dx) - Math.atan2(0.4, 5.6 + teleX) + tugFlex + mastVib
     if (tele.current) tele.current.position.x = 3.0 + teleX
     // R12: gravity-stabilized spreader — counter-rotate so the twistlocks stay level and flush on the container
     // throughout the lift/arc (the boom tips, the spreader never does).
@@ -404,9 +422,9 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       />
       <directionalLight ref={fillLight} position={[-20, 15, -15]} intensity={2.2} color="#D4E2F4" />
       <directionalLight ref={rimLight} position={[0, 15, -20]} intensity={2.0} color="#E0F7FF" />
-      <ambientLight intensity={0.35} color="#F4F4F5" />
-      <color attach="background" args={['#F4F4F5']} />
-      <fogExp2 attach="fog" args={['#F4F4F5', 0.008]} />
+      <ambientLight intensity={0.35} color="#EAE8E4" />
+      <color attach="background" args={['#EAE8E4']} />
+      <fogExp2 attach="fog" args={['#EAE8E4', 0.01]} />
       {/* R12: atmospheric sky dome — vertical gradient (cool zenith → hazy horizon) adds real depth behind the fog */}
       <mesh scale={200}>
         <sphereGeometry args={[1, 32, 32]} />
@@ -467,26 +485,32 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
           i === 3 ? null : (
             <mesh key={i} position={[3.5, 0.8 + i * 1.65, 0]} castShadow>
               <boxGeometry args={CONTAINER} />
-              <meshStandardMaterial color={c === 'ribWhite' ? '#F4F3F1' : c} map={c === 'ribWhite' ? ribT : undefined} {...std} />
+              <meshStandardMaterial
+                color={c === 'ribWhite' ? '#F4F3F1' : c}
+                map={c === 'ribWhite' ? ribT : undefined}
+                bumpMap={ribT}
+                bumpScale={0.02}
+                {...cargoMtl}
+              />
             </mesh>
           ),
         )}
         <group ref={cargo} position={[3.5, 5.75, 0]}>
           <mesh castShadow>
             <boxGeometry args={CONTAINER} />
-            <meshStandardMaterial color={STACK_COLS[3]} {...std} />
+            <meshStandardMaterial color={STACK_COLS[3]} bumpMap={ribT} bumpScale={0.02} {...cargoMtl} />
           </mesh>
           {/* R12: raised top corner castings — the anchor seats for the spreader's twistlocks */}
           {LOCK_CORNERS.map(([x, z], i) => (
             <mesh key={i} position={[x, 0.88, z] as [number, number, number]}>
               <boxGeometry args={[0.34, 0.16, 0.34]} />
-              <meshStandardMaterial color="#202024" roughness={0.45} metalness={0.45} />
+              <meshStandardMaterial color="#202024" roughness={0.35} metalness={0.85} />
             </mesh>
           ))}
         </group>
         <mesh position={[3.5, 0.05, 0]}>
           <boxGeometry args={[6, 0.3, 2.4]} />
-          <meshStandardMaterial color={STACKER_BLUE} {...std} />
+          <meshStandardMaterial color={STACKER_BLUE} {...cargoMtl} />
         </mesh>
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[3.5, 0.01, 0]}>
           <planeGeometry args={[6, 3]} />
@@ -543,12 +567,12 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
         <group ref={boom} position={[-2.4, 1.5, 0]}>
           <mesh position={[1.5, 0, 0]} rotation={[0, 0, 0.15]} castShadow>
             <boxGeometry args={[3.0, 0.5, 0.45]} />
-            <meshStandardMaterial color="#17181A" {...std} />
+            <meshStandardMaterial color="#17181A" {...cargoMtl} />
           </mesh>
           <group ref={tele} position={[3.0, 0.4, 0]}>
             <mesh position={[1.3, 0, 0]} rotation={[0, 0, -0.1]} castShadow>
               <boxGeometry args={[2.6, 0.4, 0.4]} />
-              <meshStandardMaterial color="#17181A" {...std} />
+              <meshStandardMaterial color="#17181A" {...cargoMtl} />
             </mesh>
             {/* boomTip — spreader is a child of this; cargo reparents here during carry (grep token: spreader-child) */}
             <group ref={boomTip} position={[2.6, 0, 0]}>
@@ -563,7 +587,7 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
                 {LOCK_CORNERS.map(([x, z], i) => (
                   <mesh key={i} position={[x, TWISTLOCK_Y, z] as [number, number, number]}>
                     <boxGeometry args={[0.3, 0.24, 0.3]} />
-                    <meshStandardMaterial color="#1f1f24" roughness={0.5} metalness={0.5} />
+                    <meshStandardMaterial color="#1f1f24" roughness={0.35} metalness={0.85} />
                   </mesh>
                 ))}
               </group>
