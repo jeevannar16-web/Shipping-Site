@@ -176,17 +176,12 @@ function SemiTraffic({
   )
 }
 
-export default function ViaductScene({ scrub }: { scrub?: ScrubRef }) {
-  const curveMain = useMemo(() => viaductCurve(), [])
-  const curveMirror = useMemo(() => viaductCurveMirror(), [])
+/** R9: scroll-blended background/fog/dome tone. Rendered INSIDE SceneCanvas so R3F hooks are legal. */
+function BlendTone({ scrub, domeMat }: { scrub?: ScrubRef; domeMat: { current: THREE.MeshBasicMaterial | null } }) {
   const { scene } = useThree()
-  const domeMat = useRef<THREE.MeshBasicMaterial>(null)
   const blendFrom = useMemo(() => new THREE.Color('#FAF9F7'), [])
   const blendDark = useMemo(() => new THREE.Color('#101410'), [])
   const blendTo = useMemo(() => new THREE.Color('#C9D3D8'), [])
-
-  // R9: seamless section blending — lighten the Highway from the outgoing light sections on entry
-  // (white→black flash) and drift toward the light Yard tone on exit (black→light flash).
   useFrame(() => {
     const p = scrub?.current ?? 0
     const entry = Math.min(Math.max(p / 0.12, 0), 1)
@@ -196,6 +191,13 @@ export default function ViaductScene({ scrub }: { scrub?: ScrubRef }) {
     if (scene.fog instanceof THREE.Fog) scene.fog.color.copy(col)
     if (domeMat.current) domeMat.current.color.copy(col)
   })
+  return null
+}
+
+export default function ViaductScene({ scrub }: { scrub?: ScrubRef }) {
+  const curveMain = useMemo(() => viaductCurve(), [])
+  const curveMirror = useMemo(() => viaductCurveMirror(), [])
+  const domeMat = useRef<THREE.MeshBasicMaterial>(null)
 
   return (
     <SceneCanvas fallbackLabel="About" tone="blue" camera={{ position: [-95, 30, 0], fov: 48 }}>
@@ -228,6 +230,7 @@ export default function ViaductScene({ scrub }: { scrub?: ScrubRef }) {
       <Traffic curve={curveMirror} laneSign={-1} count={12} />
       <SemiTraffic curve={curveMirror} laneSign={1} cab="#f2f2f2" container="#D64545" range={[0.3, 0.75]} scrub={scrub} />
 
+      <BlendTone scrub={scrub} domeMat={domeMat} />
       <CameraRig />
     </SceneCanvas>
   )
