@@ -336,6 +336,9 @@ section.scene > .pin {
 /* V1 — globe marker tag: scale-up + reveal second line on dot hover */
 .globe-tag {
   pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
   transform: scale(1);
   transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
 }

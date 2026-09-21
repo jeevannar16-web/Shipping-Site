@@ -13,15 +13,14 @@ const clamp01 = (t: number) => Math.min(Math.max(t, 0), 1)
     (the horizontal side-on shot). Phase 2: the road turns and climbs a ramp onto an elevated overpass. */
 const JOURNEY = new THREE.CatmullRomCurve3([
   new THREE.Vector3(0, 0, 34),
-  new THREE.Vector3(0, 0, 20),
-  new THREE.Vector3(0, 0, 6),
-  new THREE.Vector3(0, 0, -8),
-  new THREE.Vector3(0, 0, -20),
-  new THREE.Vector3(-8, 3, -29),
-  new THREE.Vector3(-22, 6.2, -36),
-  new THREE.Vector3(-38, 8.6, -39),
-  new THREE.Vector3(-54, 9.8, -39),
-  new THREE.Vector3(-70, 9.8, -39),
+  new THREE.Vector3(0, 0, 16),
+  new THREE.Vector3(0, 0, -6),
+  new THREE.Vector3(0, 0, -28),
+  new THREE.Vector3(-7, 3.6, -34),
+  new THREE.Vector3(-20, 6.8, -38),
+  new THREE.Vector3(-38, 9, -40),
+  new THREE.Vector3(-58, 9.8, -40),
+  new THREE.Vector3(-72, 9.8, -40),
 ])
 
 const ROAD_HALF = 2.8

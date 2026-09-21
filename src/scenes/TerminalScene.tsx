@@ -63,7 +63,7 @@ function SkyDome() {
           varying vec3 vWorldPos;
           void main() {
             float h = normalize(vWorldPos).y * 0.5 + 0.5;
-            vec3 col = mix(vec3(0.788, 0.827, 0.847), vec3(0.847, 0.867, 0.878), pow(h, 0.7));
+            vec3 col = mix(vec3(0.05, 0.055, 0.06), vec3(0.16, 0.18, 0.21), pow(h, 0.7));
             gl_FragColor = vec4(col, 1.0);
           }
         `,
@@ -164,24 +164,24 @@ function GantryCrane() {
 
     let tx: number
     let sy: number
-    if (t < 0.3) {
-      const p = t / 0.3
+    if (t < 0.28) {
+      const p = t / 0.28
       tx = -6 + p * 12
       sy = 9
-    } else if (t < 0.45) {
-      const p = (t - 0.3) / 0.15
+    } else if (t < 0.42) {
+      const p = (t - 0.28) / 0.14
       tx = 6
       sy = 9 - p * 5
-    } else if (t < 0.7) {
-      const p = (t - 0.45) / 0.25
+    } else if (t < 0.72) {
+      const p = (t - 0.42) / 0.3
       tx = 6 - p * 12
-      sy = 4
-    } else if (t < 0.85) {
-      const p = (t - 0.7) / 0.15
+      sy = 7.6
+    } else if (t < 0.86) {
+      const p = (t - 0.72) / 0.14
       tx = -6
-      sy = 4 + p * 5
+      sy = 7.6 + p * 1.4
     } else {
-      const p = (t - 0.85) / 0.15
+      const p = (t - 0.86) / 0.14
       tx = -6 + p * 12
       sy = 9
     }
@@ -260,8 +260,8 @@ function CameraRig() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
   useLayoutEffect(() => {
     camera.fov = 35
-    camera.position.set(0, 22, 55)
-    camera.lookAt(0, 6, 0)
+    camera.position.set(0, 24, 56)
+    camera.lookAt(0, 7, 0)
     camera.updateProjectionMatrix()
   }, [camera])
   return null
@@ -270,16 +270,16 @@ function CameraRig() {
 export default function TerminalScene() {
   const fitRef = useRef<THREE.Group>(null)
   return (
-    <SceneCanvas fallbackLabel="Terminal" tone="orange" camera={{ position: [0, 22, 55], fov: 35 }}>
-      <color attach="background" args={['#C9D3D8']} />
-      <fog attach="fog" args={['#C9D3D8', 50, 140]} />
-      <ambientLight intensity={0.75} />
-      <directionalLight position={[-6, 12, 8]} intensity={1.1} color="#ffffff" />
+    <SceneCanvas fallbackLabel="Terminal" tone="orange" camera={{ position: [0, 24, 56], fov: 35 }}>
+      <color attach="background" args={['#0d0d0f']} />
+      <fog attach="fog" args={['#0d0d0f', 40, 120]} />
+      <ambientLight intensity={0.85} />
+      <directionalLight position={[-6, 12, 8]} intensity={1.25} color="#ffffff" />
 
       <SkyDome />
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]}>
         <planeGeometry args={[400, 400]} />
-        <meshStandardMaterial color="#2e2e2e" roughness={0.9} />
+        <meshStandardMaterial color="#3a3a3c" roughness={0.9} />
       </mesh>
       <Lanes />
 

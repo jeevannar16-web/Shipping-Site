@@ -55,9 +55,9 @@ function skyGradient() {
   c.height = 256
   const g = c.getContext('2d')!
   const grad = g.createLinearGradient(0, 0, 0, 256)
-  grad.addColorStop(0, '#FFFFFF')
-  grad.addColorStop(0.45, '#F4F3F1')
-  grad.addColorStop(1, '#F0EFF1')
+  grad.addColorStop(0, '#1c1e21')
+  grad.addColorStop(0.45, '#141518')
+  grad.addColorStop(1, '#0f1012')
   g.fillStyle = grad
   g.fillRect(0, 0, 16, 256)
   const t = new THREE.CanvasTexture(c)
@@ -460,9 +460,9 @@ export default function StackerScene({ scrub }: { scrub?: ScrubRef }) {
       />
       <directionalLight ref={fillLight} position={[-30, 20, -15]} intensity={1.6} color="#C9DCE8" />
       <directionalLight ref={rimLight} position={[0, 15, -20]} intensity={1.2} color="#E8F4FF" />
-      <ambientLight intensity={0.45} color="#F0EFF1" />
-      <color attach="background" args={['#F0EFF1']} />
-      <fogExp2 attach="fog" args={['#F0EFF1', 0.012]} />
+      <ambientLight intensity={0.55} color="#23262b" />
+      <color attach="background" args={['#0f1012']} />
+      <fogExp2 attach="fog" args={['#0f1012', 0.012]} />
       {/* R12: atmospheric sky dome — vertical gradient (cool zenith → hazy horizon) adds real depth behind the fog */}
       <mesh scale={200}>
         <sphereGeometry args={[1, 32, 32]} />

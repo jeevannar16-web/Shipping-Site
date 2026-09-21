@@ -96,11 +96,11 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
   return (
     <group>
       <Rig />
-      <color attach="background" args={['#F4F4F5']} />
-      <fog attach="fog" args={['#F4F4F5', 25, 70]} />
+      <color attach="background" args={['#101214']} />
+      <fog attach="fog" args={['#101214', 18, 62]} />
       <mesh scale={200}>
         <sphereGeometry args={[1, 32, 32]} />
-        <meshBasicMaterial color="#F4F4F5" side={THREE.BackSide} />
+        <meshBasicMaterial color="#101214" side={THREE.BackSide} />
       </mesh>
 
       {/* R13: shared straight lane — same corridor (dash at z=0, edges at ±LANE) as the stacker scene */}
@@ -114,7 +114,7 @@ export default function TruckScene({ scrub }: { scrub?: ScrubRef }) {
       {/* R11: white guide dashes — the main truck follows this strip down the lane */}
       <mesh ref={bgText} position={[0, 6, -12]} renderOrder={-1}>
         <planeGeometry args={[26, 7.3]} />
-        <meshBasicMaterial map={wordT} color="#D8D2C8" transparent opacity={0.3} depthWrite={false} toneMapped={false} />
+        <meshBasicMaterial map={wordT} color="#D8D2C8" transparent opacity={0.45} depthWrite={false} toneMapped={false} />
       </mesh>
 
       <group ref={dashGroup}>

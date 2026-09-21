@@ -138,7 +138,9 @@ function StickyScene({
   children: ReactNode
 }) {
   const wrapRef = useRef<HTMLElement>(null)
-  const has3D = useIsDesktop() && useWebGL()
+  const isDesktop = useIsDesktop()
+  const webgl = useWebGL()
+  const has3D = isDesktop && webgl
   useSectionScrub(wrapRef, scrub)
   return (
     <section ref={wrapRef} className={`scene ${bg}`}>
@@ -175,7 +177,9 @@ function StickyScene({
 
 function HeroSection() {
   const go = useTransitionNavigate()
-  const has3D = useIsDesktop() && useWebGL()
+  const isDesktop = useIsDesktop()
+  const webgl = useWebGL()
+  const has3D = isDesktop && webgl
   return (
     <section className="scene bg-[#0a0a0a]">
       <div className="pin flex items-center">
@@ -236,17 +240,19 @@ function HeroSection() {
 
 function TruckSection({ scrub }: { scrub: ScrubRef }) {
   const wrapRef = useRef<HTMLElement>(null)
-  const has3D = useIsDesktop() && useWebGL()
+  const isDesktop = useIsDesktop()
+  const webgl = useWebGL()
+  const has3D = isDesktop && webgl
   useSectionScrub(wrapRef, scrub)
   return (
-    <section ref={wrapRef} className={`scene bg-[#F4F4F5]`}>
+    <section ref={wrapRef} className={`scene bg-[#0a0a0c]`}>
       <div className="pin">
         <div className="absolute left-6 top-8 z-20 md:left-10">
           <p className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.3em] text-orange">
             <span className="h-px w-8 bg-orange" />
             03 — Linehaul
           </p>
-          <p className="max-w-xs font-mono text-[11px] uppercase leading-relaxed tracking-[0.18em] text-[#0a0a0a]/70">
+          <p className="max-w-xs font-mono text-[11px] uppercase leading-relaxed tracking-[0.18em] text-white/70">
             Road freight that plugs straight into our air & ocean network — fast, reliable, nationwide.
           </p>
         </div>
@@ -259,7 +265,7 @@ function TruckSection({ scrub }: { scrub: ScrubRef }) {
             </SuspenseBox>
           ) : (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
-              <span className="whitespace-nowrap font-display text-[28vw] font-extrabold uppercase leading-none tracking-tight text-black/[0.06]">
+              <span className="whitespace-nowrap font-display text-[28vw] font-extrabold uppercase leading-none tracking-tight text-white/[0.08]">
                 Linehaul
               </span>
             </div>
@@ -271,7 +277,7 @@ function TruckSection({ scrub }: { scrub: ScrubRef }) {
             ['02', 'Reliability', 'label-fade label-fade-2'],
             ['03', 'Coverage', 'label-fade label-fade-3'],
           ].map(([n, w, fade]) => (
-            <div key={w} className={`flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-[#0a0a0a] ${fade}`}>
+            <div key={w} className={`flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/80 ${fade}`}>
               <span className="font-mono text-orange">{n}</span> {w}
             </div>
           ))}
@@ -394,7 +400,9 @@ function OceanSection({ scrub }: { scrub: ScrubRef }) {
   const wrapRef = useRef<HTMLElement>(null)
   const lineRef = useRef<HTMLHeadingElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
-  const has3D = useIsDesktop() && useWebGL()
+  const isDesktop = useIsDesktop()
+  const webgl = useWebGL()
+  const has3D = isDesktop && webgl
   useSectionScrub(wrapRef, scrub)
 
   useEffect(() => {
@@ -504,7 +512,7 @@ export default function Home() {
       <SceneRail />
       <HeroSection />
 
-      <StickyScene index="2" mode="TERMINAL" bg="bg-[#F0EFF1]" text="text-[#0a0a0a]" line="One team, every mode." sub="Air, ocean and road freight — all handled by a single integrated team, so you never juggle separate vendors." scrub={stackerScrub}>
+      <StickyScene index="2" mode="TERMINAL" bg="bg-[#0f1012]" text="text-ink" line="One team, every mode." sub="Air, ocean and road freight — all handled by a single integrated team, so you never juggle separate vendors." scrub={stackerScrub}>
         <SuspenseBox label="Freight">
           <SceneStage label="Freight" tone="orange">
             <StackerScene scrub={stackerScrub} />
@@ -522,7 +530,7 @@ export default function Home() {
         </SuspenseBox>
       </StickyScene>
 
-      <StickyScene index="5" mode="YARD" bg="bg-[#C9D3D8]" text="text-[#0a0a0a]" line="Powering the network.">
+      <StickyScene index="5" mode="YARD" bg="bg-[#0d0d0f]" text="text-ink" line="Powering the network.">
         <SuspenseBox label="Terminal">
           <TerminalScene />
         </SuspenseBox>

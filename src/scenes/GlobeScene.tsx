@@ -288,7 +288,7 @@ function Markers() {
             <Html
               position={[0, 0.18, 0]}
               center
-              distanceFactor={30}
+              distanceFactor={45}
               zIndexRange={[30, 0]}
               style={{ pointerEvents: 'none' }}
             >
@@ -297,7 +297,7 @@ function Markers() {
                   labelRefs.current[i] = el
                 }}
                 data-hover
-                className="globe-tag flex items-center gap-1.5 whitespace-nowrap px-2 py-0.5 font-mono text-[10px] leading-none tracking-[0.14em] text-white transition-opacity duration-300"
+                className="globe-tag flex select-none items-center gap-1.5 whitespace-nowrap px-2 py-0.5 font-mono text-[10px] leading-none tracking-[0.14em] text-white transition-opacity duration-300"
                 style={{ backgroundColor: '#0a0a0a', zIndex: 30 }}
               >
                 <span className="inline-block h-[3px] w-[3px] rounded-full bg-[#ff4a00]" />
