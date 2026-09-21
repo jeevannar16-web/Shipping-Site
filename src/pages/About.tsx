@@ -77,7 +77,7 @@ export default function About() {
                   {String(i + 1).padStart(2, '0')}
                 </p>
                 <h3 className="font-display text-xl font-bold uppercase tracking-tight text-ink">{w.title}</h3>
-                <p className="mt-3 text-xs leading-relaxed text-dim">{w.desc}</p>
+                <p className="mt-3 text-sm leading-relaxed text-dim">{w.desc}</p>
               </FadeUp>
             ))}
           </div>

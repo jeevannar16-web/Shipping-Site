@@ -13,11 +13,38 @@ const ShipScene = lazy(() => import('../scenes/ShipScene'))
 const TerminalScene = lazy(() => import('../scenes/TerminalScene'))
 const ViaductScene = lazy(() => import('../scenes/ViaductScene'))
 
+/** True when the viewport is at least tablet width (md breakpoint). */
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(min-width: 768px)').matches : false,
+  )
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const update = () => setIsDesktop(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+  return isDesktop
+}
+
+/** True when a WebGL context can be created (3D is usable). */
+function useWebGL() {
+  if (typeof window === 'undefined') return true
+  try {
+    const c = document.createElement('canvas')
+    return !!(c.getContext('webgl2') || c.getContext('webgl'))
+  } catch {
+    return false
+  }
+}
+
 function SceneSkeleton({ label }: { label: string }) {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-      <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-white/40">{label}</span>
-      <span className="h-px w-24 animate-pulse bg-orange/50" />
+      <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-white/50">{label}</span>
+      <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/35">Loading scene…</span>
+      <span className="h-px w-24 animate-pulse bg-white/25" />
     </div>
   )
 }
@@ -111,11 +138,26 @@ function StickyScene({
   children: ReactNode
 }) {
   const wrapRef = useRef<HTMLElement>(null)
+  const has3D = useIsDesktop() && useWebGL()
   useSectionScrub(wrapRef, scrub)
   return (
     <section ref={wrapRef} className={`scene ${bg}`}>
       <div className="pin flex flex-col">
-        <div className="absolute inset-0">{children}</div>
+        <div className="absolute inset-0">
+          {has3D ? (
+            children
+          ) : (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
+              <span
+                className={`whitespace-nowrap font-display text-[28vw] font-extrabold uppercase leading-none tracking-tight ${
+                  text === 'text-[#0a0a0a]' ? 'text-black/[0.06]' : 'text-white/[0.08]'
+                }`}
+              >
+                {mode}
+              </span>
+            </div>
+          )}
+        </div>
         <div className="relative z-10 mx-auto flex w-full max-w-7xl min-h-0 flex-1 flex-col justify-end px-6 pb-14 md:px-10">
           <p className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.3em] text-orange">
             <span className="h-px w-8 bg-orange" />
@@ -124,7 +166,7 @@ function StickyScene({
           <h2 className={`font-display text-[clamp(2.25rem,5.5vw,5rem)] font-extrabold uppercase leading-[0.92] tracking-tight ${text}`}>
             {line}
           </h2>
-          {sub && <p className={`mt-3 max-w-md text-xs leading-relaxed text-dim ${text === 'text-ink' ? '' : 'text-neutral-600'}`}>{sub}</p>}
+          {sub && <p className={`mt-3 max-w-md text-sm leading-relaxed text-dim ${text === 'text-ink' ? '' : 'text-neutral-600'}`}>{sub}</p>}
         </div>
       </div>
     </section>
@@ -133,19 +175,22 @@ function StickyScene({
 
 function HeroSection() {
   const go = useTransitionNavigate()
+  const has3D = useIsDesktop() && useWebGL()
   return (
     <section className="scene bg-[#0a0a0a]">
       <div className="pin flex items-center">
         <div className="absolute inset-0" data-cursor="DRAG">
-          <SuspenseBox label="Global">
-            <GlobeScene />
-          </SuspenseBox>
+          {has3D && (
+            <SuspenseBox label="Global">
+              <GlobeScene />
+            </SuspenseBox>
+          )}
         </div>
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-void via-void/70 to-transparent lg:w-3/5" />
 
         <div className="pointer-events-none relative z-10 mx-auto w-full max-w-7xl px-6 py-24 md:px-10">
-          <p className="mb-6 flex items-center gap-3 text-[10px] uppercase tracking-[0.28em] text-orange">
-            <span className="h-px w-10 bg-orange" /> 01 — Network
+          <p className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] uppercase tracking-[0.28em] text-orange">
+            <span className="h-px w-10 bg-orange" /> Jeevan Global Logistics — Freight Forwarding & Customs Brokerage
           </p>
           <LineMask as="h1" className="font-display text-[clamp(3rem,9vw,8.5rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-[#ededed]">
             Every Leg
@@ -153,9 +198,10 @@ function HeroSection() {
           <LineMask as="h1" delay={0.18} className="font-display text-[clamp(3rem,9vw,8.5rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-[#ededed]">
             Of The Journey
           </LineMask>
-          <FadeUp className="mt-8 max-w-md">
-            <p className="text-sm leading-relaxed text-dim">
-              Freight forwarding, customs brokerage, and transport — unified under one accountable team.
+          <FadeUp className="mt-8 max-w-lg">
+            <p className="text-base leading-relaxed text-dim">
+              We are a freight forwarding and customs brokerage company in Kathmandu, Nepal — moving your cargo by
+              air, ocean and road across 9 countries. One team handles everything, from booking to final delivery.
             </p>
             <div className="pointer-events-auto mt-8 flex flex-wrap gap-4">
               <Magnetic>
@@ -163,7 +209,7 @@ function HeroSection() {
                   onClick={() => go('/contact')}
                   className="rounded-full border border-[#555] bg-transparent px-7 py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-white transition-all hover:bg-white hover:text-black"
                 >
-                  Talk With Us
+                  Get a Quote
                 </button>
               </Magnetic>
               <Magnetic>
@@ -190,6 +236,7 @@ function HeroSection() {
 
 function TruckSection({ scrub }: { scrub: ScrubRef }) {
   const wrapRef = useRef<HTMLElement>(null)
+  const has3D = useIsDesktop() && useWebGL()
   useSectionScrub(wrapRef, scrub)
   return (
     <section ref={wrapRef} className={`scene bg-[#F4F4F5]`}>
@@ -199,13 +246,24 @@ function TruckSection({ scrub }: { scrub: ScrubRef }) {
             <span className="h-px w-8 bg-orange" />
             03 — Linehaul
           </p>
+          <p className="max-w-xs font-mono text-[11px] uppercase leading-relaxed tracking-[0.18em] text-[#0a0a0a]/70">
+            Road freight that plugs straight into our air & ocean network — fast, reliable, nationwide.
+          </p>
         </div>
         <div className="absolute inset-0">
-          <SuspenseBox label="Linehaul">
-            <SceneStage label="Linehaul" tone="orange">
-              <TruckScene scrub={scrub} />
-            </SceneStage>
-          </SuspenseBox>
+          {has3D ? (
+            <SuspenseBox label="Linehaul">
+              <SceneStage label="Linehaul" tone="orange">
+                <TruckScene scrub={scrub} />
+              </SceneStage>
+            </SuspenseBox>
+          ) : (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
+              <span className="whitespace-nowrap font-display text-[28vw] font-extrabold uppercase leading-none tracking-tight text-black/[0.06]">
+                Linehaul
+              </span>
+            </div>
+          )}
         </div>
         <div className="absolute bottom-12 left-1/2 z-10 flex -translate-x-1/2 items-center gap-10">
           {[
@@ -283,15 +341,15 @@ function ReliabilitySection({ scrub }: { scrub: ScrubRef }) {
               </p>
               <div className="flex flex-col items-end gap-1">
                 <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#17181A]">Real-Time Visibility</p>
-                <p className="max-w-[13rem] text-[11px] leading-snug text-[#3A3D40]">Follow every shipment live, from booking to delivery.</p>
+                <p className="max-w-[14rem] text-sm leading-snug text-[#3A3D40]">Follow every shipment live, from booking to delivery.</p>
               </div>
               <div className="flex flex-col items-end gap-1">
                 <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#17181A]">Proactive Exceptions</p>
-                <p className="max-w-[13rem] text-[11px] leading-snug text-[#3A3D40]">We flag problems early, before they become delays.</p>
+                <p className="max-w-[14rem] text-sm leading-snug text-[#3A3D40]">We flag problems early, before they become delays.</p>
               </div>
               <div className="flex flex-col items-end gap-1">
                 <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#17181A]">Owned Outcome</p>
-                <p className="max-w-[13rem] text-[11px] leading-snug text-[#3A3D40]">One accountable team sees your cargo through to delivery.</p>
+                <p className="max-w-[14rem] text-sm leading-snug text-[#3A3D40]">One accountable team sees your cargo through to delivery.</p>
               </div>
             </div>
           </div>
@@ -312,7 +370,7 @@ function ReliabilitySection({ scrub }: { scrub: ScrubRef }) {
               <div ref={blk1} className="border-l border-[#e0e0e0] pl-6 opacity-0 md:pb-10">
                 <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-orange">01</p>
                 <h3 className="mt-2 font-display text-xl font-bold uppercase tracking-tight text-[#0a0a0a]">Real-Time Freight Tracking</h3>
-                <p className="mt-2 max-w-md text-xs leading-relaxed text-[#3A3D40]">
+                <p className="mt-2 max-w-md text-sm leading-relaxed text-[#3A3D40]">
                   Know exactly where your cargo is at every milestone. Live visibility means faster decisions and zero guesswork.
                 </p>
               </div>
@@ -320,7 +378,7 @@ function ReliabilitySection({ scrub }: { scrub: ScrubRef }) {
               <div ref={blk2} className="border-l border-[#e0e0e0] pl-6 pt-10 opacity-0 md:pt-10">
                 <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-orange">02</p>
                 <h3 className="mt-2 font-display text-xl font-bold uppercase tracking-tight text-[#0a0a0a]">24/7 Customer Support</h3>
-                <p className="mt-2 max-w-md text-xs leading-relaxed text-[#3A3D40]">
+                <p className="mt-2 max-w-md text-sm leading-relaxed text-[#3A3D40]">
                   Real people, always available. We pick up the phone and we own the outcome.
                 </p>
               </div>
@@ -336,6 +394,7 @@ function OceanSection({ scrub }: { scrub: ScrubRef }) {
   const wrapRef = useRef<HTMLElement>(null)
   const lineRef = useRef<HTMLHeadingElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
+  const has3D = useIsDesktop() && useWebGL()
   useSectionScrub(wrapRef, scrub)
 
   useEffect(() => {
@@ -359,11 +418,19 @@ function OceanSection({ scrub }: { scrub: ScrubRef }) {
     <section ref={wrapRef} className="scene bg-[#1E56A0]">
       <div className="pin flex flex-col">
         <div className="absolute inset-0">
-          <SuspenseBox label="Ocean">
-            <SceneStage label="Ocean" tone="blue" camera={{ position: [0, 36, 16], fov: 35 }}>
-              <ShipScene scrub={scrub} />
-            </SceneStage>
-          </SuspenseBox>
+          {has3D ? (
+            <SuspenseBox label="Ocean">
+              <SceneStage label="Ocean" tone="blue" camera={{ position: [0, 36, 16], fov: 35 }}>
+                <ShipScene scrub={scrub} />
+              </SceneStage>
+            </SuspenseBox>
+          ) : (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
+              <span className="whitespace-nowrap font-display text-[28vw] font-extrabold uppercase leading-none tracking-tight text-white/[0.1]">
+                Ocean
+              </span>
+            </div>
+          )}
         </div>
         <div className="relative z-10 mx-auto flex w-full max-w-7xl min-h-0 flex-1 flex-col justify-end px-6 pb-14 md:px-10">
           <p ref={lineRef} className="mb-3 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.3em] text-orange transition-opacity duration-300">
@@ -373,7 +440,7 @@ function OceanSection({ scrub }: { scrub: ScrubRef }) {
           <h2 className={`font-display text-[clamp(2.25rem,5.5vw,5rem)] font-extrabold uppercase leading-[0.92] tracking-tight text-white transition-opacity duration-300 ${lineRef.current ? '' : ''}`}>
             Ocean freight, end to end.
           </h2>
-          <p className={`mt-3 max-w-md text-xs leading-relaxed text-white/70`}>
+          <p className={`mt-3 max-w-md text-sm leading-relaxed text-white/70`}>
             FCL, LCL and specialised cargo — across every major trade lane.
           </p>
         </div>
@@ -401,14 +468,14 @@ function OceanSection({ scrub }: { scrub: ScrubRef }) {
         {/* Left micro-copy */}
         <div className="absolute bottom-24 left-6 z-10 hidden max-w-[14rem] md:left-10 md:block">
           <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white">Compliance you can verify</p>
-          <p className="mt-2 text-[11px] leading-relaxed text-white/70">
+          <p className="mt-2 text-sm leading-relaxed text-white/70">
             Licensed in-house brokerage. Classification, duties, and quarantine handled end to end — no outsourcing.
           </p>
         </div>
         {/* Right micro-copy */}
         <div className="absolute bottom-24 right-6 z-10 hidden max-w-[14rem] text-right md:right-10 md:block">
           <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white">Competitive, transparent pricing</p>
-          <p className="mt-2 text-[11px] leading-relaxed text-white/70">
+          <p className="mt-2 text-sm leading-relaxed text-white/70">
             Clear quotes with no hidden fees. Rate confirmation before booking, every time.
           </p>
         </div>
@@ -437,7 +504,7 @@ export default function Home() {
       <SceneRail />
       <HeroSection />
 
-      <StickyScene index="2" mode="TERMINAL" bg="bg-[#F0EFF1]" text="text-[#0a0a0a]" line="One team, every mode." scrub={stackerScrub}>
+      <StickyScene index="2" mode="TERMINAL" bg="bg-[#F0EFF1]" text="text-[#0a0a0a]" line="One team, every mode." sub="Air, ocean and road freight — all handled by a single integrated team, so you never juggle separate vendors." scrub={stackerScrub}>
         <SuspenseBox label="Freight">
           <SceneStage label="Freight" tone="orange">
             <StackerScene scrub={stackerScrub} />
@@ -449,7 +516,7 @@ export default function Home() {
 
       <ReliabilitySection scrub={reliabilityScrub} />
 
-      <StickyScene index="4" mode="HIGHWAY" bg="bg-gradient-to-b from-[#FAF9F7] via-[#101410] to-[#C9D3D8]" text="text-[#ededed]" line="Built for every lane." scrub={viaductScrub}>
+      <StickyScene index="4" mode="HIGHWAY" bg="bg-gradient-to-b from-[#FAF9F7] via-[#101410] to-[#C9D3D8]" text="text-[#ededed]" line="Built for every lane." sub="Domestic and linehaul road transport, connected to our international air and ocean network." scrub={viaductScrub}>
         <SuspenseBox label="About">
           <ViaductScene scrub={viaductScrub} />
         </SuspenseBox>
@@ -484,6 +551,10 @@ export default function Home() {
           <h3 className="mt-2 font-display text-[clamp(1.25rem,2.5vw,2rem)] font-extrabold uppercase tracking-tight text-white/60">
             Under one group.
           </h3>
+          <p className="mt-6 max-w-2xl text-[15px] leading-relaxed text-dim">
+            One partner for air freight, ocean freight, customs clearance, warehousing and road transport — we handle
+            your entire shipment so you never have to juggle separate vendors.
+          </p>
           <div className="mt-10 grid grid-cols-2 gap-x-8 gap-y-10 md:grid-cols-3 lg:grid-cols-6">
             {SERVICES.map((s, i) => (
               <div key={s.title} className="flex flex-col gap-3">
@@ -525,8 +596,8 @@ export default function Home() {
                   )}
                 </div>
                 <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-orange">0{i + 1}</p>
-                <h3 className="font-display text-sm font-bold uppercase tracking-tight text-ink">{s.title}</h3>
-                <p className="text-[11px] leading-relaxed text-dim">{s.desc}</p>
+                <h3 className="font-display text-base font-bold uppercase tracking-tight text-ink">{s.title}</h3>
+                <p className="text-sm leading-relaxed text-dim">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -571,7 +642,7 @@ export default function Home() {
               We own the outcome.
             </LineMask>
             <FadeUp className="mt-8 max-w-xl">
-              <p className="section-copy text-sm leading-relaxed">
+              <p className="section-copy text-base leading-relaxed">
                 From booking to final-mile delivery, one team manages your shipment end to end. Real-time visibility,
                 in-house customs brokerage, and a network across 9 countries — engineered so your cargo arrives on time, every time.
               </p>
@@ -604,7 +675,7 @@ function HubsStrip() {
               </p>
               <p className="mt-3 flex flex-wrap gap-2">
                 {h.capabilities.slice(0, 4).map((c) => (
-                  <span key={c} className="rounded-full border border-white/10 px-3 py-1 text-[9px] uppercase tracking-[0.14em] text-white/50 transition-colors hover:border-orange/60 hover:text-orange">
+                  <span key={c} className="rounded-full border border-white/10 px-3 py-1 text-[10px] uppercase tracking-[0.14em] text-white/50 transition-colors hover:border-orange/60 hover:text-orange">
                     {c}
                   </span>
                 ))}
@@ -637,7 +708,7 @@ function FaqSection() {
             </button>
             <div className={`acc-panel ${open === i ? 'open' : ''}`}>
               <div>
-                <p className="max-w-2xl px-8 pb-6 pt-0 text-xs leading-relaxed text-dim">{f.a}</p>
+                <p className="max-w-2xl px-8 pb-6 pt-0 text-sm leading-relaxed text-dim">{f.a}</p>
               </div>
             </div>
           </div>
@@ -659,7 +730,7 @@ function HomeShowcase() {
           <FadeUp key={s.title} delay={i * 0.1} className="hover-card p-10">
             <p className="hc-index mb-6 font-mono text-xs text-white/40">0{i + 1}</p>
             <h3 className="font-display text-2xl font-bold uppercase tracking-tight text-ink">{s.title}</h3>
-            <p className="mt-4 text-xs leading-relaxed text-dim">{s.desc}</p>
+            <p className="mt-4 text-sm leading-relaxed text-dim">{s.desc}</p>
             <button
               onClick={() => go('/services')}
               className="mt-6 text-[10px] uppercase tracking-[0.2em] text-white/40 transition-colors hover:text-orange"

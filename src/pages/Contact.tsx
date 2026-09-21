@@ -106,14 +106,14 @@ function AppointmentForm() {
   return (
     <FadeUp className="rounded-2xl border border-white/[0.07] bg-panel p-8 md:p-10">
       <h3 className="font-display text-xl font-bold uppercase tracking-tight text-ink">Book an appointment</h3>
-      <p className="mt-2 text-xs leading-relaxed text-dim">
+      <p className="mt-2 text-sm leading-relaxed text-dim">
         Use the form below — our team responds within one business day.
       </p>
 
       {sent ? (
         <div className="mt-8 rounded-xl border border-orange/40 bg-orange/10 p-8 text-center">
           <p className="font-display text-lg font-bold text-ink">Request received</p>
-          <p className="mt-2 text-xs text-dim">
+          <p className="mt-2 text-sm text-dim">
             Thank you, {name || 'friend'}. We will reply to {email || 'your inbox'} within one business day.
           </p>
         </div>

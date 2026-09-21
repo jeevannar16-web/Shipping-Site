@@ -27,7 +27,7 @@ export default function Footer() {
   return (
     <footer className="relative overflow-hidden border-t border-white/[0.07] bg-panel">
       <div className="px-6 pb-10 pt-16 md:px-10">
-        <div className="text-stroke pointer-events-none select-none whitespace-nowrap text-[12vw] font-display font-extrabold uppercase leading-none tracking-tight">
+        <div className="text-stroke pointer-events-none select-none whitespace-nowrap text-center text-[clamp(2rem,6vw,7.5rem)] font-display font-extrabold uppercase leading-none tracking-tight">
           Jeevan ✦ Logistics
         </div>
       </div>
@@ -35,9 +35,9 @@ export default function Footer() {
       <div className="grid gap-10 border-t border-white/[0.07] px-6 py-12 md:grid-cols-4 md:px-10">
         <div className="md:col-span-2">
           <p className="mb-4 font-display text-2xl font-bold uppercase tracking-tight text-ink">Jeevan ✦ Logistics</p>
-          <p className="max-w-sm text-xs leading-relaxed text-dim">
-            Freight forwarding, customs brokerage, and transport — unified under one accountable team, operating from our
-            Kathmandu HQ around the clock.
+          <p className="max-w-sm text-sm leading-relaxed text-dim">
+            Global freight forwarding, customs brokerage, warehousing and transport. We move your cargo by air, ocean
+            and road across 9 countries — from our Kathmandu headquarters.
           </p>
           <a
             href={`mailto:${CONTACT.email}`}
@@ -80,7 +80,7 @@ export default function Footer() {
         <div className="overflow-hidden">
           <div className="marquee-track flex w-max whitespace-nowrap">
             {[...SERVICES, ...SERVICES].map((s, i) => (
-              <span key={i} className="mx-8 inline-flex items-center gap-8 text-[11px] uppercase tracking-[0.2em] text-white/40">
+              <span key={i} className="mx-8 inline-flex items-center gap-8 text-sm uppercase tracking-[0.2em] text-white/40">
                 {s.title}
                 <span className="text-orange">✦</span>
               </span>

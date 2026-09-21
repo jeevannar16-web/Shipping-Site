@@ -42,7 +42,7 @@ export default function Services() {
         <div className="overflow-hidden">
           <div className="marquee-track-reverse flex w-max whitespace-nowrap">
             {[...MARQUEE, ...MARQUEE].map((m, i) => (
-              <span key={i} className="mx-8 inline-flex items-center gap-8 text-[11px] uppercase tracking-[0.2em] text-white/40">
+              <span key={i} className="mx-8 inline-flex items-center gap-8 text-sm uppercase tracking-[0.2em] text-white/40">
                 {m}
                 <span className="text-orange">✦</span>
               </span>
@@ -69,7 +69,7 @@ export default function Services() {
               </h2>
             </div>
             <div className="md:col-span-4">
-              <p className="text-xs leading-relaxed text-dim">{s.desc}</p>
+              <p className="text-sm leading-relaxed text-dim">{s.desc}</p>
             </div>
             <div className="md:col-span-1 text-right">
               <button

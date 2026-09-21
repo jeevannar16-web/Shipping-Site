@@ -43,7 +43,7 @@ export default function Industries() {
               </span>
               <div className="relative">
                 <h3 className="font-display text-xl font-bold uppercase tracking-tight text-ink">{ind.title}</h3>
-                <p className="mt-4 max-w-xs text-xs leading-relaxed text-dim">{ind.desc}</p>
+                <p className="mt-4 max-w-xs text-sm leading-relaxed text-dim">{ind.desc}</p>
                 <p className="mt-6 inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-white/35 transition-colors group-hover:text-orange">
                   Explore <span>⟶</span>
                 </p>

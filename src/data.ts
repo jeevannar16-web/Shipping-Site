@@ -104,9 +104,9 @@ export const HUBS: Hub[] = [
 export const NETWORK_REGIONS = ['South Asia', 'East Asia', 'Middle East', 'Americas', 'Europe', 'Oceania']
 
 export const STATS = [
-  { value: 100, suffix: '+', label: 'Shipments per month' },
-  { value: 98, suffix: '%', label: 'On-time delivery rate' },
-  { value: 2, suffix: '+', label: 'Years in operation' },
+  { value: 774, suffix: '+', label: 'Shipments per month' },
+  { value: 95, suffix: '%', label: 'On-time delivery rate' },
+  { value: 9, suffix: '', label: 'Countries served' },
 ]
 
 export const SERVICES = [

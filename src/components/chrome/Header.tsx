@@ -66,7 +66,7 @@ export default function Header() {
             onClick={() => closeAndGo('/contact')}
             className="rounded-full border border-[#333] px-5 py-2 text-[11px] uppercase tracking-[0.14em] text-ink transition-all hover:bg-ink hover:text-void"
           >
-            Work With Us
+            Get a Quote
           </button>
         </div>
       </header>

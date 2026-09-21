@@ -53,7 +53,7 @@
 | Section | Highlights |
 | --- | --- |
 | **Hero** | "Every leg of the journey" headline, animated line-mask, dual magnetic CTAs, 3D globe |
-| **About** | Real company stats with scroll-triggered **count-up animation** (2,500+ shipments/mo, 98.2% on-time) |
+| **About** | Real company stats with scroll-triggered **count-up animation** (774+ shipments/mo, 95% on-time, 9 countries) |
 | **Services** | Air, Ocean, Customs, Warehousing & 3PL, Project Cargo, Domestic & Linehaul + marquee ticker |
 | **Reliability** | Real-time tracking, global coverage, 24/7 support cards |
 | **Why Us** | One point of contact, full visibility, compliance, transparent pricing |

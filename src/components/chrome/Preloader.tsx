@@ -143,7 +143,7 @@ export default function Preloader({ onDone }: { onDone: () => void }) {
     const obj = { n: 0 }
     const tw = gsap.to(obj, {
       n: 100,
-      duration: 2.2,
+      duration: 1.5,
       ease: 'power2.inOut',
       onUpdate: () => setPct(Math.round(obj.n)),
       onComplete: () => {
@@ -177,21 +177,23 @@ export default function Preloader({ onDone }: { onDone: () => void }) {
         {/* center block */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           <h1 className="font-display text-center text-3xl font-bold uppercase tracking-tight text-ink md:text-5xl">
-            Jeevan <span className="text-orange">✦</span> Logistics
+            Jeevan <span>✦</span> Logistics
           </h1>
-          <p className="mt-3 text-[10px] uppercase tracking-[0.3em] text-white/40">Global Freight · Every Leg</p>
+          <p className="mt-3 max-w-[24rem] px-4 text-center text-[10px] uppercase tracking-[0.3em] text-white/40">
+            Global Freight Forwarding & Customs Brokerage
+          </p>
         </div>
 
         {/* top-right % */}
         <div className="absolute right-6 top-8 flex items-center gap-3 md:right-10">
-          <span className="spinner inline-block h-4 w-4 rounded-full border border-white/20 border-t-orange" />
+          <span className="spinner inline-block h-4 w-4 rounded-full border border-white/20 border-t-white/60" />
           <span className="font-mono text-2xl text-ink tabular-nums md:text-3xl">{pct}%</span>
         </div>
 
         {/* bottom hint */}
         <div className="absolute bottom-6 left-6 flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-white/35 md:left-10">
-          <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-violet" />
-          Loading network…
+          <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-white/60" />
+          Connecting global network…
         </div>
         <div className="absolute bottom-6 right-6 text-[10px] uppercase tracking-[0.2em] text-white/35 md:right-10">
           Kathmandu HQ · 24/7
