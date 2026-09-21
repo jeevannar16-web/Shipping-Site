@@ -149,15 +149,7 @@ function StickyScene({
           {has3D ? (
             children
           ) : (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
-              <span
-                className={`whitespace-nowrap font-display text-[28vw] font-extrabold uppercase leading-none tracking-tight ${
-                  text === 'text-[#0a0a0a]' ? 'text-black/[0.06]' : 'text-white/[0.08]'
-                }`}
-              >
-                {mode}
-              </span>
-            </div>
+            <div className="pointer-events-none absolute inset-0 overflow-hidden" />
           )}
         </div>
         <div className="relative z-10 mx-auto flex w-full max-w-7xl min-h-0 flex-1 flex-col justify-end px-6 pb-14 md:px-10">
@@ -264,11 +256,7 @@ function TruckSection({ scrub }: { scrub: ScrubRef }) {
               </SceneStage>
             </SuspenseBox>
           ) : (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
-              <span className="whitespace-nowrap font-display text-[28vw] font-extrabold uppercase leading-none tracking-tight text-white/[0.08]">
-                Linehaul
-              </span>
-            </div>
+            <div className="pointer-events-none absolute inset-0 overflow-hidden" />
           )}
         </div>
         <div className="absolute bottom-12 left-1/2 z-10 flex -translate-x-1/2 items-center gap-10">
@@ -433,11 +421,7 @@ function OceanSection({ scrub }: { scrub: ScrubRef }) {
               </SceneStage>
             </SuspenseBox>
           ) : (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
-              <span className="whitespace-nowrap font-display text-[28vw] font-extrabold uppercase leading-none tracking-tight text-white/[0.1]">
-                Ocean
-              </span>
-            </div>
+            <div className="pointer-events-none absolute inset-0 overflow-hidden" />
           )}
         </div>
         <div className="relative z-10 mx-auto flex w-full max-w-7xl min-h-0 flex-1 flex-col justify-end px-6 pb-14 md:px-10">
@@ -455,16 +439,16 @@ function OceanSection({ scrub }: { scrub: ScrubRef }) {
         <div className="absolute left-6 top-8 z-10 md:left-10">
           <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-white backdrop-blur">
             <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-orange" />
-            Ocean Freight — FCL / LCL / Specialised
+            Ocean Freight — Full Containers (FCL) · Shared Containers (LCL)
           </p>
         </div>
         <div className="absolute right-6 top-8 z-10 hidden w-44 md:right-10 md:block">
           <div className="rounded-md border border-white/15 bg-black/55 p-4 font-mono text-[10px] uppercase tracking-[0.14em] text-white backdrop-blur">
-            <p className="mb-2 text-white/50">Rates — FCL</p>
+            <p className="mb-2 text-white/50">Rates — Full Containers</p>
             {[
-              ['20FT', '2,150'],
-              ['40FT', '3,900'],
-              ['REEFER', '5,400'],
+              ['20 FT', '2,150'],
+              ['40 FT', '3,900'],
+              ['REEFER (CHILLED)', '5,400'],
             ].map(([k, v]) => (
               <div key={k} className="flex items-center justify-between border-t border-white/10 py-1.5">
                 <span className="text-white/70">{k}</span>

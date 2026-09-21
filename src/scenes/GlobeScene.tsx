@@ -286,9 +286,9 @@ function Markers() {
               <meshBasicMaterial color="#000000" />
             </mesh>
             <Html
-              position={[0, 0.18, 0]}
+              position={[0, 0.22, 0]}
               center
-              distanceFactor={45}
+              distanceFactor={60}
               zIndexRange={[30, 0]}
               style={{ pointerEvents: 'none' }}
             >
@@ -297,13 +297,13 @@ function Markers() {
                   labelRefs.current[i] = el
                 }}
                 data-hover
-                className="globe-tag flex select-none items-center gap-1.5 whitespace-nowrap px-2 py-0.5 font-mono text-[10px] leading-none tracking-[0.14em] text-white transition-opacity duration-300"
+                className="globe-tag flex select-none items-center gap-1 whitespace-nowrap px-1.5 py-px font-mono text-[8px] leading-none tracking-[0.12em] text-white transition-opacity duration-300"
                 style={{ backgroundColor: '#0a0a0a', zIndex: 30 }}
               >
                 <span className="inline-block h-[3px] w-[3px] rounded-full bg-[#ff4a00]" />
                 <span className="flex flex-col">
                   <span>{m.label}</span>
-                  <span className="globe-tag-sub font-mono text-[8px] tracking-[0.18em] text-white/80">{m.sub}</span>
+                  <span className="globe-tag-sub font-mono text-[7px] tracking-[0.16em] text-white/80">{m.sub}</span>
                 </span>
               </div>
             </Html>
